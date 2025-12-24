@@ -1,0 +1,16 @@
+{
+  "name": "scpdf",
+  "module": "src/index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@jsonresume/schema": "^1.2.1",
+    "handlebars": "^4.7.8",
+    "pdf-lib": "^1.17.1"
+  }
+}
