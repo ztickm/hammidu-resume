@@ -1,0 +1,302 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
+  "basics": {
+    "name": "Jane Smith",
+    "label": "Full Stack Developer",
+    "image": "",
+    "email": "jane.smith@example.com",
+    "phone": "(555) 123-4567",
+    "url": "https://janesmith.dev",
+    "summary": "Passionate software engineer with 5+ years of experience building scalable web applications. Specialized in modern JavaScript frameworks and cloud infrastructure. Strong advocate for clean code, test-driven development, and continuous learning.",
+    "location": {
+      "address": "123 Main Street",
+      "postalCode": "10001",
+      "city": "New York",
+      "countryCode": "US",
+      "region": "New York"
+    },
+    "profiles": [
+      {
+        "network": "LinkedIn",
+        "username": "janesmith",
+        "url": "https://linkedin.com/in/janesmith"
+      },
+      {
+        "network": "GitHub",
+        "username": "janesmith",
+        "url": "https://github.com/janesmith"
+      },
+      {
+        "network": "Twitter",
+        "username": "janesmith",
+        "url": "https://twitter.com/janesmith"
+      }
+    ]
+  },
+  "work": [
+    {
+      "name": "Tech Innovations Inc",
+      "location": "San Francisco, CA",
+      "description": "Leading SaaS platform for business analytics",
+      "position": "Senior Software Engineer",
+      "url": "https://techinnovations.example.com",
+      "startDate": "2021-03",
+      "summary": "Lead developer for the core platform team, responsible for architecture decisions and mentoring junior developers.",
+      "highlights": [
+        "Architected and implemented microservices architecture serving 1M+ daily active users",
+        "Reduced API response time by 60% through database optimization and caching strategies",
+        "Mentored team of 5 junior developers and conducted code reviews",
+        "Led migration from monolithic application to containerized microservices using Docker and Kubernetes"
+      ]
+    },
+    {
+      "name": "StartupXYZ",
+      "location": "New York, NY",
+      "description": "E-commerce platform for sustainable products",
+      "position": "Full Stack Developer",
+      "url": "https://startupxyz.example.com",
+      "startDate": "2019-06",
+      "endDate": "2021-02",
+      "summary": "Full-stack development of customer-facing web application and internal tools.",
+      "highlights": [
+        "Developed and launched e-commerce platform generating $2M+ in annual revenue",
+        "Implemented real-time inventory management system with 99.9% uptime",
+        "Built RESTful APIs consumed by web and mobile applications",
+        "Integrated payment processing with Stripe and PayPal"
+      ]
+    },
+    {
+      "name": "Digital Solutions Ltd",
+      "location": "Boston, MA",
+      "description": "Web development agency",
+      "position": "Junior Developer",
+      "url": "https://digitalsolutions.example.com",
+      "startDate": "2018-01",
+      "endDate": "2019-05",
+      "summary": "Developed client websites and maintained existing applications.",
+      "highlights": [
+        "Delivered 15+ client projects on time and within budget",
+        "Implemented responsive designs using modern CSS frameworks",
+        "Collaborated with designers to translate mockups into functional interfaces"
+      ]
+    }
+  ],
+  "volunteer": [
+    {
+      "organization": "Code for Good",
+      "position": "Volunteer Developer",
+      "url": "https://codeforgood.example.org",
+      "startDate": "2020-01",
+      "summary": "Building web applications for non-profit organizations.",
+      "highlights": [
+        "Developed volunteer management system for local food bank",
+        "Mentored high school students in web development workshops"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "University of Technology",
+      "url": "https://utech.example.edu",
+      "area": "Computer Science",
+      "studyType": "Bachelor of Science",
+      "startDate": "2014-09",
+      "endDate": "2018-05",
+      "score": "3.8",
+      "courses": [
+        "Data Structures and Algorithms",
+        "Database Systems",
+        "Software Engineering",
+        "Web Development",
+        "Computer Networks"
+      ]
+    }
+  ],
+  "awards": [
+    {
+      "title": "Employee of the Year",
+      "date": "2022-12",
+      "awarder": "Tech Innovations Inc",
+      "summary": "Recognized for outstanding contributions to platform architecture and team leadership"
+    },
+    {
+      "title": "Best Capstone Project",
+      "date": "2018-05",
+      "awarder": "University of Technology",
+      "summary": "Awarded for developing an AI-powered chatbot for student services"
+    }
+  ],
+  "certificates": [
+    {
+      "name": "AWS Certified Solutions Architect",
+      "date": "2022-08-15",
+      "url": "https://aws.amazon.com/certification/",
+      "issuer": "Amazon Web Services"
+    },
+    {
+      "name": "Professional Scrum Master I",
+      "date": "2021-03-20",
+      "url": "https://scrum.org",
+      "issuer": "Scrum.org"
+    }
+  ],
+  "publications": [
+    {
+      "name": "Building Scalable Microservices with Node.js",
+      "publisher": "Dev.to",
+      "releaseDate": "2023-04",
+      "url": "https://dev.to/janesmith/microservices",
+      "summary": "A comprehensive guide to designing and implementing microservices architecture using Node.js and Docker"
+    }
+  ],
+  "skills": [
+    {
+      "name": "Frontend Development",
+      "level": "Expert",
+      "keywords": [
+        "React",
+        "TypeScript",
+        "Vue.js",
+        "HTML5",
+        "CSS3",
+        "Tailwind CSS",
+        "Next.js"
+      ]
+    },
+    {
+      "name": "Backend Development",
+      "level": "Advanced",
+      "keywords": [
+        "Node.js",
+        "Express",
+        "Python",
+        "Django",
+        "RESTful APIs",
+        "GraphQL",
+        "PostgreSQL",
+        "MongoDB"
+      ]
+    },
+    {
+      "name": "DevOps & Cloud",
+      "level": "Intermediate",
+      "keywords": [
+        "Docker",
+        "Kubernetes",
+        "AWS",
+        "CI/CD",
+        "GitHub Actions",
+        "Terraform"
+      ]
+    },
+    {
+      "name": "Tools & Practices",
+      "level": "Advanced",
+      "keywords": [
+        "Git",
+        "Agile/Scrum",
+        "TDD",
+        "Jest",
+        "Webpack",
+        "VS Code"
+      ]
+    }
+  ],
+  "languages": [
+    {
+      "language": "English",
+      "fluency": "Native speaker"
+    },
+    {
+      "language": "Spanish",
+      "fluency": "Professional working proficiency"
+    },
+    {
+      "language": "French",
+      "fluency": "Elementary proficiency"
+    }
+  ],
+  "interests": [
+    {
+      "name": "Open Source",
+      "keywords": [
+        "Contributing to React ecosystem",
+        "Maintaining npm packages"
+      ]
+    },
+    {
+      "name": "Technology",
+      "keywords": [
+        "AI/Machine Learning",
+        "Web3",
+        "IoT"
+      ]
+    },
+    {
+      "name": "Outdoor Activities",
+      "keywords": [
+        "Hiking",
+        "Rock climbing",
+        "Photography"
+      ]
+    }
+  ],
+  "references": [
+    {
+      "name": "John Johnson",
+      "reference": "Jane is an exceptional developer with strong technical skills and great team collaboration abilities. She consistently delivers high-quality work and is always willing to help others."
+    }
+  ],
+  "projects": [
+    {
+      "name": "DevTools Dashboard",
+      "description": "Open-source developer productivity dashboard",
+      "highlights": [
+        "Built with React, TypeScript, and Tailwind CSS",
+        "Integrates with GitHub, Jira, and Slack APIs",
+        "500+ stars on GitHub"
+      ],
+      "keywords": [
+        "React",
+        "TypeScript",
+        "API Integration"
+      ],
+      "startDate": "2023-01",
+      "url": "https://github.com/janesmith/devtools-dashboard",
+      "roles": [
+        "Creator",
+        "Maintainer"
+      ],
+      "entity": "Personal Project",
+      "type": "application"
+    },
+    {
+      "name": "Recipe Sharing Platform",
+      "description": "Community platform for sharing and discovering recipes",
+      "highlights": [
+        "Full-stack application with user authentication",
+        "Image upload and processing with AWS S3",
+        "Search functionality with Elasticsearch"
+      ],
+      "keywords": [
+        "Node.js",
+        "MongoDB",
+        "AWS",
+        "Vue.js"
+      ],
+      "startDate": "2022-06",
+      "endDate": "2022-12",
+      "url": "https://recipeplatform.example.com",
+      "roles": [
+        "Full Stack Developer"
+      ],
+      "entity": "Side Project",
+      "type": "application"
+    }
+  ],
+  "meta": {
+    "canonical": "https://raw.githubusercontent.com/jsonresume/resume-schema/master/resume.json",
+    "version": "v1.0.0",
+    "lastModified": "2025-12-24"
+  }
+}
