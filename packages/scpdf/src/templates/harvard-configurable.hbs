@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{basics.name}} - Resume</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 12pt;
+      line-height: 1.5;
+      color: #000;
+      max-width: 8.5in;
+      margin: 0 auto;
+      padding: 1in;
+      background: white;
+    }
+
+    /* Header Section */
+    .header {
+      text-align: center;
+      margin-bottom: 2em;
+      padding-bottom: 1em;
+      border-bottom: 1px solid #000;
+    }
+
+    .header h1 {
+      font-size: 24pt;
+      font-weight: bold;
+      margin-bottom: 0.25em;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .header .label {
+      font-size: 14pt;
+      font-style: italic;
+      margin-bottom: 0.5em;
+      color: #333;
+    }
+
+    .contact-info {
+      font-size: 11pt;
+      line-height: 1.4;
+    }
+
+    .contact-info a {
+      color: #000;
+      text-decoration: none;
+    }
+
+    /* Section Headers */
+    .section {
+      margin-bottom: 1.5em;
+      page-break-inside: avoid;
+    }
+
+    .section.page-break-before {
+      page-break-before: always;
+    }
+
+    .section.page-break-after {
+      page-break-after: always;
+    }
+
+    .section-title {
+      font-size: 14pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 0.75em;
+      padding-bottom: 0.25em;
+      border-bottom: 1px solid #333;
+      letter-spacing: 0.5px;
+    }
+
+    /* Summary */
+    .summary {
+      text-align: justify;
+      margin-bottom: 0.5em;
+    }
+
+    /* Work/Education Entries */
+    .entry {
+      margin-bottom: 1.25em;
+    }
+
+    .entry-header {
+      margin-bottom: 0.5em;
+    }
+
+    .entry-title {
+      font-weight: bold;
+      font-size: 12pt;
+    }
+
+    .entry-subtitle {
+      font-style: italic;
+      color: #333;
+    }
+
+    .entry-date {
+      color: #333;
+      font-size: 11pt;
+    }
+
+    .entry-description {
+      margin-top: 0.5em;
+      text-align: justify;
+    }
+
+    /* Lists */
+    ul {
+      margin-left: 2em;
+      margin-top: 0.5em;
+    }
+
+    li {
+      margin-bottom: 0.25em;
+    }
+
+    /* Skills */
+    .skill-item {
+      margin-bottom: 0.75em;
+    }
+
+    .skill-name {
+      font-weight: bold;
+    }
+
+    .skill-level {
+      font-style: italic;
+      color: #333;
+      font-size: 11pt;
+    }
+
+    .skill-keywords {
+      margin-top: 0.25em;
+    }
+
+    /* Languages */
+    .language-item {
+      margin-bottom: 0.5em;
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        padding: 0.5in;
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <h1>{{basics.name}}</h1>
+    {{#if basics.label}}
+    <div class="label">{{basics.label}}</div>
+    {{/if}}
+    <div class="contact-info">
+      {{#if basics.email}}<div>{{basics.email}}</div>{{/if}}
+      {{#if basics.phone}}<div>{{basics.phone}}</div>{{/if}}
+      {{#if basics.url}}<div><a href="{{basics.url}}">{{basics.url}}</a></div>{{/if}}
+      {{#if basics.location}}
+      <div>
+        {{#if basics.location.city}}{{basics.location.city}}{{/if}}{{#if basics.location.region}}, {{basics.location.region}}{{/if}}{{#if basics.location.countryCode}} {{basics.location.countryCode}}{{/if}}
+      </div>
+      {{/if}}
+    </div>
+  </div>
+
+  <!-- Dynamic Sections Based on Configuration -->
+  {{#each _config.sectionOrder}}
+    {{#if (eq this "summary")}}
+      {{#if ../basics.summary}}
+      <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore "summary")}} page-break-before{{/if}}{{#if (hasPageBreak ../_config.pageBreakAfter "summary")}} page-break-after{{/if}}">
+        <div class="summary">{{../basics.summary}}</div>
+      </div>
+      {{/if}}
+    {{/if}}
+
+    {{#if (eq this "education")}}
+      {{#if ../education}}
+      <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore "education")}} page-break-before{{/if}}{{#if (hasPageBreak ../_config.pageBreakAfter "education")}} page-break-after{{/if}}">
+        <h2 class="section-title">Education</h2>
+        {{#each ../education}}
+        <div class="entry">
+          <div class="entry-header">
+            <div class="entry-title">{{studyType}} in {{area}}</div>
+            <div class="entry-subtitle">{{institution}}</div>
+            <div class="entry-date">{{formatDate startDate}} - {{formatDate endDate}}</div>
+          </div>
+          {{#if score}}
+          <div>GPA: {{score}}</div>
+          {{/if}}
+          {{#if courses}}
+          <ul>
+            {{#each courses}}
+            <li>{{this}}</li>
+            {{/each}}
+          </ul>
+          {{/if}}
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+    {{/if}}
+
+    {{#if (eq this "work")}}
+      {{#if ../work}}
+      <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore "work")}} page-break-before{{/if}}{{#if (hasPageBreak ../_config.pageBreakAfter "work")}} page-break-after{{/if}}">
+        <h2 class="section-title">Experience</h2>
+        {{#each ../work}}
+        <div class="entry">
+          <div class="entry-header">
+            <div class="entry-title">{{position}}</div>
+            <div class="entry-subtitle">{{name}}{{#if location}}, {{location}}{{/if}}</div>
+            <div class="entry-date">{{formatDate startDate}} - {{formatDateOrPresent endDate}}</div>
+          </div>
+          {{#if summary}}
+          <div class="entry-description">{{summary}}</div>
+          {{/if}}
+          {{#if highlights}}
+          <ul>
+            {{#each highlights}}
+            <li>{{this}}</li>
+            {{/each}}
+          </ul>
+          {{/if}}
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+    {{/if}}
+
+    {{#if (eq this "skills")}}
+      {{#if ../skills}}
+      <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore "skills")}} page-break-before{{/if}}{{#if (hasPageBreak ../_config.pageBreakAfter "skills")}} page-break-after{{/if}}">
+        <h2 class="section-title">Skills</h2>
+        {{#each ../skills}}
+        <div class="skill-item">
+          <span class="skill-name">{{name}}</span>
+          {{#if level}}<span class="skill-level"> ({{level}})</span>{{/if}}
+          {{#if keywords}}
+          <div class="skill-keywords">{{join keywords ", "}}</div>
+          {{/if}}
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+    {{/if}}
+
+    {{#if (eq this "volunteer")}}
+      {{#if ../volunteer}}
+      <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore "volunteer")}} page-break-before{{/if}}{{#if (hasPageBreak ../_config.pageBreakAfter "volunteer")}} page-break-after{{/if}}">
+        <h2 class="section-title">Volunteer Work</h2>
+        {{#each ../volunteer}}
+        <div class="entry">
+          <div class="entry-header">
+            <div class="entry-title">{{position}}</div>
+            <div class="entry-subtitle">{{organization}}</div>
+            <div class="entry-date">{{formatDate startDate}} - {{formatDateOrPresent endDate}}</div>
+          </div>
+          {{#if summary}}
+          <div class="entry-description">{{summary}}</div>
+          {{/if}}
+          {{#if highlights}}
+          <ul>
+            {{#each highlights}}
+            <li>{{this}}</li>
+            {{/each}}
+          </ul>
+          {{/if}}
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+    {{/if}}
+
+    {{#if (eq this "awards")}}
+      {{#if ../awards}}
+      <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore "awards")}} page-break-before{{/if}}{{#if (hasPageBreak ../_config.pageBreakAfter "awards")}} page-break-after{{/if}}">
+        <h2 class="section-title">Awards & Honors</h2>
+        {{#each ../awards}}
+        <div class="entry">
+          <div class="entry-header">
+            <div class="entry-title">{{title}}</div>
+            <div class="entry-subtitle">{{awarder}}</div>
+            <div class="entry-date">{{formatDate date}}</div>
+          </div>
+          {{#if summary}}
+          <div class="entry-description">{{summary}}</div>
+          {{/if}}
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+    {{/if}}
+
+    {{#if (eq this "publications")}}
+      {{#if ../publications}}
+      <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore "publications")}} page-break-before{{/if}}{{#if (hasPageBreak ../_config.pageBreakAfter "publications")}} page-break-after{{/if}}">
+        <h2 class="section-title">Publications</h2>
+        {{#each ../publications}}
+        <div class="entry">
+          <div class="entry-header">
+            <div class="entry-title">{{name}}</div>
+            <div class="entry-subtitle">{{publisher}}</div>
+            <div class="entry-date">{{formatDate releaseDate}}</div>
+          </div>
+          {{#if summary}}
+          <div class="entry-description">{{summary}}</div>
+          {{/if}}
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+    {{/if}}
+
+    {{#if (eq this "projects")}}
+      {{#if ../projects}}
+      <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore "projects")}} page-break-before{{/if}}{{#if (hasPageBreak ../_config.pageBreakAfter "projects")}} page-break-after{{/if}}">
+        <h2 class="section-title">Projects</h2>
+        {{#each ../projects}}
+        <div class="entry">
+          <div class="entry-header">
+            <div class="entry-title">{{name}}</div>
+            {{#if entity}}<div class="entry-subtitle">{{entity}}</div>{{/if}}
+            {{#if startDate}}<div class="entry-date">{{formatDate startDate}} - {{formatDateOrPresent endDate}}</div>{{/if}}
+          </div>
+          {{#if description}}
+          <div class="entry-description">{{description}}</div>
+          {{/if}}
+          {{#if highlights}}
+          <ul>
+            {{#each highlights}}
+            <li>{{this}}</li>
+            {{/each}}
+          </ul>
+          {{/if}}
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+    {{/if}}
+
+    {{#if (eq this "languages")}}
+      {{#if ../languages}}
+      <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore "languages")}} page-break-before{{/if}}{{#if (hasPageBreak ../_config.pageBreakAfter "languages")}} page-break-after{{/if}}">
+        <h2 class="section-title">Languages</h2>
+        {{#each ../languages}}
+        <div class="language-item">
+          <span class="skill-name">{{language}}</span>
+          {{#if fluency}}<span class="skill-level"> - {{fluency}}</span>{{/if}}
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+    {{/if}}
+
+    {{#if (eq this "certificates")}}
+      {{#if ../certificates}}
+      <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore "certificates")}} page-break-before{{/if}}{{#if (hasPageBreak ../_config.pageBreakAfter "certificates")}} page-break-after{{/if}}">
+        <h2 class="section-title">Certificates</h2>
+        {{#each ../certificates}}
+        <div class="entry">
+          <div class="entry-header">
+            <div class="entry-title">{{name}}</div>
+            <div class="entry-subtitle">{{issuer}}</div>
+            <div class="entry-date">{{formatDate date}}</div>
+          </div>
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+    {{/if}}
+
+    {{#if (eq this "interests")}}
+      {{#if ../interests}}
+      <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore "interests")}} page-break-before{{/if}}{{#if (hasPageBreak ../_config.pageBreakAfter "interests")}} page-break-after{{/if}}">
+        <h2 class="section-title">Interests</h2>
+        {{#each ../interests}}
+        <div class="skill-item">
+          <span class="skill-name">{{name}}</span>
+          {{#if keywords}}
+          <div class="skill-keywords">{{join keywords ", "}}</div>
+          {{/if}}
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+    {{/if}}
+
+    {{#if (eq this "references")}}
+      {{#if ../references}}
+      <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore "references")}} page-break-before{{/if}}{{#if (hasPageBreak ../_config.pageBreakAfter "references")}} page-break-after{{/if}}">
+        <h2 class="section-title">References</h2>
+        {{#each ../references}}
+        <div class="entry">
+          <div class="entry-title">{{name}}</div>
+          {{#if reference}}
+          <div class="entry-description">{{reference}}</div>
+          {{/if}}
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+    {{/if}}
+  {{/each}}
+</body>
+</html>

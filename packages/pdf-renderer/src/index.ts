@@ -1,16 +1,16 @@
 import puppeteer from "puppeteer";
 import { PDFDocument } from "pdf-lib";
-import { generateHTML, type ResumeSchema } from "scpdf";
+import { generateHTML, type ResumeSchema, type GenerateConfig } from "scpdf";
 
 /**
  * Generate PDF from JSON Resume with embedded metadata using Puppeteer
  */
 export async function generatePDF(
   resume: ResumeSchema,
-  options: { outputPath?: string } = {}
+  options: { config?: GenerateConfig } = {}
 ): Promise<Uint8Array> {
-  // Step 1: Generate HTML from resume
-  const html = generateHTML(resume);
+  // Step 1: Generate HTML from resume with configuration
+  const html = generateHTML(resume, options.config);
 
   // Step 2: Launch Puppeteer and render HTML to PDF
   const browser = await puppeteer.launch({
@@ -83,9 +83,10 @@ async function embedJSONMetadata(
  */
 export async function generatePDFToFile(
   resume: ResumeSchema,
-  outputPath: string
+  outputPath: string,
+  config?: GenerateConfig
 ): Promise<void> {
-  const pdfBytes = await generatePDF(resume);
+  const pdfBytes = await generatePDF(resume, { config });
   await Bun.write(outputPath, pdfBytes);
   console.log(`PDF saved to: ${outputPath}`);
 }

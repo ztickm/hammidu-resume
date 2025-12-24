@@ -20,14 +20,29 @@ bun install
 
 ```typescript
 import { generatePDFToFile } from "pdf-renderer";
-import type { ResumeSchema } from "scpdf";
+import type { ResumeSchema, GenerateConfig } from "scpdf";
 
 const resume: ResumeSchema = {
   // Your JSON Resume data
 };
 
+// Generate PDF with default configuration
 await generatePDFToFile(resume, "output.pdf");
+
+// Or with custom configuration
+const config: GenerateConfig = {
+  sectionOrder: ["summary", "work", "education", "skills"],
+  pageBreakAfter: ["education"],
+};
+await generatePDFToFile(resume, "output.pdf", config);
 ```
+
+### Configuration
+
+Supports all configuration options from `scpdf`:
+- **Section ordering**: Control which sections appear and in what order
+- **Page breaks**: Add page breaks before or after specific sections
+- **Custom layouts**: Perfect for multi-page resumes
 
 ## Development
 

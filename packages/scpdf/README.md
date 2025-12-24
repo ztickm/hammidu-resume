@@ -19,16 +19,35 @@ bun add scpdf
 ## Usage
 
 ```typescript
-import { generateHTML } from "scpdf";
+import { generateHTML, type GenerateConfig } from "scpdf";
 import type { ResumeSchema } from "scpdf";
 
 const resume: ResumeSchema = {
   // Your JSON Resume data
 };
 
-// Generate HTML
+// Generate HTML with default configuration
 const html = generateHTML(resume);
+
+// Or with custom configuration
+const config: GenerateConfig = {
+  // Custom section order (omit sections you don't want)
+  sectionOrder: ["summary", "work", "education", "skills"],
+  
+  // Add page breaks
+  pageBreakAfter: ["education"],
+  pageBreakBefore: ["work"],
+};
+const htmlWithConfig = generateHTML(resume, config);
 ```
+
+### Configuration Options
+
+- **`sectionOrder`**: Array of section names to control order and which sections appear
+- **`pageBreakBefore`**: Array of section names that should have a page break before them
+- **`pageBreakAfter`**: Array of section names that should have a page break after them
+
+Available sections: `summary`, `education`, `work`, `volunteer`, `skills`, `languages`, `awards`, `publications`, `projects`, `certificates`, `interests`, `references`
 
 ## Development
 
