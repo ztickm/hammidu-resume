@@ -14,8 +14,22 @@
 
     body {
       font-family: 'Times New Roman', Times, serif;
-      font-size: {{_config.baseFontSize}}pt;
-      line-height: {{_config.lineHeight}};
+
+      font-size: {
+          {
+          _config.baseFontSize
+        }
+      }
+
+      pt;
+
+      line-height: {
+          {
+          _config.lineHeight
+        }
+      }
+
+      ;
       color: #000;
       max-width: 8.5in;
       margin: 0 auto;
@@ -54,6 +68,19 @@
     .contact-info a {
       color: #000;
       text-decoration: none;
+    }
+
+    /* Links styling - blue with underline and icon */
+    a {
+      color: #0066cc;
+      text-decoration: underline;
+    }
+
+    a::after {
+      content: "🔗";
+      font-size: 0.7em;
+      margin-left: 0.2em;
+      vertical-align: super;
     }
 
     /* Section Headers */
@@ -226,7 +253,14 @@
     <div class="entry">
       <div class="entry-header">
         <div class="entry-title">{{position}}</div>
-        <div class="entry-subtitle">{{name}}{{#if location}}, {{location}}{{/if}}</div>
+        <div class="entry-subtitle">
+          {{#if url}}
+          <a href="{{url}}" target="_blank">{{name}}</a>
+          {{else}}
+          {{name}}
+          {{/if}}
+          {{#if location}}, {{location}}{{/if}}
+        </div>
         <div class="entry-date">{{formatDate startDate}} - {{formatDateOrPresent endDate}}</div>
       </div>
       {{#if summary}}
@@ -341,7 +375,13 @@
     {{#each ../projects}}
     <div class="entry">
       <div class="entry-header">
-        <div class="entry-title">{{name}}</div>
+        <div class="entry-title">
+          {{#if url}}
+          <a href="{{url}}" target="_blank">{{name}}</a>
+          {{else}}
+          {{name}}
+          {{/if}}
+        </div>
         {{#if entity}}<div class="entry-subtitle">{{entity}}</div>{{/if}}
         {{#if startDate}}<div class="entry-date">{{formatDate startDate}} - {{formatDateOrPresent endDate}}</div>{{/if}}
       </div>

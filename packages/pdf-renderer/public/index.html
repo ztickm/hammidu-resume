@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON Resume to PDF Converter</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #14b8a6 0%, #10b981 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #14b8a6 0%, #10b981 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+
+    .main-content {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      min-height: calc(100vh - 200px);
+    }
+
+    .sidebar {
+      background: #f8f9fa;
+      padding: 30px;
+      border-right: 1px solid #dee2e6;
+      overflow-y: auto;
+      max-height: calc(100vh - 200px);
+    }
+
+    .preview-area {
+      padding: 30px;
+      background: white;
+      overflow-y: auto;
+      max-height: calc(100vh - 200px);
+    }
+
+    .section {
+      margin-bottom: 30px;
+    }
+
+    .section-title {
+      font-size: 1.2em;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title::before {
+      content: "";
+      width: 4px;
+      height: 20px;
+      background: #14b8a6;
+      border-radius: 2px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: #495057;
+      font-size: 0.9em;
+    }
+
+    textarea, input[type="number"], input[type="range"] {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 13px;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus, input:focus {
+      outline: none;
+      border-color: #14b8a6;
+    }
+
+    textarea {
+      min-height: 200px;
+      resize: vertical;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #14b8a6 0%, #10b981 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(20, 184, 166, 0.4);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+    }
+
+    .validation-message {
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-size: 0.9em;
+    }
+
+    .validation-message.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .validation-message.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .draggable-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .draggable-item {
+      background: white;
+      padding: 12px 15px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      cursor: move;
+      border: 2px solid #dee2e6;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+
+    .draggable-item:hover {
+      border-color: #14b8a6;
+      box-shadow: 0 2px 8px rgba(20, 184, 166, 0.2);
+    }
+
+    .draggable-item.dragging {
+      opacity: 0.5;
+    }
+
+    .drag-handle {
+      font-size: 1.2em;
+      color: #6c757d;
+    }
+
+    .page-break-controls {
+      display: flex;
+      gap: 10px;
+      margin-left: auto;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.85em;
+      color: #6c757d;
+      cursor: pointer;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: auto;
+      cursor: pointer;
+    }
+
+    .range-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .range-value {
+      min-width: 50px;
+      text-align: center;
+      font-weight: 600;
+      color: #14b8a6;
+    }
+
+    .preview-frame {
+      width: 100%;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      min-height: 800px;
+      background: white;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #6c757d;
+      font-size: 1.1em;
+    }
+
+    .file-upload {
+      border: 2px dashed #14b8a6;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      background: #f0fdfa;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 15px;
+    }
+
+    .file-upload:hover {
+      background: #ccfbf1;
+      border-color: #0d9488;
+    }
+
+    .file-upload input[type="file"] {
+      display: none;
+    }
+
+    .upload-icon {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 1200px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+      
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
+        max-height: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📄 JSON Resume to PDF</h1>
+      <p>Upload or paste your JSON Resume, customize the layout, and generate a professional PDF</p>
+    </div>
+
+    <div class="main-content">
+      <div class="sidebar">
+        <!-- JSON Input Section -->
+        <div class="section">
+          <div class="section-title">JSON Resume Input</div>
+          
+          <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+            <input type="file" id="fileInput" accept=".json" />
+            <div class="upload-icon">📁</div>
+            <div>Click to upload JSON file</div>
+            <div style="font-size: 0.9em; color: #6c757d; margin-top: 5px;">or drag and drop</div>
+          </div>
+
+          <div class="input-group">
+            <label for="jsonInput">Or paste JSON Resume here:</label>
+            <textarea id="jsonInput" placeholder='{\n  "basics": {\n    "name": "Your Name",\n    ...\n  }\n}'></textarea>
+          </div>
+
+          <div id="validationMessage"></div>
+        </div>
+
+        <!-- Configuration Section -->
+        <div class="section">
+          <div class="section-title">Configuration</div>
+
+          <div class="input-group">
+            <label>Font Size: <span class="range-value" id="fontSizeValue">12pt</span></label>
+            <input type="range" id="fontSize" min="8" max="18" value="12" step="0.5">
+          </div>
+
+          <div class="input-group">
+            <label>Line Height: <span class="range-value" id="lineHeightValue">1.5</span></label>
+            <input type="range" id="lineHeight" min="1" max="2.5" value="1.5" step="0.1">
+          </div>
+        </div>
+
+        <!-- Section Order -->
+        <div class="section">
+          <div class="section-title">Section Order & Page Breaks</div>
+          <p style="font-size: 0.9em; color: #6c757d; margin-bottom: 15px;">
+            Drag to reorder sections. Check boxes to add page breaks.
+          </p>
+          <ul id="sectionList" class="draggable-list"></ul>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="section">
+          <button class="btn" onclick="updatePreview()">🔄 Update Preview</button>
+          <button class="btn" onclick="generatePDF()">📥 Download PDF</button>
+          <button class="btn btn-secondary" onclick="loadExample()">📋 Load Example</button>
+        </div>
+      </div>
+
+      <div class="preview-area">
+        <div class="section-title">Preview</div>
+        <div id="previewContainer" class="loading">
+          Upload or paste a JSON Resume to see the preview
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Default sections
+    const DEFAULT_SECTIONS = [
+      "summary", "education", "work", "skills", "languages",
+      "volunteer", "awards", "publications", "projects",
+      "certificates", "interests", "references"
+    ];
+
+    // State
+    let currentResume = null;
+    let draggedItem = null;
+
+    // Initialize
+    function init() {
+      initializeSectionList();
+      setupEventListeners();
+      setupDragAndDrop();
+    }
+
+    function initializeSectionList() {
+      const list = document.getElementById('sectionList');
+      list.innerHTML = '';
+      
+      DEFAULT_SECTIONS.forEach(section => {
+        const li = createSectionItem(section);
+        list.appendChild(li);
+      });
+    }
+
+    function createSectionItem(section) {
+      const li = document.createElement('li');
+      li.className = 'draggable-item';
+      li.draggable = true;
+      li.dataset.section = section;
+      
+      li.innerHTML = `
+        <span class="drag-handle">☰</span>
+        <span style="flex: 1; text-transform: capitalize;">${section}</span>
+        <div class="page-break-controls">
+          <label class="checkbox-label">
+            <input type="checkbox" class="break-before" data-section="${section}">
+            <span>Before</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" class="break-after" data-section="${section}">
+            <span>After</span>
+          </label>
+        </div>
+      `;
+      
+      return li;
+    }
+
+    function setupEventListeners() {
+      // JSON input
+      document.getElementById('jsonInput').addEventListener('input', debounce(validateJSON, 500));
+      
+      // File upload
+      document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+      
+      // Range inputs
+      document.getElementById('fontSize').addEventListener('input', (e) => {
+        document.getElementById('fontSizeValue').textContent = e.target.value + 'pt';
+      });
+      
+      document.getElementById('lineHeight').addEventListener('input', (e) => {
+        document.getElementById('lineHeightValue').textContent = e.target.value;
+      });
+    }
+
+    function setupDragAndDrop() {
+      const list = document.getElementById('sectionList');
+      
+      list.addEventListener('dragstart', (e) => {
+        if (e.target.classList.contains('draggable-item')) {
+          draggedItem = e.target;
+          e.target.classList.add('dragging');
+        }
+      });
+      
+      list.addEventListener('dragend', (e) => {
+        if (e.target.classList.contains('draggable-item')) {
+          e.target.classList.remove('dragging');
+        }
+      });
+      
+      list.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const afterElement = getDragAfterElement(list, e.clientY);
+        const dragging = document.querySelector('.dragging');
+        
+        if (afterElement == null) {
+          list.appendChild(dragging);
+        } else {
+          list.insertBefore(dragging, afterElement);
+        }
+      });
+    }
+
+    function getDragAfterElement(container, y) {
+      const draggableElements = [...container.querySelectorAll('.draggable-item:not(.dragging)')];
+      
+      return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        
+        if (offset < 0 && offset > closest.offset) {
+          return { offset: offset, element: child };
+        } else {
+          return closest;
+        }
+      }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    async function handleFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const text = await file.text();
+      document.getElementById('jsonInput').value = text;
+      validateJSON();
+    }
+
+    function validateJSON() {
+      const input = document.getElementById('jsonInput').value.trim();
+      const messageDiv = document.getElementById('validationMessage');
+      
+      if (!input) {
+        messageDiv.innerHTML = '';
+        return;
+      }
+      
+      try {
+        const resume = JSON.parse(input);
+        
+        // Basic schema validation
+        if (!resume.basics || !resume.basics.name) {
+          throw new Error('Invalid JSON Resume: missing basics.name');
+        }
+        
+        currentResume = resume;
+        messageDiv.innerHTML = '<div class="validation-message success">✓ Valid JSON Resume</div>';
+        updatePreview();
+      } catch (error) {
+        currentResume = null;
+        messageDiv.innerHTML = `<div class="validation-message error">✗ ${error.message}</div>`;
+      }
+    }
+
+    function getConfig() {
+      const sections = [...document.querySelectorAll('#sectionList .draggable-item')]
+        .map(item => item.dataset.section);
+      
+      const pageBreakBefore = [...document.querySelectorAll('.break-before:checked')]
+        .map(cb => cb.dataset.section);
+      
+      const pageBreakAfter = [...document.querySelectorAll('.break-after:checked')]
+        .map(cb => cb.dataset.section);
+      
+      return {
+        sectionOrder: sections,
+        pageBreakBefore,
+        pageBreakAfter,
+        baseFontSize: parseFloat(document.getElementById('fontSize').value),
+        lineHeight: parseFloat(document.getElementById('lineHeight').value)
+      };
+    }
+
+    async function updatePreview() {
+      if (!currentResume) {
+        return;
+      }
+      
+      const container = document.getElementById('previewContainer');
+      container.innerHTML = '<div class="loading">Generating preview...</div>';
+      
+      try {
+        const config = getConfig();
+        
+        const response = await fetch('/api/preview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resume: currentResume, config })
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error);
+        }
+        
+        const { html } = await response.json();
+        
+        // Create iframe for preview
+        const iframe = document.createElement('iframe');
+        iframe.className = 'preview-frame';
+        container.innerHTML = '';
+        container.appendChild(iframe);
+        
+        iframe.contentDocument.open();
+        iframe.contentDocument.write(html);
+        iframe.contentDocument.close();
+      } catch (error) {
+        container.innerHTML = `<div class="validation-message error">Preview error: ${error.message}</div>`;
+      }
+    }
+
+    async function generatePDF() {
+      if (!currentResume) {
+        alert('Please upload or paste a valid JSON Resume first');
+        return;
+      }
+      
+      try {
+        const config = getConfig();
+        
+        const response = await fetch('/api/generate-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resume: currentResume, config })
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error);
+        }
+        
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${currentResume.basics.name.replace(/\s+/g, '_')}_resume.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        alert('PDF generation error: ' + error.message);
+      }
+    }
+
+    function loadExample() {
+      const example = {
+        "basics": {
+          "name": "John Doe",
+          "label": "Software Engineer",
+          "email": "john.doe@example.com",
+          "phone": "(555) 123-4567",
+          "url": "https://johndoe.com",
+          "summary": "Experienced software engineer with a passion for building scalable web applications and leading technical teams.",
+          "location": {
+            "city": "San Francisco",
+            "countryCode": "US"
+          }
+        },
+        "work": [
+          {
+            "name": "Tech Corp",
+            "position": "Senior Software Engineer",
+            "url": "https://techcorp.example.com",
+            "startDate": "2020-01",
+            "summary": "Led development of cloud-based applications",
+            "highlights": [
+              "Architected microservices platform",
+              "Mentored junior developers"
+            ]
+          }
+        ],
+        "education": [
+          {
+            "institution": "University of Technology",
+            "area": "Computer Science",
+            "studyType": "Bachelor",
+            "startDate": "2012-09",
+            "endDate": "2016-06"
+          }
+        ],
+        "skills": [
+          {
+            "name": "Programming",
+            "keywords": ["JavaScript", "TypeScript", "Python", "Go"]
+          }
+        ]
+      };
+      
+      document.getElementById('jsonInput').value = JSON.stringify(example, null, 2);
+      validateJSON();
+    }
+
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    // Initialize on load
+    init();
+  </script>
+</body>
+</html>
