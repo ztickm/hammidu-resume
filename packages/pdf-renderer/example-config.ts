@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 import type { ResumeSchema, GenerateConfig } from "scpdf";
 
 // Load JSON Resume from the scpdf package example
-const resumePath = "../scpdf/example_json_resume.json";
+const resumePath = "./json_resume.json";
 const resume = JSON.parse(
   readFileSync(resumePath, "utf-8")
 ) as ResumeSchema;
@@ -25,8 +25,8 @@ await generatePDFToFile(resume, "output-configured.pdf", config);
 // Test 3: Custom section order
 console.log("\n3. Generating PDF with custom section order (work first)...");
 const config2: GenerateConfig = {
-  sectionOrder: ["summary", "work", "education", "skills", "projects", "languages"],
-  pageBreakAfter: ["work"],
+  sectionOrder: ["work", "education", "skills", "projects", "languages"],
+  pageBreakAfter: [],
 };
 await generatePDFToFile(resume, "output-custom-order.pdf", config2);
 
