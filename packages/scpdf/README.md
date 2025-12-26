@@ -37,6 +37,10 @@ const config: GenerateConfig = {
   // Add page breaks
   pageBreakAfter: ["education"],
   pageBreakBefore: ["work"],
+  
+  // Compact font size for longer resumes
+  baseFontSize: 10,
+  lineHeight: 1.4,
 };
 const htmlWithConfig = generateHTML(resume, config);
 ```
@@ -46,8 +50,17 @@ const htmlWithConfig = generateHTML(resume, config);
 - **`sectionOrder`**: Array of section names to control order and which sections appear
 - **`pageBreakBefore`**: Array of section names that should have a page break before them
 - **`pageBreakAfter`**: Array of section names that should have a page break after them
+- **`baseFontSize`**: Base font size in points (default: 12). Smaller values make more compact resumes
+- **`lineHeight`**: Line height multiplier (default: 1.5). Lower values reduce spacing
 
 Available sections: `summary`, `education`, `work`, `volunteer`, `skills`, `languages`, `awards`, `publications`, `projects`, `certificates`, `interests`, `references`
+
+### Font Size Recommendations
+
+- **12pt** (default): Standard, highly readable
+- **10pt**: Compact, still very readable, recommended for longer resumes
+- **9pt**: Very compact, professional, fits more content
+- **11pt**: Good middle ground
 
 ## Development
 

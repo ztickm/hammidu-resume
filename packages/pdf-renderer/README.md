@@ -33,6 +33,8 @@ await generatePDFToFile(resume, "output.pdf");
 const config: GenerateConfig = {
   sectionOrder: ["summary", "work", "education", "skills"],
   pageBreakAfter: ["education"],
+  baseFontSize: 10,  // More compact
+  lineHeight: 1.4,
 };
 await generatePDFToFile(resume, "output.pdf", config);
 ```
@@ -42,6 +44,7 @@ await generatePDFToFile(resume, "output.pdf", config);
 Supports all configuration options from `scpdf`:
 - **Section ordering**: Control which sections appear and in what order
 - **Page breaks**: Add page breaks before or after specific sections
+- **Font sizing**: Adjust base font size and line height for more compact PDFs
 - **Custom layouts**: Perfect for multi-page resumes
 
 ## Development

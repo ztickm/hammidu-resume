@@ -32,6 +32,8 @@ export function generateHTML(
     sectionOrder: config.sectionOrder ?? DEFAULT_CONFIG.sectionOrder,
     pageBreakBefore: config.pageBreakBefore ?? DEFAULT_CONFIG.pageBreakBefore,
     pageBreakAfter: config.pageBreakAfter ?? DEFAULT_CONFIG.pageBreakAfter,
+    baseFontSize: config.baseFontSize ?? DEFAULT_CONFIG.baseFontSize,
+    lineHeight: config.lineHeight ?? DEFAULT_CONFIG.lineHeight,
   };
 
   // Create a context object with resume data and configuration
@@ -41,6 +43,8 @@ export function generateHTML(
       sectionOrder: finalConfig.sectionOrder,
       pageBreakBefore: new Set(finalConfig.pageBreakBefore),
       pageBreakAfter: new Set(finalConfig.pageBreakAfter),
+      baseFontSize: finalConfig.baseFontSize,
+      lineHeight: finalConfig.lineHeight,
     },
   };
 

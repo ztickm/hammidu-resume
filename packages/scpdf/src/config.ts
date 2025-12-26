@@ -35,6 +35,18 @@ export interface GenerateConfig {
    * Default: [] (no forced page breaks)
    */
   pageBreakAfter?: SectionName[];
+
+  /**
+   * Base font size in pixels
+   * Default: 12
+   */
+  baseFontSize?: number;
+
+  /**
+   * Line height multiplier
+   * Default: 1.5
+   */
+  lineHeight?: number;
 }
 
 export const DEFAULT_SECTION_ORDER: SectionName[] = [
@@ -56,4 +68,6 @@ export const DEFAULT_CONFIG: Required<GenerateConfig> = {
   sectionOrder: DEFAULT_SECTION_ORDER,
   pageBreakBefore: [],
   pageBreakAfter: [],
+  baseFontSize: 12,
+  lineHeight: 1.5,
 };
