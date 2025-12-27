@@ -217,6 +217,21 @@
       cursor: pointer;
     }
 
+    .remove-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.8em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .remove-btn:hover {
+      background: #c82333;
+    }
+
     .range-group {
       display: flex;
       align-items: center;
@@ -330,9 +345,12 @@
         <div class="section">
           <div class="section-title">Section Order & Page Breaks</div>
           <p style="font-size: 0.9em; color: #6c757d; margin-bottom: 15px;">
-            Drag to reorder sections. Check boxes to add page breaks.
+            Drag to reorder sections. Check boxes to add page breaks. Click ✕ to remove.
           </p>
           <ul id="sectionList" class="draggable-list"></ul>
+          <button class="btn btn-secondary" onclick="restoreAllSections()" style="margin-top: 10px; font-size: 0.9em;">
+            ↺ Restore Removed Sections
+          </button>
         </div>
 
         <!-- Action Buttons -->
@@ -363,6 +381,7 @@
     // State
     let currentResume = null;
     let draggedItem = null;
+    let removedSections = [];
 
     // Initialize
     function init() {
@@ -399,10 +418,34 @@
             <input type="checkbox" class="break-after" data-section="${section}">
             <span>After</span>
           </label>
+          <button class="remove-btn" data-section="${section}">✕</button>
         </div>
       `;
       
+      // Add click handler for remove button
+      li.querySelector('.remove-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeSection(section);
+      });
+      
       return li;
+    }
+
+    function removeSection(section) {
+      const item = document.querySelector(`[data-section="${section}"]`);
+      if (item) {
+        item.remove();
+        removedSections.push(section);
+      }
+    }
+
+    function restoreAllSections() {
+      removedSections.forEach(section => {
+        const list = document.getElementById('sectionList');
+        const li = createSectionItem(section);
+        list.appendChild(li);
+      });
+      removedSections = [];
     }
 
     function setupEventListeners() {
