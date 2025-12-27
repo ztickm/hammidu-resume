@@ -1,8 +1,8 @@
 {
-  "name": "pdf-renderer",
+  "name": "flouka",
   "version": "1.0.0",
   "type": "module",
-  "description": "PDF renderer using Puppeteer to convert scpdf HTML to PDF",
+  "description": "PDF renderer and web interface for JSON Resume using Puppeteer",
   "main": "src/index.ts",
   "scripts": {
     "dev": "bun run src/index.ts",
@@ -10,7 +10,7 @@
     "web": "bun run web-server.ts"
   },
   "dependencies": {
-    "scpdf": "workspace:*",
+    "xebec": "workspace:*",
     "puppeteer": "^23.0.0",
     "pdf-lib": "^1.17.1"
   },

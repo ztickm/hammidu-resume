@@ -1,12 +1,12 @@
 {
-  "name": "pdfts-monorepo",
+  "name": "hammidu-resume",
   "version": "1.0.0",
   "private": true,
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "build": "bun run --cwd packages/scpdf build",
+    "build": "bun run --cwd packages/xebec build",
     "test": "bun test"
   },
   "devDependencies": {

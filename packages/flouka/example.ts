@@ -1,9 +1,9 @@
 import { generatePDFToFile } from "./src/index";
 import { readFileSync } from "fs";
-import type { ResumeSchema } from "scpdf";
+import type { ResumeSchema } from "xebec";
 
-// Load JSON Resume from the scpdf package example
-const resumePath = "../scpdf/example_json_resume.json";
+// Load JSON Resume from the xebec package example
+const resumePath = "../xebec/example_json_resume.json";
 const resume = JSON.parse(
   readFileSync(resumePath, "utf-8")
 ) as ResumeSchema;

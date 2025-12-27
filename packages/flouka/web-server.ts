@@ -3,8 +3,8 @@
  * Provides a web interface for uploading/pasting JSON Resume and generating PDFs
  */
 
-import { generateHTML } from "scpdf";
-import type { GenerateConfig, ResumeSchema } from "scpdf";
+import { generateHTML } from "xebec";
+import type { GenerateConfig, ResumeSchema } from "xebec";
 import { generatePDF } from "./src/index.ts";
 
 const server = Bun.serve({

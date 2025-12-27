@@ -1,6 +1,7 @@
 {
-  "name": "scpdf",
+  "name": "xebec",
   "version": "1.0.0",
+  "description": "Convert JSON Resume to styled HTML",
   "module": "src/index.ts",
   "type": "module",
   "types": "index.d.ts",

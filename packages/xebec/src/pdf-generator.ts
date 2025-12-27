@@ -49,8 +49,8 @@ export async function embedJSONMetadata(
   pdfDoc.setAuthor(resume.basics.name);
   pdfDoc.setSubject("Resume/CV");
   pdfDoc.setKeywords(["resume", "cv"]);
-  pdfDoc.setProducer("SCPDF - JSON Resume to PDF");
-  pdfDoc.setCreator("SCPDF");
+  pdfDoc.setProducer("Hammidu Resume - Xebec");
+  pdfDoc.setCreator("Xebec");
   
   // Save and return
   return await pdfDoc.save();

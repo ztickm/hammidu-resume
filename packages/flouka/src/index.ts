@@ -1,6 +1,6 @@
 import puppeteer from "puppeteer";
 import { PDFDocument } from "pdf-lib";
-import { generateHTML, type ResumeSchema, type GenerateConfig } from "scpdf";
+import { generateHTML, type ResumeSchema, type GenerateConfig } from "xebec";
 
 /**
  * Generate PDF from JSON Resume with embedded metadata using Puppeteer
@@ -71,8 +71,8 @@ async function embedJSONMetadata(
   pdfDoc.setAuthor(resume.basics.name);
   pdfDoc.setSubject("Resume/CV");
   pdfDoc.setKeywords(["resume", "cv", "json-resume"]);
-  pdfDoc.setProducer("PDFTS - JSON Resume to PDF");
-  pdfDoc.setCreator("PDFTS/pdf-renderer");
+  pdfDoc.setProducer("Hammidu Resume - Flouka");
+  pdfDoc.setCreator("Flouka");
 
   // Save and return
   return await pdfDoc.save();

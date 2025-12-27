@@ -1,4 +1,4 @@
-# PDFTS - JSON Resume to PDF
+# Hammidu Resume - JSON Resume to PDF
 
 A Bun-based monorepo for converting JSON Resume format to PDF with embedded metadata.
 
@@ -6,18 +6,19 @@ A Bun-based monorepo for converting JSON Resume format to PDF with embedded meta
 
 This is a monorepo containing two packages:
 
-### 📦 `packages/scpdf`
+### 📦 `packages/xebec`
 Lightweight library for generating HTML from JSON Resume data.
 - ✅ No browser dependencies
 - ✅ Handlebars templating
 - ✅ Harvard CV format
 - ✅ Type-safe with TypeScript
 
-### 📦 `packages/pdf-renderer`
-PDF generator using Puppeteer to convert HTML to PDF.
+### 📦 `packages/flouka`
+PDF generator using Puppeteer to convert HTML to PDF, plus a web interface.
 - ✅ High-quality PDF rendering
 - ✅ Embeds JSON Resume as PDF attachment
 - ✅ Full CSS support
+- ✅ Web UI with live preview
 
 ## Getting Started
 
@@ -25,33 +26,41 @@ PDF generator using Puppeteer to convert HTML to PDF.
 # Install dependencies for all packages
 bun install
 
-# Try the scpdf library (HTML generation only)
-cd packages/scpdf
+# Try the xebec library (HTML generation only)
+cd packages/xebec
 bun run example.ts
 
-# Try the pdf-renderer (full PDF generation)
-cd packages/pdf-renderer
+# Try the flouka PDF generator
+cd packages/flouka
 bun install  # Downloads Puppeteer/Chromium
 bun run example.ts
+
+# Start the web interface
+cd packages/flouka
+bun run web
+# Open http://localhost:3001 in your browser
 ```
 
 ## Project Structure
 
 ```
-PDFTS/
+hammidu-resume/
 ├── packages/
-│   ├── scpdf/           # Core library (lightweight)
+│   ├── xebec/             # Core library (lightweight)
 │   │   ├── src/
 │   │   │   ├── index.ts
 │   │   │   ├── html-generator.ts
 │   │   │   ├── helpers.ts
 │   │   │   └── templates/
-│   │   │       └── harvard.hbs
+│   │   │       └── harvard-configurable.hbs
 │   │   └── example.ts
 │   │
-│   └── pdf-renderer/    # PDF generation (with Puppeteer)
+│   └── flouka/            # PDF generation + Web UI
 │       ├── src/
 │       │   └── index.ts
+│       ├── public/
+│       │   └── index.html
+│       ├── web-server.ts
 │       └── example.ts
 │
 ├── package.json         # Monorepo root

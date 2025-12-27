@@ -1,6 +1,6 @@
 import { generatePDFToFile } from "./src/index";
 import { readFileSync } from "fs";
-import type { ResumeSchema, GenerateConfig } from "scpdf";
+import type { ResumeSchema, GenerateConfig } from "xebec";
 
 // Load JSON Resume
 const resumePath = "./json_resume.json";

@@ -1,5 +1,6 @@
 /**
- * Type declarations for scpdf package
+ * Type declarations for xebec package
+ * Converts JSON Resume to styled HTML
  */
 
 // Re-export all JSON Resume types from the source
