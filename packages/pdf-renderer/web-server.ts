@@ -22,10 +22,10 @@ const server = Bun.serve({
     // API: Generate HTML preview
     if (url.pathname === "/api/preview" && req.method === "POST") {
       try {
-        const body = await req.json();
+        const body = (await req.json()) as { resume: ResumeSchema; config: GenerateConfig };
         const { resume, config } = body;
         
-        const html = generateHTML(resume as ResumeSchema, config as GenerateConfig);
+        const html = generateHTML(resume, config);
         
         return new Response(JSON.stringify({ html }), {
           headers: { "Content-Type": "application/json" },
@@ -41,12 +41,12 @@ const server = Bun.serve({
     // API: Generate and download PDF
     if (url.pathname === "/api/generate-pdf" && req.method === "POST") {
       try {
-        const body = await req.json();
+        const body = (await req.json()) as { resume: ResumeSchema; config: GenerateConfig };
         const { resume, config } = body;
         
         const pdfBytes = await generatePDF(
-          resume as ResumeSchema,
-          { config: config as GenerateConfig }
+          resume,
+          { config }
         );
         
         return new Response(pdfBytes, {
