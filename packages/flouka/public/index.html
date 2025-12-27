@@ -569,12 +569,12 @@
       }
       
       const container = document.getElementById('previewContainer');
-      container.innerHTML = '<div class="loading">Generating preview...</div>';
+      container.innerHTML = '<div class="loading">Generating PDF preview...</div>';
       
       try {
         const config = getConfig();
         
-        const response = await fetch('/api/preview', {
+        const response = await fetch('/api/generate-pdf', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ resume: currentResume, config })
@@ -585,17 +585,25 @@
           throw new Error(error.error);
         }
         
-        const { html } = await response.json();
+        const blob = await response.blob();
+        const pdfUrl = URL.createObjectURL(blob);
         
-        // Create iframe for preview
+        // Create iframe for PDF preview
         const iframe = document.createElement('iframe');
         iframe.className = 'preview-frame';
+        iframe.src = pdfUrl;
+        iframe.style.border = 'none';
+        
         container.innerHTML = '';
         container.appendChild(iframe);
         
-        iframe.contentDocument.open();
-        iframe.contentDocument.write(html);
-        iframe.contentDocument.close();
+        // Clean up the blob URL when component updates
+        iframe.addEventListener('load', () => {
+          if (window.lastPdfUrl) {
+            URL.revokeObjectURL(window.lastPdfUrl);
+          }
+          window.lastPdfUrl = pdfUrl;
+        });
       } catch (error) {
         container.innerHTML = `<div class="validation-message error">Preview error: ${error.message}</div>`;
       }
