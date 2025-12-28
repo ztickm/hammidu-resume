@@ -27,13 +27,14 @@ export async function generatePDF(
 
   // Generate PDF with proper print settings
   const pdfBuffer = await page.pdf({
-    format: "Letter",
+    format: "A4",
     printBackground: true,
+    preferCSSPageSize: false,
     margin: {
-      top: "0.5in",
-      right: "0.5in",
-      bottom: "0.5in",
-      left: "0.5in",
+      top: "0.5cm",
+      right: "0.5cm",
+      bottom: "0.5cm",
+      left: "0.5cm",
     },
   });
 

@@ -89,11 +89,15 @@
     }
 
     .section.page-break-before {
+      break-before: page;
       page-break-before: always;
+      /* Fallback for older browsers */
     }
 
     .section.page-break-after {
+      break-after: page;
       page-break-after: always;
+      /* Fallback for older browsers */
     }
 
     .section-title {
@@ -104,21 +108,27 @@
       padding-bottom: 0.25em;
       border-bottom: 1px solid #333;
       letter-spacing: 0.5px;
+      break-inside: avoid;
+      break-after: avoid;
     }
 
     /* Summary */
     .summary {
       text-align: justify;
       margin-bottom: 0.5em;
+      break-inside: avoid;
     }
 
     /* Work/Education Entries */
     .entry {
       margin-bottom: 1.25em;
+      break-inside: avoid;
     }
 
     .entry-header {
       margin-bottom: 0.5em;
+      break-inside: avoid;
+      break-after: avoid;
     }
 
     .entry-title {
@@ -139,21 +149,25 @@
     .entry-description {
       margin-top: 0.5em;
       text-align: justify;
+      break-inside: avoid;
     }
 
     /* Lists */
     ul {
       margin-left: 2em;
       margin-top: 0.5em;
+      break-inside: avoid;
     }
 
     li {
       margin-bottom: 0.25em;
+      break-inside: avoid;
     }
 
     /* Skills */
     .skill-item {
       margin-bottom: 0.75em;
+      break-inside: avoid;
     }
 
     .skill-name {
@@ -173,6 +187,7 @@
     /* Languages */
     .language-item {
       margin-bottom: 0.5em;
+      break-inside: avoid;
     }
 
     /* Print Styles */
