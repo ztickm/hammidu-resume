@@ -385,19 +385,33 @@
 
     // Initialize
     function init() {
-      initializeSectionList();
+      const savedConfig = loadConfig();
+      initializeSectionList(savedConfig);
       setupEventListeners();
       setupDragAndDrop();
+      
+      // Apply saved config after DOM is ready
+      if (savedConfig) {
+        setTimeout(() => applyConfig(savedConfig), 0);
+      }
     }
 
-    function initializeSectionList() {
+    function initializeSectionList(savedConfig) {
       const list = document.getElementById('sectionList');
       list.innerHTML = '';
       
-      DEFAULT_SECTIONS.forEach(section => {
+      // Use saved section order if available, otherwise use defaults
+      const sections = savedConfig?.sectionOrder || DEFAULT_SECTIONS;
+      
+      sections.forEach(section => {
         const li = createSectionItem(section);
         list.appendChild(li);
       });
+      
+      // Restore removed sections
+      if (savedConfig?.removedSections) {
+        removedSections = savedConfig.removedSections;
+      }
     }
 
     function createSectionItem(section) {
@@ -436,6 +450,8 @@
       if (item) {
         item.remove();
         removedSections.push(section);
+        // Save config after removing section
+        saveConfig(getConfigWithoutSaving());
       }
     }
 
@@ -446,6 +462,27 @@
         list.appendChild(li);
       });
       removedSections = [];
+      // Save config after restoring sections
+      saveConfig(getConfigWithoutSaving());
+    }
+
+    function getConfigWithoutSaving() {
+      const sections = [...document.querySelectorAll('#sectionList .draggable-item')]
+        .map(item => item.dataset.section);
+      
+      const pageBreakBefore = [...document.querySelectorAll('.break-before:checked')]
+        .map(cb => cb.dataset.section);
+      
+      const pageBreakAfter = [...document.querySelectorAll('.break-after:checked')]
+        .map(cb => cb.dataset.section);
+      
+      return {
+        sectionOrder: sections,
+        pageBreakBefore,
+        pageBreakAfter,
+        baseFontSize: parseFloat(document.getElementById('fontSize').value),
+        lineHeight: parseFloat(document.getElementById('lineHeight').value)
+      };
     }
 
     function setupEventListeners() {
@@ -478,6 +515,8 @@
       list.addEventListener('dragend', (e) => {
         if (e.target.classList.contains('draggable-item')) {
           e.target.classList.remove('dragging');
+          // Save config after reordering
+          saveConfig(getConfigWithoutSaving());
         }
       });
       
@@ -554,13 +593,77 @@
       const pageBreakAfter = [...document.querySelectorAll('.break-after:checked')]
         .map(cb => cb.dataset.section);
       
-      return {
+      const config = {
         sectionOrder: sections,
         pageBreakBefore,
         pageBreakAfter,
         baseFontSize: parseFloat(document.getElementById('fontSize').value),
         lineHeight: parseFloat(document.getElementById('lineHeight').value)
       };
+      
+      // Save to localStorage
+      saveConfig(config);
+      
+      return config;
+    }
+
+    function saveConfig(config) {
+      try {
+        localStorage.setItem('resumeConfig', JSON.stringify({
+          sectionOrder: config.sectionOrder,
+          pageBreakBefore: config.pageBreakBefore,
+          pageBreakAfter: config.pageBreakAfter,
+          removedSections: removedSections
+        }));
+      } catch (e) {
+        console.error('Failed to save config to localStorage:', e);
+      }
+    }
+
+    function loadConfig() {
+      try {
+        const saved = localStorage.getItem('resumeConfig');
+        if (!saved) return null;
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to load config from localStorage:', e);
+        return null;
+      }
+    }
+
+    function applyConfig(config) {
+      if (!config) return;
+      
+      // Restore removed sections
+      if (config.removedSections) {
+        removedSections = config.removedSections;
+      }
+      
+      // Restore section order
+      if (config.sectionOrder) {
+        const list = document.getElementById('sectionList');
+        list.innerHTML = '';
+        
+        config.sectionOrder.forEach(section => {
+          const li = createSectionItem(section);
+          list.appendChild(li);
+        });
+      }
+      
+      // Restore page breaks
+      if (config.pageBreakBefore) {
+        config.pageBreakBefore.forEach(section => {
+          const checkbox = document.querySelector(`.break-before[data-section="${section}"]`);
+          if (checkbox) checkbox.checked = true;
+        });
+      }
+      
+      if (config.pageBreakAfter) {
+        config.pageBreakAfter.forEach(section => {
+          const checkbox = document.querySelector(`.break-after[data-section="${section}"]`);
+          if (checkbox) checkbox.checked = true;
+        });
+      }
     }
 
     async function updatePreview() {
