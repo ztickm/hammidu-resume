@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "bun run src/index.ts",
     "build": "bun build src/index.ts --outdir dist",
-    "web": "bun run web-server.ts"
+    "web": "bun --watch web-server.ts"
   },
   "dependencies": {
     "xebec": "workspace:*",
