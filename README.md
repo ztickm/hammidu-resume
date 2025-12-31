@@ -4,7 +4,7 @@ A Bun-based monorepo for converting JSON Resume format to PDF with embedded meta
 
 ## Architecture
 
-This is a monorepo containing two packages:
+This is a monorepo containing three packages:
 
 ### 📦 `packages/xebec`
 Lightweight library for generating HTML from JSON Resume data.
@@ -20,11 +20,23 @@ PDF generator using Puppeteer to convert HTML to PDF, plus a web interface.
 - ✅ Full CSS support
 - ✅ Web UI with live preview
 
+### 📦 `packages/validator`
+JSON Resume schema validator using AJV.
+- ✅ Validates against official JSON Resume schema
+- ✅ Detailed error messages with paths
+- ✅ CLI tool and programmatic API
+- ✅ Format validation (email, URI, dates)
+
 ## Getting Started
 
 ```bash
 # Install dependencies for all packages
 bun install
+
+# Validate a JSON Resume file
+cd packages/validator
+bun install
+bun run validate ../../resumes/example_input.json
 
 # Try the xebec library (HTML generation only)
 cd packages/xebec
