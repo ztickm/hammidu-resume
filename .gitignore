@@ -1,16 +1,6 @@
 # dependencies (bun install)
 node_modules
 
-# personal json resume
-json_resume.json
-
-# output
-out
-dist
-*.tgz
-output.html
-*.pdf
-
 # code coverage
 coverage
 *.lcov
@@ -38,5 +28,4 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # Finder (MacOS) folder config
 .DS_Store
 
-*.md
-output*
+_*.md

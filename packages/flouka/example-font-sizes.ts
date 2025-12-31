@@ -1,11 +1,15 @@
 import { generatePDFToFile } from "./src/index";
 import { readFileSync } from "fs";
 import type { ResumeSchema, GenerateConfig } from "xebec";
+import { join } from "path";
+
+// Define resumes folder path
+const resumesPath = join(__dirname, "../../resumes");
+const inputPath = join(resumesPath, "example_input.json");
 
 // Load JSON Resume
-const resumePath = "./json_resume.json";
 const resume = JSON.parse(
-  readFileSync(resumePath, "utf-8")
+  readFileSync(inputPath, "utf-8")
 ) as ResumeSchema;
 
 console.log("=== Generating PDFs with Different Font Sizes ===\n");
@@ -19,7 +23,7 @@ const config12: GenerateConfig = {
   pageBreakAfter: [],
   pageBreakBefore: [],
 };
-await generatePDFToFile(resume, "output-12pt.pdf", config12);
+await generatePDFToFile(resume, join(resumesPath, "pdf-12pt.pdf"), config12);
 
 // // Test 2: Compact size (10pt)
 // console.log("\n2. Generating compact PDF (10pt)...");
@@ -27,7 +31,7 @@ await generatePDFToFile(resume, "output-12pt.pdf", config12);
 //   baseFontSize: 10,
 //   lineHeight: 1.4,
 // };
-// await generatePDFToFile(resume, "output-10pt.pdf", config10);
+// await generatePDFToFile(resume, join(resumesPath, "pdf-10pt.pdf"), config10);
 
 // // Test 3: Very compact (9pt)
 // console.log("\n3. Generating very compact PDF (9pt)...");
@@ -35,9 +39,9 @@ await generatePDFToFile(resume, "output-12pt.pdf", config12);
 //   baseFontSize: 9,
 //   lineHeight: 1.3,
 // };
-// await generatePDFToFile(resume, "output-9pt.pdf", config9);
+// await generatePDFToFile(resume, join(resumesPath, "pdf-9pt.pdf"), config9);
 
-console.log("\n✅ All PDFs generated successfully!");
+console.log("\n✅ All PDFs generated successfully in resumes/ folder!");
 console.log("   - Smaller font sizes reduce page count");
 console.log("   - 10pt is a good balance between compact and readable");
 console.log("   - 9pt is very compact but still professional");

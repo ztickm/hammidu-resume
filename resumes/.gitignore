@@ -1,0 +1,9 @@
+# Ignore all Input files
+*.json
+
+# Keep example input  JSON file
+!example_input.json
+
+# Ignore all generated output files
+*.pdf
+*.html

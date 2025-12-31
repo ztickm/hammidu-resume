@@ -1,0 +1,198 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
+  "basics": {
+    "name": "Raïs Hamidou",
+    "label": "Admiral & Corsair Commander",
+    "image": "",
+    "email": "hammidu.reis@example.com",
+    "phone": "(+213) 000-999-4567",
+    "url": "https://hammidureis.example.com",
+    "summary": "Passionate corsair and maritime strategist with extensive experience in naval warfare and trade route protection. Skilled in leadership, navigation, and diplomacy, with a deep understanding of Mediterranean geopolitics during the Golden Age of Barbary Corsairs.",
+    "location": {
+      "address": "Maritime Lane, Casbah",
+      "postalCode": "16000",
+      "city": "Algiers",
+      "countryCode": "DZ",
+      "region": "Regency of Algiers"
+    },
+    "profiles": [
+      {
+        "network": "LinkedIn",
+        "username": "hammidurais",
+        "url": "https://linkedin.com/in/hammidurais"
+      },
+      {
+        "network": "GitHub",
+        "username": "hammidurais",
+        "url": "https://github.com/hammidurais"
+      },
+      {
+        "network": "Twitter",
+        "username": "hammidurais",
+        "url": "https://twitter.com/hammidurais"
+      }
+    ]
+  },
+  "work": [
+    {
+      "name": "Regency of Algiers Navy",
+      "location": "Algiers, Ottoman Regency",
+      "description": "Naval defense force of the Regency of Algiers",
+      "position": "Admiral (Raïs)",
+      "startDate": "1797",
+      "endDate": "1815-06-17",
+      "summary": "Supreme naval commander defending Algerian waters and Mediterranean trade routes against European naval powers.",
+      "highlights": [
+        "Rose from humble origins to become the most feared corsair commander in the Mediterranean",
+        "Led numerous successful naval campaigns against Spanish, Portuguese, and Italian vessels",
+        "Commanded the defense of Algiers against multiple European naval attacks",
+        "Captured over 200 enemy vessels during his career",
+        "Fell heroically in battle against the USS Constellation during the Second Barbary War",
+        "Known for exceptional seamanship and tactical brilliance in naval warfare"
+      ]
+    },
+    {
+      "name": "Barbary Corsairs",
+      "location": "Mediterranean Sea",
+      "description": "North African privateers operating under Ottoman authority",
+      "position": "Corsair Captain",
+      "startDate": "1790",
+      "endDate": "1797",
+      "summary": "Independent corsair captain conducting naval operations in the Mediterranean.",
+      "highlights": [
+        "Built reputation as a skilled naval commander and tactician",
+        "Secured trade routes for Algerian merchants",
+        "Earned the title 'Raïs' (Captain) through demonstrated naval prowess"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Maritime Training",
+      "area": "Naval Warfare & Seamanship",
+      "studyType": "Practical Experience",
+      "startDate": "1785",
+      "endDate": "1790",
+      "courses": [
+        "Naval Navigation",
+        "Ship Command",
+        "Maritime Combat Tactics",
+        "Mediterranean Trade Routes"
+      ]
+    }
+  ],
+  "awards": [
+    {
+      "title": "Title of Raïs (Admiral)",
+      "date": "1797",
+      "awarder": "Dey of Algiers",
+      "summary": "Elevated to the rank of Admiral for exceptional service and naval victories"
+    },
+    {
+      "title": "National Hero of Algeria",
+      "date": "1962",
+      "awarder": "Algerian Nation",
+      "summary": "Honored posthumously as a symbol of resistance against colonial powers and defender of Algerian sovereignty"
+    }
+  ],
+  "skills": [
+    {
+      "name": "Naval Warfare",
+      "level": "Master",
+      "keywords": [
+        "Ship-to-ship combat",
+        "Naval tactics",
+        "Fleet command",
+        "Boarding operations",
+        "Artillery warfare"
+      ]
+    },
+    {
+      "name": "Leadership",
+      "level": "Expert",
+      "keywords": [
+        "Crew management",
+        "Strategic planning",
+        "Combat motivation",
+        "Discipline enforcement"
+      ]
+    },
+    {
+      "name": "Seamanship",
+      "level": "Master",
+      "keywords": [
+        "Navigation",
+        "Mediterranean waters",
+        "Weather forecasting",
+        "Ship maintenance",
+        "Emergency repairs"
+      ]
+    }
+  ],
+  "languages": [
+    {
+      "language": "Arabic",
+      "fluency": "Native speaker"
+    },
+    {
+      "language": "Turkish",
+      "fluency": "Professional working proficiency"
+    },
+    {
+      "language": "Mediterranean Lingua Franca",
+      "fluency": "Fluent"
+    }
+  ],
+  "interests": [
+    {
+      "name": "Naval History",
+      "keywords": [
+        "Ottoman naval tactics",
+        "Mediterranean trade routes",
+        "Ship design and construction"
+      ]
+    },
+    {
+      "name": "Algerian Independence",
+      "keywords": [
+        "Defense of sovereignty",
+        "Resistance against colonialism"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Defense of Algiers",
+      "description": "Led multiple successful defenses of Algiers harbor against European naval forces",
+      "startDate": "1797",
+      "endDate": "1815",
+      "highlights": [
+        "Repelled numerous attack attempts by European powers",
+        "Maintained Algerian control of Mediterranean shipping lanes",
+        "Protected the sovereignty of the Regency of Algiers"
+      ],
+      "entity": "Regency of Algiers Navy",
+      "type": "military campaign"
+    },
+    {
+      "name": "Final Battle - USS Constellation",
+      "description": "Engaged American frigate USS Constellation during the Second Barbary War",
+      "startDate": "1815-06-17",
+      "endDate": "1815-06-17",
+      "highlights": [
+        "Commanded the Algerian flagship Mashouda (46 guns) against superior American force",
+        "Fought valiantly despite being outgunned",
+        "Fell in battle while defending his ship and crew",
+        "Battle became legendary in both Algerian and American naval history"
+      ],
+      "url": "https://en.wikipedia.org/wiki/Action_of_17_June_1815",
+      "entity": "Second Barbary War",
+      "type": "naval engagement"
+    }
+  ],
+  "meta": {
+    "canonical": "https://raw.githubusercontent.com/jsonresume/resume-schema/master/resume.json",
+    "version": "v1.0.0",
+    "lastModified": "2025-12-31T00:00:00"
+  }
+}
