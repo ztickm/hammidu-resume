@@ -1,15 +1,36 @@
 # Validator
 
-JSON Resume schema validator using AJV (Another JSON Schema Validator).
+JSON Resume schema validator with **practical validation rules** using AJV.
 
 ## Features
 
 - ✅ Validates JSON Resume files against the official schema
+- ✅ **Enhanced practical validation** beyond the permissive official schema
+- ✅ Checks for essential fields (name, contact info, content sections)
+- ✅ Validates email and URL formats
+- ✅ Validates ISO8601 date formats (YYYY-MM-DD, YYYY-MM, YYYY)
+- ✅ Type checking for arrays and objects
 - ✅ Detailed error messages with paths
 - ✅ Multiple validation functions (object, string, file)
-- ✅ Strict mode that throws on validation errors
-- ✅ Format validation (email, URI, dates)
+- ✅ CLI tool for easy validation
 - ✅ Type-safe with TypeScript
+
+## Why This Validator is Useful
+
+**The official JSON Resume schema is intentionally very permissive:**
+- ❌ No required fields (not even `basics.name`!)
+- ✅ Allows additional properties everywhere
+- ✅ All fields are optional
+
+**This validator adds practical checks that catch real issues:**
+- ✅ Missing name
+- ✅ Missing contact information (email or phone)
+- ✅ Invalid email formats
+- ✅ Invalid URL formats  
+- ✅ Invalid date formats (checks ISO8601: YYYY-MM-DD, YYYY-MM, YYYY)
+- ✅ Empty resume (no work, education, or projects)
+- ✅ Type mismatches (string instead of array, etc.)
+- ✅ Missing required fields in sections (company name, institution, etc.)
 
 ## Installation
 

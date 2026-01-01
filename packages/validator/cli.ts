@@ -25,14 +25,25 @@ if (result.valid) {
   process.exit(0);
 } else {
   console.log("❌ Invalid JSON Resume\n");
-  console.log("Errors:");
-  result.errors?.forEach((err, index) => {
-    console.log(`\n${index + 1}. Path: ${err.path}`);
-    console.log(`   Message: ${err.message}`);
-    if (err.keyword) {
-      console.log(`   Type: ${err.keyword}`);
-    }
-  });
+  
+  if (result.errors && result.errors.length > 0) {
+    console.log("Schema Errors:");
+    result.errors?.forEach((err, index) => {
+      console.log(`\n${index + 1}. Path: ${err.path}`);
+      console.log(`   Message: ${err.message}`);
+      if (err.keyword) {
+        console.log(`   Type: ${err.keyword}`);
+      }
+    });
+  }
+  
+  if (result.warnings && result.warnings.length > 0) {
+    console.log("\n⚠️  Warnings:");
+    result.warnings.forEach((warning, index) => {
+      console.log(`${index + 1}. ${warning}`);
+    });
+  }
+  
   console.log();
   process.exit(1);
 }

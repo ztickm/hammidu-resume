@@ -13,6 +13,7 @@ export interface ValidationResult {
     keyword?: string;
     params?: Record<string, unknown>;
   }>;
+  warnings?: string[];
 }
 
 /**
