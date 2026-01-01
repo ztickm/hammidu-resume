@@ -3,8 +3,8 @@
  * Provides a web interface for uploading/pasting JSON Resume and generating PDFs
  */
 
-import { generateHTML } from "xebec";
-import type { GenerateConfig, ResumeSchema } from "xebec";
+import { generateHTML } from "xebec-render";
+import type { GenerateConfig, ResumeSchema } from "xebec-render";
 import { generatePDF } from "./src/index.ts";
 import { validateResume } from "validator";
 

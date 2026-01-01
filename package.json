@@ -6,14 +6,14 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "bun run --cwd packages/xebec build",
+    "build": "bun run --cwd packages/xebec-render build",
     "test": "bun test",
     
-    "xebec:example": "bun run --cwd packages/xebec example.ts",
-    "xebec:test": "bun run --cwd packages/xebec test-validator.ts",
+    "xebec:example": "bun run --cwd packages/xebec-render example.ts",
+    "xebec:test": "bun run --cwd packages/xebec-render test-validator.ts",
     
-    "flouka:web": "bun run --cwd packages/flouka --watch web-server.ts",
-    "flouka:example": "bun run --cwd packages/flouka example.ts",
+    "flouka:web": "bun run --cwd packages/flouka-studio --watch web-server.ts",
+    "flouka:example": "bun run --cwd packages/flouka-studio example.ts",
     
     "validator:example": "bun run --cwd packages/validator example.ts",
     "validator:validate": "bun run --cwd packages/validator cli.ts",

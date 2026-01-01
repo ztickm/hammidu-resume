@@ -6,14 +6,14 @@ A Bun-based monorepo for converting JSON Resume format to PDF with embedded meta
 
 This is a monorepo containing three packages:
 
-### 📦 `packages/xebec`
+### 📦 `packages/xebec-render`
 Lightweight library for generating HTML from JSON Resume data.
 - ✅ No browser dependencies
 - ✅ Handlebars templating
 - ✅ Harvard CV format
 - ✅ Type-safe with TypeScript
 
-### 📦 `packages/flouka`
+### 📦 `packages/flouka-studio`
 PDF generator using Puppeteer to convert HTML to PDF, plus a web interface.
 - ✅ High-quality PDF rendering
 - ✅ Embeds JSON Resume as PDF attachment
@@ -59,12 +59,12 @@ bun run xebec:test
 - `bun run validator:example` - Same as above
 - `bun run validator:validate` - Validate a JSON file (with path argument)
 
-**Xebec (HTML Generator):**
+**Xebec Render (HTML Generator):**
 - `bun run example` - Generate HTML from example resume
 - `bun run xebec:example` - Same as above
 - `bun run xebec:test` - Test validator integration
 
-**Flouka (PDF Generator & Web UI):**
+**Flouka Studio (PDF Generator & Web UI):**
 - `bun run web` - Start web interface at http://localhost:3001
 - `bun run flouka:web` - Same as above
 - `bun run flouka:example` - Generate PDF from example resume
@@ -78,16 +78,16 @@ If you prefer working within each package:
 cd packages/validator
 bun cli.ts ../../resumes/example_input.json
 
-# Try the xebec library (HTML generation only)
-cd packages/xebec
+# Try the xebec-render library (HTML generation only)
+cd packages/xebec-render
 bun example.ts
 
-# Try the flouka PDF generator
-cd packages/flouka
+# Try the flouka-studio PDF generator
+cd packages/flouka-studio
 bun example.ts
 
 # Start the web interface
-cd packages/flouka
+cd packages/flouka-studio
 bun --watch web-server.ts
 # Open http://localhost:3001 in your browser
 ```
@@ -97,7 +97,7 @@ bun --watch web-server.ts
 ```
 hammidu-resume/
 ├── packages/
-│   ├── xebec/             # Core library (lightweight)
+│   ├── xebec-render/      # HTML rendering library (lightweight)
 │   │   ├── src/
 │   │   │   ├── index.ts
 │   │   │   ├── html-generator.ts
@@ -106,12 +106,18 @@ hammidu-resume/
 │   │   │       └── harvard-configurable.hbs
 │   │   └── example.ts
 │   │
-│   └── flouka/            # PDF generation + Web UI
+│   ├── flouka-studio/     # PDF generation + Web UI
+│   │   ├── src/
+│   │   │   └── index.ts
+│   │   ├── public/
+│   │   │   └── index.html
+│   │   ├── web-server.ts
+│   │   └── example.ts
+│   │
+│   └── validator/         # JSON Resume validator
 │       ├── src/
 │       │   └── index.ts
-│       ├── public/
-│       │   └── index.html
-│       ├── web-server.ts
+│       ├── cli.ts
 │       └── example.ts
 │
 ├── package.json         # Monorepo root

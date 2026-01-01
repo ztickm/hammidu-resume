@@ -1,5 +1,5 @@
 {
-  "name": "xebec",
+  "name": "xebec-render",
   "version": "1.0.0",
   "description": "Convert JSON Resume to styled HTML",
   "module": "src/index.ts",

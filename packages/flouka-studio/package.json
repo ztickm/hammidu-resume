@@ -1,5 +1,5 @@
 {
-  "name": "flouka",
+  "name": "flouka-studio",
   "version": "1.0.0",
   "type": "module",
   "description": "PDF renderer and web interface for JSON Resume using Puppeteer",
@@ -10,7 +10,7 @@
     "web": "bun --watch web-server.ts"
   },
   "dependencies": {
-    "xebec": "workspace:*",
+    "xebec-render": "workspace:*",
     "validator": "workspace:*",
     "puppeteer": "^23.0.0",
     "pdf-lib": "^1.17.1"

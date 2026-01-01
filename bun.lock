@@ -8,14 +8,14 @@
         "@types/bun": "latest",
       },
     },
-    "packages/flouka": {
-      "name": "flouka",
+    "packages/flouka-studio": {
+      "name": "flouka-studio",
       "version": "1.0.0",
       "dependencies": {
         "pdf-lib": "^1.17.1",
         "puppeteer": "^23.0.0",
         "validator": "workspace:*",
-        "xebec": "workspace:*",
+        "xebec-render": "workspace:*",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -33,8 +33,8 @@
         "@types/bun": "latest",
       },
     },
-    "packages/xebec": {
-      "name": "xebec",
+    "packages/xebec-render": {
+      "name": "xebec-render",
       "version": "1.0.0",
       "dependencies": {
         "@jsonresume/schema": "^1.2.1",
@@ -159,7 +159,7 @@
 
     "fd-slicer": ["fd-slicer@1.1.0", "", { "dependencies": { "pend": "~1.2.0" } }, "sha512-cE1qsB/VwyQozZ+q1dGxR8LBYNZeofhEdUNGSMbQD3Gw2lAzX9Zb3uIU6Ebc/Fmyjo9AWWfnn0AUCHqtevs/8g=="],
 
-    "flouka": ["flouka@workspace:packages/flouka"],
+    "flouka-studio": ["flouka-studio@workspace:packages/flouka-studio"],
 
     "get-caller-file": ["get-caller-file@2.0.5", "", {}, "sha512-DyFP3BM/3YHTQOCUL/w0OZHR0lpKeGrxotcHWcqNEdnltqFwXVfhEBQ94eIo34AfQpo0rGki4cyIiftY06h2Fg=="],
 
@@ -289,7 +289,7 @@
 
     "ws": ["ws@8.18.3", "", { "peerDependencies": { "bufferutil": "^4.0.1", "utf-8-validate": ">=5.0.2" }, "optionalPeers": ["bufferutil", "utf-8-validate"] }, "sha512-PEIGCY5tSlUt50cqyMXfCzX+oOPqN0vuGqWzbcJ2xvnkzkq46oOpz7dQaTDBdfICb4N14+GARUDw2XV2N4tvzg=="],
 
-    "xebec": ["xebec@workspace:packages/xebec"],
+    "xebec-render": ["xebec-render@workspace:packages/xebec-render"],
 
     "y18n": ["y18n@5.0.8", "", {}, "sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA=="],
 
