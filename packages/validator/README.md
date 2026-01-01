@@ -113,11 +113,38 @@ Errors include:
 - `keyword`: AJV error keyword (e.g., "required", "format")
 - `params`: Additional error parameters
 
-## Examples
+## Testing
+
+### Run Comprehensive Test Suite
 
 ```bash
 bun run example.ts
 ```
+
+The test suite includes:
+- ✅ Valid resume validation with all best practices
+- ✅ Email format validation (dots, plus signs, TLD optional)
+- ✅ ISO8601 date format validation (YYYY, YYYY-MM, YYYY-MM-DD)
+- ✅ File validation with test JSON files
+- ✅ Strict validation (throws on error)
+- ✅ Real-world example (Raïs Hamidou resume)
+
+### Test Files
+
+- **test-valid.json**: Comprehensive valid resume with all sections (Jane Smith)
+- **test-invalid.json**: Resume with multiple validation errors for testing
+
+### Email Validation
+
+The validator uses a permissive email regex that:
+- ✅ Allows dots in username: `john.doe@company.com`
+- ✅ Allows plus signs: `user+tag@domain.com`
+- ✅ Combines both: `john.doe+work@company.com`
+- ✅ Optional TLD: `user@domain` or `user@domain.com`
+- ❌ Rejects consecutive dots: `user..name@domain.com`
+- ❌ Rejects leading/trailing dots or plus signs
+
+Regex: `/^[a-zA-Z0-9]+([.+][a-zA-Z0-9]+)*@[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*$/`
 
 ## Schema
 

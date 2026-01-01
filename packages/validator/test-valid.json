@@ -1,0 +1,224 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
+  "basics": {
+    "name": "Jane Smith",
+    "label": "Full Stack Developer",
+    "image": "https://example.com/photo.jpg",
+    "email": "jane.smith+work@techcorp.com",
+    "phone": "+1-555-0199",
+    "url": "https://janesmith.dev",
+    "summary": "Passionate full-stack developer with 5+ years of experience building scalable web applications. Specialized in React, Node.js, and cloud infrastructure.",
+    "location": {
+      "address": "123 Tech Street",
+      "postalCode": "94102",
+      "city": "San Francisco",
+      "countryCode": "US",
+      "region": "California"
+    },
+    "profiles": [
+      {
+        "network": "GitHub",
+        "username": "janesmith",
+        "url": "https://github.com/janesmith"
+      },
+      {
+        "network": "LinkedIn",
+        "username": "jane-smith",
+        "url": "https://linkedin.com/in/jane-smith"
+      },
+      {
+        "network": "Twitter",
+        "username": "janesmith_dev",
+        "url": "https://twitter.com/janesmith_dev"
+      }
+    ]
+  },
+  "work": [
+    {
+      "name": "TechCorp Solutions",
+      "position": "Senior Full Stack Developer",
+      "url": "https://techcorp.example.com",
+      "startDate": "2021-03",
+      "endDate": "2023-12",
+      "summary": "Led development of cloud-based applications serving 1M+ users",
+      "highlights": [
+        "Architected microservices platform reducing deployment time by 60%",
+        "Mentored team of 5 junior developers",
+        "Implemented CI/CD pipeline improving release frequency by 3x"
+      ]
+    },
+    {
+      "name": "StartupXYZ",
+      "position": "Full Stack Developer",
+      "url": "https://startupxyz.com",
+      "startDate": "2019-01",
+      "endDate": "2021-02",
+      "summary": "Core team member building MVP to Series A funding",
+      "highlights": [
+        "Built real-time collaboration features using WebSockets",
+        "Reduced API response time by 45% through optimization",
+        "Contributed to product roadmap and technical architecture"
+      ]
+    },
+    {
+      "name": "Digital Agency Inc",
+      "position": "Junior Developer",
+      "startDate": "2018-06",
+      "endDate": "2018-12",
+      "summary": "Developed client websites and web applications",
+      "highlights": [
+        "Created responsive websites for 10+ clients",
+        "Learned modern web development best practices"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "University of California, Berkeley",
+      "url": "https://berkeley.edu",
+      "area": "Computer Science",
+      "studyType": "Bachelor of Science",
+      "startDate": "2014-09",
+      "endDate": "2018-05",
+      "score": "3.8",
+      "courses": [
+        "CS61A - Structure and Interpretation of Computer Programs",
+        "CS61B - Data Structures",
+        "CS170 - Algorithms"
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "name": "Frontend",
+      "level": "Expert",
+      "keywords": [
+        "React",
+        "TypeScript",
+        "Next.js",
+        "TailwindCSS",
+        "HTML5",
+        "CSS3"
+      ]
+    },
+    {
+      "name": "Backend",
+      "level": "Advanced",
+      "keywords": [
+        "Node.js",
+        "Express",
+        "PostgreSQL",
+        "MongoDB",
+        "Redis",
+        "GraphQL"
+      ]
+    },
+    {
+      "name": "DevOps",
+      "level": "Intermediate",
+      "keywords": [
+        "Docker",
+        "Kubernetes",
+        "AWS",
+        "CI/CD",
+        "GitHub Actions"
+      ]
+    }
+  ],
+  "languages": [
+    {
+      "language": "English",
+      "fluency": "Native speaker"
+    },
+    {
+      "language": "Spanish",
+      "fluency": "Professional working proficiency"
+    }
+  ],
+  "projects": [
+    {
+      "name": "Open Source Dashboard",
+      "description": "Real-time monitoring dashboard for cloud applications",
+      "highlights": [
+        "Used by 500+ developers",
+        "Featured on Product Hunt"
+      ],
+      "keywords": [
+        "React",
+        "WebSocket",
+        "D3.js"
+      ],
+      "startDate": "2022-06",
+      "endDate": "2023-03",
+      "url": "https://github.com/janesmith/os-dashboard",
+      "roles": [
+        "Creator",
+        "Maintainer"
+      ],
+      "entity": "Personal Project",
+      "type": "application"
+    }
+  ],
+  "awards": [
+    {
+      "title": "Best Developer Award",
+      "date": "2023-06-15",
+      "awarder": "TechCorp Solutions",
+      "summary": "Recognition for outstanding technical contributions"
+    }
+  ],
+  "certificates": [
+    {
+      "name": "AWS Certified Solutions Architect",
+      "date": "2022-08",
+      "issuer": "Amazon Web Services",
+      "url": "https://aws.amazon.com/certification/"
+    }
+  ],
+  "publications": [
+    {
+      "name": "Building Scalable Web Applications",
+      "publisher": "Dev.to",
+      "releaseDate": "2023-01-15",
+      "url": "https://dev.to/janesmith/building-scalable-web-apps",
+      "summary": "Guide to architecting modern web applications"
+    }
+  ],
+  "volunteer": [
+    {
+      "organization": "Code for Good",
+      "position": "Volunteer Developer",
+      "url": "https://codeforgood.org",
+      "startDate": "2020",
+      "summary": "Building websites for non-profit organizations"
+    }
+  ],
+  "interests": [
+    {
+      "name": "Open Source",
+      "keywords": [
+        "Contributing",
+        "Maintaining"
+      ]
+    },
+    {
+      "name": "Technology",
+      "keywords": [
+        "Web3",
+        "AI/ML",
+        "DevOps"
+      ]
+    }
+  ],
+  "references": [
+    {
+      "name": "John Manager",
+      "reference": "Jane is an exceptional developer with strong technical skills and great communication abilities."
+    }
+  ],
+  "meta": {
+    "canonical": "https://janesmith.dev/resume.json",
+    "version": "v1.0.0",
+    "lastModified": "2026-01-01T00:00:00Z"
+  }
+}

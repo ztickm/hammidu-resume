@@ -1,0 +1,53 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
+  "basics": {
+    "name": "",
+    "email": "invalid..email@test.com",
+    "phone": "not-a-phone",
+    "url": "not a valid url",
+    "profiles": [
+      {
+        "network": "GitHub",
+        "username": "testuser",
+        "url": "not-a-url"
+      }
+    ]
+  },
+  "work": [
+    {
+      "name": "Company A",
+      "position": "Developer",
+      "startDate": "2023-13-45",
+      "endDate": "2024-99-99"
+    },
+    {
+      "position": "Engineer",
+      "startDate": "invalid-date"
+    },
+    {
+      "name": "Company C",
+      "startDate": "2020/06/15"
+    }
+  ],
+  "education": [
+    {
+      "studyType": "Bachelor",
+      "startDate": "2015-00-01",
+      "endDate": "not a date"
+    },
+    {
+      "area": "Computer Science"
+    }
+  ],
+  "projects": [
+    {
+      "description": "A project without a name",
+      "startDate": "June 2023",
+      "endDate": "2023-13"
+    }
+  ],
+  "skills": "should be an array not a string",
+  "languages": {
+    "invalid": "should be array"
+  }
+}
