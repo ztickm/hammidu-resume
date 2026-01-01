@@ -1,6 +1,19 @@
 # Hammidu Resume - JSON Resume to PDF
 
-A Bun-based monorepo for converting JSON Resume format to PDF with embedded metadata.
+A Bun-based monorepo for converting [JSON Resume](https://jsonresume.org/) format to PDF with the original JSON resume as embedded metadata.
+
+## Disclaimer
+
+Parts of this project are written with AI tools. Do with that information what you will.
+
+## Features
+
+- **Complete round-trip**: JSON → HTML → PDF → JSON
+- **Clean separation**: Library doesn't depend on heavy browser tools
+- **Type-safe**: Full TypeScript support with JSON Resume schema
+- **Metadata embedding**: Original JSON stored as PDF attachment and extractable
+- **Professional layouts**: Harvard CV format included
+- **Extensible**: Easy to add new templates and formats
 
 ## Architecture
 
@@ -10,7 +23,7 @@ This is a monorepo containing four packages:
 Lightweight library for generating HTML from JSON Resume data.
 - ✅ No browser dependencies
 - ✅ Handlebars templating
-- ✅ Harvard CV format
+- ✅ Harvard CV format ( more later, please feel free to contribute)
 - ✅ Type-safe with TypeScript
 
 ### 📦 `packages/flouka-studio`
@@ -41,22 +54,14 @@ Extract JSON Resume metadata from PDF files.
 bun install
 ```
 
-### Quick Start (from root directory)
+### Quick Start
 
-You can run all package commands from the root directory without cd'ing:
+You can run all package commands from the root directory, for example:
+
+You can start the web interface (flouka-studio) perfect for end users by running the following command on your terminal
 
 ```bash
-# Run validator tests
-bun run validate
-
-# Generate HTML example (xebec)
-bun run example
-
-# Start web interface (flouka)
 bun run web
-
-# Run xebec validator integration test
-bun run xebec:test
 ```
 
 ### Available Scripts
@@ -79,6 +84,9 @@ bun run xebec:test
 **Extractor (PDF to JSON):**
 - `bun run extract` - Extract JSON Resume from generated PDF
 - `bun run extractor:example` - Same as above
+
+**Round-Trip Test:**
+- `bun run roundtrip` - Test complete workflow: JSON → HTML → PDF → JSON
 
 ### Manual Package Usage
 
@@ -140,15 +148,7 @@ hammidu-resume/
 └── README.md
 ```
 
-## Features
-
-- **Complete round-trip**: JSON → HTML → PDF → JSON
-- **Clean separation**: Library doesn't depend on heavy browser tools
-- **Type-safe**: Full TypeScript support with JSON Resume schema
-- **Metadata embedding**: Original JSON stored as PDF attachment and extractable
-- **Professional layouts**: Harvard CV format included
-- **Extensible**: Easy to add new templates and formats
 
 ## Development
 
-Built with [Bun](https://bun.sh) - a fast all-in-one JavaScript runtime.
+Built with [Bun](https://bun.sh)

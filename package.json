@@ -8,6 +8,7 @@
   "scripts": {
     "build": "bun run --cwd packages/xebec-render build",
     "test": "bun test",
+    "roundtrip": "bun test-roundtrip.ts",
     
     "xebec:example": "bun run --cwd packages/xebec-render example.ts",
     "xebec:test": "bun run --cwd packages/xebec-render test-validator.ts",
