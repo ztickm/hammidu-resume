@@ -1,0 +1,27 @@
+{
+  "name": "extractor",
+  "version": "1.0.0",
+  "description": "Extract JSON Resume metadata from PDF files",
+  "module": "src/index.ts",
+  "type": "module",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "example": "bun run example.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@jsonresume/schema": "^1.2.1",
+    "pdf-lib": "^1.17.1"
+  }
+}

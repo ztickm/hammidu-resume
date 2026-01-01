@@ -1,6 +1,6 @@
 {
   "name": "hammidu-resume",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -18,9 +18,12 @@
     "validator:example": "bun run --cwd packages/validator example.ts",
     "validator:validate": "bun run --cwd packages/validator cli.ts",
     
+    "extractor:example": "bun run --cwd packages/extractor example.ts",
+    
     "web": "bun run flouka:web",
     "example": "bun run xebec:example",
-    "validate": "bun run validator:example"
+    "validate": "bun run validator:example",
+    "extract": "bun run extractor:example"
   },
   "devDependencies": {
     "@types/bun": "latest"
