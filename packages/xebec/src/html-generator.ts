@@ -5,6 +5,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import type { GenerateConfig, SectionName } from "./config";
 import { DEFAULT_CONFIG } from "./config";
+import { validateResumeStrict } from "validator";
 
 // Load the Handlebars template
 const templatePath = join(import.meta.dir, "templates", "harvard-configurable.hbs");
@@ -22,11 +23,15 @@ Handlebars.registerHelper("hasPageBreak", (set: Set<SectionName>, section: Secti
 
 /**
  * Generate HTML from a JSON Resume with optional configuration
+ * @throws Error if resume is invalid
  */
 export function generateHTML(
   resume: jsonT.ResumeSchema,
   config: GenerateConfig = {}
 ): string {
+  // Validate resume before generating HTML
+  validateResumeStrict(resume);
+
   // Merge with defaults
   const finalConfig: Required<GenerateConfig> = {
     sectionOrder: config.sectionOrder ?? DEFAULT_CONFIG.sectionOrder,

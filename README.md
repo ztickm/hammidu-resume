@@ -32,24 +32,63 @@ JSON Resume schema validator using AJV.
 ```bash
 # Install dependencies for all packages
 bun install
+```
 
+### Quick Start (from root directory)
+
+You can run all package commands from the root directory without cd'ing:
+
+```bash
+# Run validator tests
+bun run validate
+
+# Generate HTML example (xebec)
+bun run example
+
+# Start web interface (flouka)
+bun run web
+
+# Run xebec validator integration test
+bun run xebec:test
+```
+
+### Available Scripts
+
+**Validator:**
+- `bun run validate` - Run comprehensive validator test suite
+- `bun run validator:example` - Same as above
+- `bun run validator:validate` - Validate a JSON file (with path argument)
+
+**Xebec (HTML Generator):**
+- `bun run example` - Generate HTML from example resume
+- `bun run xebec:example` - Same as above
+- `bun run xebec:test` - Test validator integration
+
+**Flouka (PDF Generator & Web UI):**
+- `bun run web` - Start web interface at http://localhost:3001
+- `bun run flouka:web` - Same as above
+- `bun run flouka:example` - Generate PDF from example resume
+
+### Manual Package Usage
+
+If you prefer working within each package:
+
+```bash
 # Validate a JSON Resume file
 cd packages/validator
-bun install
-bun run validate ../../resumes/example_input.json
+bun cli.ts ../../resumes/example_input.json
 
 # Try the xebec library (HTML generation only)
 cd packages/xebec
-bun run example.ts
+bun example.ts
 
 # Try the flouka PDF generator
 cd packages/flouka
-bun install  # Downloads Puppeteer/Chromium
-bun run example.ts
+bun example.ts
 
 # Start the web interface
 cd packages/flouka
-bun run web
+bun --watch web-server.ts
 # Open http://localhost:3001 in your browser
 ```
 

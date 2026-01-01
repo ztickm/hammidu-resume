@@ -557,7 +557,7 @@
       validateJSON();
     }
 
-    function validateJSON() {
+    async function validateJSON() {
       const input = document.getElementById('jsonInput').value.trim();
       const messageDiv = document.getElementById('validationMessage');
       
@@ -569,14 +569,45 @@
       try {
         const resume = JSON.parse(input);
         
-        // Basic schema validation
-        if (!resume.basics || !resume.basics.name) {
-          throw new Error('Invalid JSON Resume: missing basics.name');
-        }
+        // Use server-side validation
+        const response = await fetch('/api/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resume })
+        });
         
-        currentResume = resume;
-        messageDiv.innerHTML = '<div class="validation-message success">✓ Valid JSON Resume</div>';
-        updatePreview();
+        const validation = await response.json();
+        
+        if (validation.valid) {
+          currentResume = resume;
+          messageDiv.innerHTML = '<div class="validation-message success">✓ Valid JSON Resume</div>';
+          updatePreview();
+        } else {
+          currentResume = null;
+          
+          // Build error/warning messages
+          let errorHtml = '<div class="validation-message error">';
+          errorHtml += '<strong>✗ Invalid JSON Resume</strong><br><br>';
+          
+          if (validation.errors && validation.errors.length > 0) {
+            errorHtml += '<strong>Schema Errors:</strong><ul style="margin: 10px 0; padding-left: 20px;">';
+            validation.errors.forEach(err => {
+              errorHtml += `<li><code>${err.path}</code>: ${err.message}</li>`;
+            });
+            errorHtml += '</ul>';
+          }
+          
+          if (validation.warnings && validation.warnings.length > 0) {
+            errorHtml += '<strong>Warnings:</strong><ul style="margin: 10px 0; padding-left: 20px;">';
+            validation.warnings.forEach(warning => {
+              errorHtml += `<li>${warning}</li>`;
+            });
+            errorHtml += '</ul>';
+          }
+          
+          errorHtml += '</div>';
+          messageDiv.innerHTML = errorHtml;
+        }
       } catch (error) {
         currentResume = null;
         messageDiv.innerHTML = `<div class="validation-message error">✗ ${error.message}</div>`;

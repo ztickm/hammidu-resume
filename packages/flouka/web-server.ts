@@ -6,6 +6,7 @@
 import { generateHTML } from "xebec";
 import type { GenerateConfig, ResumeSchema } from "xebec";
 import { generatePDF } from "./src/index.ts";
+import { validateResume } from "validator";
 
 const server = Bun.serve({
   port: 3001,
@@ -19,11 +20,45 @@ const server = Bun.serve({
       });
     }
 
+    // API: Validate JSON Resume
+    if (url.pathname === "/api/validate" && req.method === "POST") {
+      try {
+        const body = (await req.json()) as { resume: ResumeSchema };
+        const { resume } = body;
+        
+        const result = validateResume(resume);
+        
+        return new Response(JSON.stringify(result), {
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (error) {
+        return new Response(
+          JSON.stringify({ 
+            valid: false,
+            errors: [{ path: "/", message: (error as Error).message }]
+          }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     // API: Generate HTML preview
     if (url.pathname === "/api/preview" && req.method === "POST") {
       try {
         const body = (await req.json()) as { resume: ResumeSchema; config: GenerateConfig };
         const { resume, config } = body;
+        
+        // Validate before generating
+        const validation = validateResume(resume);
+        if (!validation.valid) {
+          return new Response(
+            JSON.stringify({ 
+              error: "Invalid resume",
+              validation 
+            }),
+            { status: 400, headers: { "Content-Type": "application/json" } }
+          );
+        }
         
         const html = generateHTML(resume, config);
         
@@ -43,6 +78,18 @@ const server = Bun.serve({
       try {
         const body = (await req.json()) as { resume: ResumeSchema; config: GenerateConfig };
         const { resume, config } = body;
+        
+        // Validate before generating
+        const validation = validateResume(resume);
+        if (!validation.valid) {
+          return new Response(
+            JSON.stringify({ 
+              error: "Invalid resume",
+              validation 
+            }),
+            { status: 400, headers: { "Content-Type": "application/json" } }
+          );
+        }
         
         const pdfBytes = await generatePDF(
           resume,
