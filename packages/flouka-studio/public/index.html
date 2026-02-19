@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JSON Resume to PDF Converter</title>
+  <title>Hammidu Rais - JSON Resume to PDF Converter</title>
   <style>
     * {
       margin: 0;
@@ -13,41 +13,45 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(135deg, #14b8a6 0%, #10b981 100%);
+      background: #ffffff;
       min-height: 100vh;
-      padding: 20px;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
     }
 
     .container {
-      max-width: 1800px;
-      margin: 0 auto;
+      width: 100vw;
+      height: 100vh;
       background: white;
-      border-radius: 12px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
     }
 
     .header {
       background: linear-gradient(135deg, #14b8a6 0%, #10b981 100%);
       color: white;
-      padding: 30px;
+      padding: 20px 30px;
       text-align: center;
+      flex-shrink: 0;
     }
 
     .header h1 {
-      font-size: 2.5em;
-      margin-bottom: 10px;
+      font-size: 2em;
+      margin-bottom: 5px;
     }
 
     .header p {
-      font-size: 1.1em;
+      font-size: 1em;
       opacity: 0.9;
     }
 
     .main-content {
-      display: grid;
-      grid-template-columns: 400px 1fr;
-      min-height: calc(100vh - 200px);
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
     }
 
     .sidebar {
@@ -55,14 +59,39 @@
       padding: 30px;
       border-right: 1px solid #dee2e6;
       overflow-y: auto;
-      max-height: calc(100vh - 200px);
+      width: 400px;
+      min-width: 250px;
+      max-width: 800px;
+      flex-shrink: 0;
+    }
+
+    .resizer {
+      width: 5px;
+      background: #dee2e6;
+      cursor: col-resize;
+      position: relative;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+
+    .resizer:hover {
+      background: #14b8a6;
+    }
+
+    .resizer::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -5px;
+      right: -5px;
+      bottom: 0;
     }
 
     .preview-area {
       padding: 30px;
       background: white;
       overflow-y: auto;
-      max-height: calc(100vh - 200px);
+      flex: 1;
     }
 
     .section {
@@ -287,13 +316,24 @@
 
     @media (max-width: 1200px) {
       .main-content {
-        grid-template-columns: 1fr;
+        flex-direction: column;
       }
       
       .sidebar {
         border-right: none;
         border-bottom: 1px solid #dee2e6;
-        max-height: none;
+        width: 100% !important;
+        max-width: 100%;
+        height: 300px;
+        overflow-y: auto;
+      }
+
+      .resizer {
+        display: none;
+      }
+
+      .preview-area {
+        flex: 1;
       }
     }
   </style>
@@ -301,7 +341,7 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>📄 JSON Resume to PDF</h1>
+      <h1>📄 Hammidu Rais - JSON Resume to PDF</h1>
       <p>Upload or paste your JSON Resume, customize the layout, and generate a professional PDF</p>
     </div>
 
@@ -361,6 +401,8 @@
         </div>
       </div>
 
+      <div class="resizer" id="resizer"></div>
+
       <div class="preview-area">
         <div class="section-title">Preview</div>
         <div id="previewContainer" class="loading">
@@ -389,10 +431,58 @@
       initializeSectionList(savedConfig);
       setupEventListeners();
       setupDragAndDrop();
+      setupResizer();
       
       // Apply saved config after DOM is ready
       if (savedConfig) {
         setTimeout(() => applyConfig(savedConfig), 0);
+      }
+    }
+
+    // Resizable sidebar
+    function setupResizer() {
+      const resizer = document.getElementById('resizer');
+      const sidebar = document.querySelector('.sidebar');
+      let isResizing = false;
+      let startX = 0;
+      let startWidth = 0;
+
+      resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        startX = e.clientX;
+        startWidth = sidebar.offsetWidth;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+        
+        const diff = e.clientX - startX;
+        const newWidth = startWidth + diff;
+        
+        // Enforce min and max width
+        if (newWidth >= 250 && newWidth <= 800) {
+          sidebar.style.width = newWidth + 'px';
+        }
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (isResizing) {
+          isResizing = false;
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+          
+          // Save the width to localStorage
+          localStorage.setItem('sidebarWidth', sidebar.offsetWidth);
+        }
+      });
+
+      // Restore saved width
+      const savedWidth = localStorage.getItem('sidebarWidth');
+      if (savedWidth) {
+        sidebar.style.width = savedWidth + 'px';
       }
     }
 
