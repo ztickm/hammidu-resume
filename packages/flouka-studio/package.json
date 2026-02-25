@@ -12,6 +12,7 @@
   "dependencies": {
     "xebec-render": "workspace:*",
     "validator": "workspace:*",
+    "json-resume-types": "workspace:*",
     "puppeteer": "^23.0.0",
     "pdf-lib": "^1.17.1"
   },

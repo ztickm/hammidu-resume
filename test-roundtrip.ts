@@ -14,7 +14,7 @@ import { generateHTML } from "./packages/xebec-render/src/index";
 import { generatePDF } from "./packages/flouka-studio/src/index";
 import { extractResumeFromPDF } from "./packages/extractor/src/index";
 import { validateResumeStrict } from "./packages/validator/src/index";
-import type { ResumeSchema } from "@jsonresume/schema";
+import type { ResumeSchema } from "json-resume-types";
 
 const originalResume: ResumeSchema = {
   basics: {

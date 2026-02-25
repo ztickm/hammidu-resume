@@ -17,7 +17,14 @@ Parts of this project are written with AI tools. Do with that information what y
 
 ## Architecture
 
-This is a monorepo containing four packages:
+This is a monorepo containing five packages:
+
+### 📦 `packages/json-resume-types`
+TypeScript type definitions for JSON Resume schema.
+- ✅ Standalone type package
+- ✅ Can be used independently in any project
+- ✅ Full JSON Resume schema types
+- ✅ ISO8601 date types
 
 ### 📦 `packages/xebec-render`
 Lightweight library for generating HTML from JSON Resume data.
@@ -116,6 +123,11 @@ bun --watch web-server.ts
 ```
 hammidu-resume/
 ├── packages/
+│   ├── json-resume-types/ # TypeScript type definitions
+│   │   ├── index.ts
+│   │   ├── package.json
+│   │   └── README.md
+│   │
 │   ├── xebec-render/      # HTML rendering library (lightweight)
 │   │   ├── src/
 │   │   │   ├── index.ts

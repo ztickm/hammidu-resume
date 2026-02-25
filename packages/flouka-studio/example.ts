@@ -1,6 +1,6 @@
 import { generatePDFToFile } from "./src/index";
 import { readFileSync } from "fs";
-import type { ResumeSchema } from "xebec-render";
+import type { ResumeSchema } from "json-resume-types";
 import { join } from "path";
 
 // Define resumes folder path

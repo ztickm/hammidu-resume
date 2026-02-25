@@ -21,7 +21,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@jsonresume/schema": "^1.2.1",
+    "json-resume-types": "workspace:*",
     "pdf-lib": "^1.17.1"
   }
 }

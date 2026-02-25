@@ -4,7 +4,8 @@
  */
 
 import { generateHTML } from "xebec-render";
-import type { GenerateConfig, ResumeSchema } from "xebec-render";
+import type { GenerateConfig } from "xebec-render";
+import type { ResumeSchema } from "json-resume-types";
 import { generatePDF } from "./src/index.ts";
 import { validateResume } from "validator";
 

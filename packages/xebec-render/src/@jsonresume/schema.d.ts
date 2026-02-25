@@ -1,3 +1,5 @@
 declare module "@jsonresume/schema" {
-  export * from "../src/json-resume";
+  export * from "json-resume-types";
+  const schema: any;
+  export default schema;
 }

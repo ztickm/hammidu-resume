@@ -1,7 +1,7 @@
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
 import schema from "@jsonresume/schema";
-import type { ResumeSchema } from "@jsonresume/schema";
+import type { ResumeSchema } from "json-resume-types";
 
 // Create AJV instance with formats support and strict validation
 const ajv = new Ajv({ 
@@ -266,4 +266,4 @@ export async function validateResumeFile(filePath: string): Promise<ValidationRe
 }
 
 // Re-export types
-export type { ResumeSchema } from "@jsonresume/schema";
+export type { ResumeSchema } from "json-resume-types";

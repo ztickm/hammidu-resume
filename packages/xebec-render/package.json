@@ -18,9 +18,9 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@jsonresume/schema": "^1.2.1",
     "handlebars": "^4.7.8",
     "pdf-lib": "^1.17.1",
-    "validator": "workspace:*"
+    "validator": "workspace:*",
+    "json-resume-types": "workspace:*"
   }
 }

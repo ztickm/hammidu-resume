@@ -1,6 +1,7 @@
 import puppeteer from "puppeteer";
 import { PDFDocument } from "pdf-lib";
-import { generateHTML, type ResumeSchema, type GenerateConfig } from "xebec-render";
+import { generateHTML, type GenerateConfig } from "xebec-render";
+import type { ResumeSchema } from "json-resume-types";
 
 /**
  * Generate PDF from JSON Resume with embedded metadata using Puppeteer

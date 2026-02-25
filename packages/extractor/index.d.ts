@@ -3,11 +3,11 @@
  * Extracts JSON Resume metadata from PDF files
  */
 
-export type { ResumeSchema } from "@jsonresume/schema";
+export type { ResumeSchema } from "json-resume-types";
 
 export interface ExtractionResult {
   success: boolean;
-  resume?: import("@jsonresume/schema").ResumeSchema;
+  resume?: import("json-resume-types").ResumeSchema;
   error?: string;
 }
 

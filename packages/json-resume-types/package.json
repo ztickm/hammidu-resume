@@ -1,0 +1,19 @@
+{
+  "name": "json-resume-types",
+  "version": "1.0.0",
+  "description": "TypeScript type definitions for JSON Resume schema",
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "keywords": [
+    "json-resume",
+    "resume",
+    "cv",
+    "types",
+    "typescript"
+  ],
+  "author": "Salim Mahboubi",
+  "license": "MIT"
+}

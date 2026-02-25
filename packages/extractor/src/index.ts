@@ -1,5 +1,5 @@
 import { PDFDocument, PDFName, PDFArray, PDFDict, PDFStream } from "pdf-lib";
-import type { ResumeSchema } from "@jsonresume/schema";
+import type { ResumeSchema } from "json-resume-types";
 import { inflateSync } from "zlib";
 
 export interface ExtractionResult {
