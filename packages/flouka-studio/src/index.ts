@@ -79,8 +79,9 @@ async function embedJSONMetadata(
   });
 
   // Set PDF metadata
-  pdfDoc.setTitle(`${resume.basics.name} - Resume`);
-  pdfDoc.setAuthor(resume.basics.name);
+  const authorName = resume.basics?.name ?? "Unknown";
+  pdfDoc.setTitle(`${authorName} - Resume`);
+  pdfDoc.setAuthor(authorName);
   pdfDoc.setSubject("Resume/CV");
   pdfDoc.setKeywords(["resume", "cv", "json-resume"]);
   pdfDoc.setProducer("Hammidu Resume - Flouka");

@@ -1,4 +1,4 @@
-import type { ISO8601 } from "./json-resume";
+import type { ISO8601 } from "json-resume-types";
 
 /**
  * Format an ISO8601 date string to a human-readable format

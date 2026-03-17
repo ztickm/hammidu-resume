@@ -1,6 +1,6 @@
 // Export types
-export type * as JsonResumeTypes from "./json-resume.d.ts";
-export type { ResumeSchema } from "./json-resume.d.ts";
+export type * as JsonResumeTypes from "json-resume-types";
+export type { ResumeSchema } from "json-resume-types";
 export type { GenerateConfig, SectionName } from "./config";
 
 // Export functions

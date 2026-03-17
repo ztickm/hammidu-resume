@@ -21,7 +21,7 @@ export type {
   Interest,
   Reference,
   Project,
-} from "./src/json-resume.d.ts";
+} from "json-resume-types";
 
 // Re-export configuration types
 export type {

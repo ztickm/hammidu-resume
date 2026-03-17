@@ -1,5 +1,5 @@
 import Handlebars from "handlebars";
-import * as jsonT from "./json-resume";
+import * as jsonT from "json-resume-types";
 import { formatDate, formatDateOrPresent, joinArray } from "./helpers";
 import { readFileSync } from "fs";
 import { join } from "path";

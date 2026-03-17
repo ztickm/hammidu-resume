@@ -1,4 +1,4 @@
-import * as jsonT from "./json-resume";
+import * as jsonT from "json-resume-types";
 import schema from "@jsonresume/schema";
 
 function addJsonResumeToPDF(jsonResume: jsonT.ResumeSchema) {
