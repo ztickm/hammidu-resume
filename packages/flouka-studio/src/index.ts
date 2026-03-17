@@ -34,9 +34,19 @@ export async function generatePDF(
     margin: {
       top: "0.5cm",
       right: "0.5cm",
-      bottom: "0.5cm",
+      bottom: "1.2cm",
       left: "0.5cm",
     },
+    displayHeaderFooter: true,
+    headerTemplate: "<span></span>",
+    footerTemplate: `
+      <div style="width:100%; text-align:center; font-size:9pt; color:#333;
+                  font-family:'Times New Roman',Times,serif; padding-bottom:0.3cm;">
+        <span class="pageNumber"></span>/<span class="totalPages"></span>
+        &nbsp;&nbsp;·&nbsp;&nbsp;
+        Generated with <a href="https://github.com/ztickm/hammidu-resume"
+          style="color:#0066cc;">Hammidu Resume</a>
+      </div>`,
   });
 
   await browser.close();
