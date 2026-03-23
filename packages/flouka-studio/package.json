@@ -1,22 +1,28 @@
 {
   "name": "flouka-studio",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "type": "module",
-  "description": "PDF renderer and web interface for JSON Resume using Puppeteer",
+  "description": "Flouka Studio — Hammidu Resume desktop app (Tauri)",
   "main": "src/index.ts",
   "scripts": {
     "dev": "bun run src/index.ts",
     "build": "bun build src/index.ts --outdir dist",
-    "web": "bun --watch web-server.ts"
+    "web": "bun --watch web-server.ts",
+    "dev:frontend": "echo 'No frontend build step — serving static public/'",
+    "build:frontend": "echo 'No frontend build step — serving static public/'",
+    "tauri": "tauri",
+    "tauri:dev": "bunx tauri dev",
+    "tauri:build": "bunx tauri build"
   },
   "dependencies": {
     "xebec-render": "workspace:*",
     "validator": "workspace:*",
     "json-resume-types": "workspace:*",
-    "puppeteer": "^23.0.0",
     "pdf-lib": "^1.17.1"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@tauri-apps/cli": "^2",
+    "@tauri-apps/api": "^2"
   }
 }
