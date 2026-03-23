@@ -1,4 +1,8 @@
 use serde_json::Value;
+use tauri::{AppHandle, Runtime, WebviewWindow};
+use tauri_plugin_dialog::DialogExt;
+
+use crate::pdf::webview_create_pdf;
 
 /// Validate a JSON Resume.
 /// Phase 1: delegated to the JS validator package in the frontend.
@@ -18,14 +22,49 @@ pub fn generate_html(json: String, config: Option<Value>) -> Result<String, Stri
     Err("generate_html: use the JS xebec-render module directly in Phase 1".into())
 }
 
-/// Write raw PDF bytes to a file chosen by the user via the native save dialog.
-/// The PDF bytes come from pdf-lib running in the JS frontend.
-/// Full implementation in Phase 2 once the print_to_pdf command exists.
+/// Print the current WebView contents to PDF using the platform's native engine.
+///
+/// Returns the raw PDF bytes (before pdf-lib post-processing).
+/// The JS frontend receives these bytes, runs pdf-lib to embed resume.json,
+/// then calls `save_pdf` to write the final file.
 #[tauri::command]
-pub async fn save_pdf(
-    _app: tauri::AppHandle,
-    _bytes: Vec<u8>,
-    _default_name: String,
+pub async fn print_to_pdf<R: Runtime>(window: WebviewWindow<R>) -> Result<Vec<u8>, String> {
+    webview_create_pdf(window).await
+}
+
+/// Open a native Save dialog and write raw PDF bytes to the chosen path.
+///
+/// `bytes`        — raw PDF bytes produced by pdf-lib in the JS frontend
+/// `default_name` — suggested filename shown in the dialog (e.g. "John_Doe_resume.pdf")
+///
+/// Returns the absolute path of the saved file, or an error string.
+#[tauri::command]
+pub async fn save_pdf<R: Runtime>(
+    app: AppHandle<R>,
+    bytes: Vec<u8>,
+    default_name: String,
 ) -> Result<String, String> {
-    Err("save_pdf: full implementation in Phase 2".into())
+    // Show the native save dialog on the main thread.
+    let path = app
+        .dialog()
+        .file()
+        .set_file_name(&default_name)
+        .add_filter("PDF Document", &["pdf"])
+        .blocking_save_file();
+
+    let path = match path {
+        Some(p) => p,
+        None => return Err("cancelled".into()),
+    };
+
+    let path_str = path
+        .as_path()
+        .ok_or("Could not resolve save path")?
+        .to_string_lossy()
+        .to_string();
+
+    std::fs::write(&path_str, &bytes)
+        .map_err(|e| format!("Failed to write PDF: {e}"))?;
+
+    Ok(path_str)
 }

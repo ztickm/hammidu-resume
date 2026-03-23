@@ -23,3 +23,11 @@ tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+
+# macOS: WKWebView.createPDF() bindings (already transitive via tauri-runtime-wry,
+# listed explicitly here so we can enable the features we need)
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", features = ["NSData", "NSError"] }
+objc2-web-kit = { version = "0.3", features = ["WKWebView", "WKPDFConfiguration", "block2"] }
+block2 = "0.6"

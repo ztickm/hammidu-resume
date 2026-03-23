@@ -38,22 +38,53 @@ export function clientGenerateHTML(resume: ResumeSchema, config?: GenerateConfig
 
 /**
  * Request Tauri backend to print the current WebView to PDF.
- * Returns the saved file path, or null if cancelled.
- * Phase 2: this will be implemented in src-tauri/src/pdf.rs.
+ *
+ * Flow:
+ *   1. Rust `print_to_pdf` calls `WKWebView.createPDF()` → returns raw bytes
+ *   2. JS runs pdf-lib to embed resume.json + metadata
+ *   3. Rust `save_pdf` opens a native Save dialog and writes the final PDF
+ *
+ * Returns the saved file path, or null if the user cancelled.
  */
-export async function tauriPrintToPDF(defaultName: string): Promise<string | null> {
-  try {
-    // Phase 2: invoke('print_to_pdf', { defaultName })
-    // For now, show user that PDF export is coming soon.
-    const result = await invoke<string | null>("save_pdf", {
-      bytes: [],
-      defaultName,
-    });
-    return result;
-  } catch (err) {
-    console.warn("tauriPrintToPDF: Phase 2 not yet implemented", err);
-    return null;
+export async function tauriPrintToPDF(
+  resume: ResumeSchema,
+  defaultName: string,
+): Promise<string | null> {
+  // Step 1: get raw PDF bytes from the WebView's own print engine
+  const rawBytes: number[] = await invoke<number[]>("print_to_pdf");
+
+  // Step 2: embed resume.json as an attachment using pdf-lib (dynamic import
+  // keeps pdf-lib out of the initial parse — it's large).
+  const { PDFDocument } = await import("pdf-lib");
+  const pdfDoc = await PDFDocument.load(new Uint8Array(rawBytes));
+
+  const jsonBytes = new TextEncoder().encode(JSON.stringify(resume, null, 2));
+  await pdfDoc.attach(jsonBytes, "resume.json", {
+    mimeType: "application/json",
+    description: "JSON Resume source data",
+    creationDate: new Date(),
+    modificationDate: new Date(),
+  });
+
+  if (resume.basics) {
+    const name = resume.basics.name ?? "";
+    pdfDoc.setTitle(`${name} — Resume`);
+    pdfDoc.setAuthor(name);
+    pdfDoc.setSubject("Curriculum Vitae");
+    pdfDoc.setKeywords(["resume", "cv", "json-resume"]);
+    pdfDoc.setProducer("Hammidu Resume / Flouka Studio");
+    pdfDoc.setCreator("Flouka Studio desktop app");
   }
+
+  const finalBytes = Array.from(await pdfDoc.save());
+
+  // Step 3: native Save dialog + write file
+  const result = await invoke<string | null>("save_pdf", {
+    bytes: finalBytes,
+    defaultName,
+  });
+
+  return result;
 }
 
 /**
@@ -66,7 +97,7 @@ declare global {
       isTauri: boolean;
       validateResume: typeof clientValidateResume;
       generateHTML: typeof clientGenerateHTML;
-      printToPDF: typeof tauriPrintToPDF;
+      printToPDF: (resume: ResumeSchema, defaultName: string) => Promise<string | null>;
     };
   }
 }

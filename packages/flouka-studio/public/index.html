@@ -880,16 +880,16 @@
         const config = getConfig();
         
         if (window.FloukaBridge) {
-          // Tauri production: Phase 2 will use WebView print-to-PDF.
-          // For now, inform the user this feature is coming.
+          // Tauri production: WKWebView.createPDF() → pdf-lib embed → native Save dialog.
           const defaultName = (currentResume.basics && currentResume.basics.name
             ? currentResume.basics.name.replace(/\s+/g, '_')
             : 'resume') + '_resume.pdf';
-          const result = await window.FloukaBridge.printToPDF(defaultName);
-          if (!result) {
-            alert('PDF export via the desktop engine is not yet implemented (Phase 2). ' +
-                  'In the meantime, use File > Print from the preview, or run the web server version.');
+          const savedPath = await window.FloukaBridge.printToPDF(currentResume, defaultName);
+          if (savedPath) {
+            // Optionally show a brief success toast (non-blocking).
+            console.log('PDF saved to:', savedPath);
           }
+          // null means user cancelled — no error to show.
         } else {
           // Web server / tauri dev mode: download via server-generated PDF.
           const response = await fetch('/api/generate-pdf', {
