@@ -8,21 +8,23 @@
     "dev": "bun run src/index.ts",
     "build": "bun build src/index.ts --outdir dist",
     "web": "bun --watch web-server.ts",
-    "dev:frontend": "echo 'No frontend build step — serving static public/'",
-    "build:frontend": "echo 'No frontend build step — serving static public/'",
+    "dev:frontend": "bun --watch web-server.ts",
+    "build:frontend": "bun build src/frontend.ts --outdir public --target browser --minify && mv public/frontend.js public/bundle.js",
     "tauri": "tauri",
     "tauri:dev": "bunx tauri dev",
     "tauri:build": "bunx tauri build"
   },
   "dependencies": {
-    "xebec-render": "workspace:*",
-    "validator": "workspace:*",
+    "@tauri-apps/plugin-dialog": "^2",
+    "@tauri-apps/plugin-fs": "^2",
     "json-resume-types": "workspace:*",
-    "pdf-lib": "^1.17.1"
+    "pdf-lib": "^1.17.1",
+    "validator": "workspace:*",
+    "xebec-render": "workspace:*"
   },
   "devDependencies": {
-    "@types/bun": "latest",
+    "@tauri-apps/api": "^2",
     "@tauri-apps/cli": "^2",
-    "@tauri-apps/api": "^2"
+    "@types/bun": "latest"
   }
 }

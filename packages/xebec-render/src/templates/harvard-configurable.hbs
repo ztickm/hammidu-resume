@@ -194,6 +194,23 @@
       body {
         padding: 0.5in;
         max-width: 100%;
+        /* Reserve space at the bottom of each page for the page-number footer */
+        margin-bottom: 1.5cm;
+      }
+
+      /* Page-number footer rendered by the print engine.
+         counter(page) is universally supported; counter(pages) (total) is supported
+         in WebKit/Blink (macOS WebView, Chrome) but not in Firefox.
+         For the Tauri desktop app, WKWebView (macOS) and WebView2 (Windows) both
+         support counter(pages) via CSS Paged Media Level 3. */
+      @page {
+        margin-bottom: 1.8cm;
+        @bottom-center {
+          content: counter(page) " / " counter(pages) "  \00B7  Generated with Hammidu Resume";
+          font-family: 'Times New Roman', Times, serif;
+          font-size: 9pt;
+          color: #555;
+        }
       }
     }
   </style>

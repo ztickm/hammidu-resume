@@ -412,6 +412,20 @@
     </div>
   </div>
 
+  <!-- Tauri production bundle: provides FloukaBridge (generateHTML, validateResume, printToPDF).
+       Loaded only when running as a packaged desktop app. In dev mode (tauri dev),
+       the frontend is served from the web server and this file may not yet exist. -->
+  <script>
+    // Attempt to load the bundle. If it fails (web-server mode), continue without it.
+    (function() {
+      if (typeof window.__TAURI_INTERNALS__ !== 'undefined' && !window.FloukaBridge) {
+        const s = document.createElement('script');
+        s.src = 'bundle.js';
+        document.head.appendChild(s);
+      }
+    })();
+  </script>
+
   <script>
     // Default sections
     const DEFAULT_SECTIONS = [
@@ -659,14 +673,18 @@
       try {
         const resume = JSON.parse(input);
         
-        // Use server-side validation
-        const response = await fetch('/api/validate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resume })
-        });
-        
-        const validation = await response.json();
+        // Use FloukaBridge (Tauri production) or web server API (web / tauri dev)
+        let validation;
+        if (window.FloukaBridge) {
+          validation = window.FloukaBridge.validateResume(resume);
+        } else {
+          const response = await fetch('/api/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ resume })
+          });
+          validation = await response.json();
+        }
         
         if (validation.valid) {
           currentResume = resume;
@@ -793,41 +811,60 @@
       }
       
       const container = document.getElementById('previewContainer');
-      container.innerHTML = '<div class="loading">Generating PDF preview...</div>';
+      container.innerHTML = '<div class="loading">Generating preview...</div>';
       
       try {
         const config = getConfig();
         
-        const response = await fetch('/api/generate-pdf', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resume: currentResume, config })
-        });
-        
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error);
-        }
-        
-        const blob = await response.blob();
-        const pdfUrl = URL.createObjectURL(blob);
-        
-        // Create iframe for PDF preview
-        const iframe = document.createElement('iframe');
-        iframe.className = 'preview-frame';
-        iframe.src = pdfUrl;
-        iframe.style.border = 'none';
-        
-        container.innerHTML = '';
-        container.appendChild(iframe);
-        
-        // Clean up the blob URL when component updates
-        iframe.addEventListener('load', () => {
-          if (window.lastPdfUrl) {
-            URL.revokeObjectURL(window.lastPdfUrl);
+        if (window.FloukaBridge) {
+          // Tauri production: generate HTML in-browser and show it directly.
+          // This is true WYSIWYG — the preview renders in the same WebView engine
+          // that will be used to print the PDF.
+          const html = window.FloukaBridge.generateHTML(currentResume, config);
+          const blob = new Blob([html], { type: 'text/html' });
+          const htmlUrl = URL.createObjectURL(blob);
+          
+          const iframe = document.createElement('iframe');
+          iframe.className = 'preview-frame';
+          iframe.src = htmlUrl;
+          iframe.style.border = 'none';
+          
+          container.innerHTML = '';
+          container.appendChild(iframe);
+          
+          iframe.addEventListener('load', () => {
+            if (window.lastPreviewUrl) URL.revokeObjectURL(window.lastPreviewUrl);
+            window.lastPreviewUrl = htmlUrl;
+          });
+        } else {
+          // Web server / tauri dev mode: use the server-generated PDF preview.
+          const response = await fetch('/api/generate-pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ resume: currentResume, config })
+          });
+          
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error);
           }
-          window.lastPdfUrl = pdfUrl;
-        });
+          
+          const blob = await response.blob();
+          const pdfUrl = URL.createObjectURL(blob);
+          
+          const iframe = document.createElement('iframe');
+          iframe.className = 'preview-frame';
+          iframe.src = pdfUrl;
+          iframe.style.border = 'none';
+          
+          container.innerHTML = '';
+          container.appendChild(iframe);
+          
+          iframe.addEventListener('load', () => {
+            if (window.lastPdfUrl) URL.revokeObjectURL(window.lastPdfUrl);
+            window.lastPdfUrl = pdfUrl;
+          });
+        }
       } catch (error) {
         container.innerHTML = `<div class="validation-message error">Preview error: ${error.message}</div>`;
       }
@@ -842,26 +879,40 @@
       try {
         const config = getConfig();
         
-        const response = await fetch('/api/generate-pdf', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resume: currentResume, config })
-        });
-        
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error);
+        if (window.FloukaBridge) {
+          // Tauri production: Phase 2 will use WebView print-to-PDF.
+          // For now, inform the user this feature is coming.
+          const defaultName = (currentResume.basics && currentResume.basics.name
+            ? currentResume.basics.name.replace(/\s+/g, '_')
+            : 'resume') + '_resume.pdf';
+          const result = await window.FloukaBridge.printToPDF(defaultName);
+          if (!result) {
+            alert('PDF export via the desktop engine is not yet implemented (Phase 2). ' +
+                  'In the meantime, use File > Print from the preview, or run the web server version.');
+          }
+        } else {
+          // Web server / tauri dev mode: download via server-generated PDF.
+          const response = await fetch('/api/generate-pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ resume: currentResume, config })
+          });
+          
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error);
+          }
+          
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${currentResume.basics.name.replace(/\s+/g, '_')}_resume.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
         }
-        
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${currentResume.basics.name.replace(/\s+/g, '_')}_resume.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
       } catch (error) {
         alert('PDF generation error: ' + error.message);
       }
