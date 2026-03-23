@@ -175,15 +175,15 @@ JSON Resume
 ### v2 — Flouka Studio Desktop App (in progress, branch: `feat/flouka-tauri-desktop`)
 - [x] Tauri desktop app wrapping the existing Flouka Studio UI — Phase 1 complete
 - [x] Dual-mode frontend: `window.FloukaBridge` in Tauri prod, `fetch('/api/...')` in web/dev mode
-- [x] `bundle.js`: xebec-render + validator + @tauri-apps/api bundled for in-browser use
+- [x] `bundle.js`: xebec-render + validator + pdf-lib + @tauri-apps/api bundled for in-browser use
 - [x] CSS `@page @bottom-center counter(page)` footer (replaces Puppeteer `footerTemplate`)
+- [x] Print-to-PDF via the WebView — Phase 2 complete (`WKWebView.createPDF()` on macOS)
+- [x] `pdf-lib` post-processing in JS (JSON embedding + title/author/keywords metadata)
+- [x] File save via Tauri `dialog.save()` + `std::fs::write` (native Save dialog)
 - [x] `cargo check` passes: zero errors, zero warnings
-- [ ] Print-to-PDF via the WebView (no Puppeteer, no shipped Chromium) — **Phase 2**
-- [ ] Rust plugin for platform print APIs (Mac: WKWebView, Windows: WebView2, Linux: WebKitGTK)
-- [ ] `pdf-lib` post-processing retained in JS (JSON embedding + metadata)
-- [ ] File save via Tauri `dialog.save()` + `fs.writeBinaryFile()`
+- [ ] Rust plugin for Windows (WebView2) and Linux (WebKitGTK) — Phase 3
 - [ ] Packaged installers: `.dmg` (Mac), `.msi` (Windows), `.AppImage`/`.deb` (Linux)
-- [ ] Remove Puppeteer and `web-server.ts` from flouka-studio
+- [ ] Remove Puppeteer and `web-server.ts` from flouka-studio (after `tauri build` validated)
 - [ ] Estimated final bundle: ~15–25MB (vs ~300MB+ with Chromium)
 
 ### v3+ — Planned
@@ -250,18 +250,17 @@ JSON Resume (pasted in UI)
 - CSS `@page @bottom-center` footer in both `.hbs` templates (replaces Puppeteer `footerTemplate`)
 - `cargo check` passes: zero errors, zero warnings
 
-#### Phase 2 — Print-to-PDF Rust plugin *(current)*
-- `src-tauri/src/pdf.rs`: platform-specific print-to-PDF
-  - macOS: `WKWebView.createPDF(configuration:)` via `objc2-web-kit` crate
-  - Windows: `CoreWebView2.PrintToPdfAsync()` via `webview2-com` crate
-  - Linux: WebKitGTK headless print operation
-- `print_to_pdf` Tauri command: returns raw PDF bytes to JS
-- Full `save_pdf` command: `tauri-plugin-dialog` file picker + `tauri-plugin-fs` write
-- JS side: receive bytes → `pdf-lib` JSON embedding → `invoke('save_pdf', { bytes, name })`
-- Wire `FloukaBridge.printToPDF()` to the real command (replace the stub)
-- Remove Puppeteer from `flouka-studio/src/index.ts`
+#### Phase 2 — Print-to-PDF Rust plugin ✅ complete (`a3d14b9`)
+- `src-tauri/src/pdf.rs`: macOS `WKWebView.createPDFWithConfiguration:completionHandler:`
+  via `objc2-web-kit`. Callback bridged to async Rust via `std::sync::mpsc` + `std::thread::spawn`
+- `print_to_pdf` Tauri command returns raw PDF bytes to JS
+- Full `save_pdf` command: `tauri-plugin-dialog` file picker + `std::fs::write`
+- JS: `tauriPrintToPDF(resume, name)` → invoke `print_to_pdf` → pdf-lib embed → invoke `save_pdf`
+- `pdf-lib` dynamically imported (keeps initial bundle parse fast)
+- Bundle updated to 738 KB (adds pdf-lib vs Phase 1's 283 KB)
+- Non-macOS: stub with clear error message
 
-#### Phase 3 — Polish & packaging
+#### Phase 3 — Polish & packaging *(current)*
 - Real app icons (replace placeholder RGBA PNGs with proper `.icns` / `.ico`)
 - `tauri build` tested on macOS, Windows, Linux
 - Code signing config (Apple Developer ID notarization, Windows Authenticode)
