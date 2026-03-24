@@ -37,11 +37,8 @@
     ]
   },
   "plugins": {
-    "dialog": {},
     "fs": {
-      "scope": {
-        "allow": ["$DOWNLOAD/**", "$DOCUMENT/**", "$DESKTOP/**"]
-      }
+      "requireLiteralLeadingDot": false
     }
   }
 }
