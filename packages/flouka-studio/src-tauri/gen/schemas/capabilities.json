@@ -1,0 +1,1 @@
+{"main-capability":{"identifier":"main-capability","description":"Permissions for the main Flouka Studio window","local":true,"windows":["main"],"permissions":["core:default","dialog:default","opener:default","fs:default","fs:allow-write-file","fs:scope-download-recursive","fs:scope-desktop-recursive","fs:scope-document-recursive"],"platforms":["macOS","windows","linux"]}}

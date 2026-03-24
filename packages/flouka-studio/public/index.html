@@ -217,13 +217,40 @@
       box-shadow: 0 2px 8px rgba(20, 184, 166, 0.2);
     }
 
-    .draggable-item.dragging {
-      opacity: 0.5;
+    .draggable-item.drag-source {
+      display: none;
+    }
+
+    .drag-placeholder {
+      height: 0;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      border: 2px dashed #14b8a6;
+      background: rgba(20, 184, 166, 0.07);
+      box-sizing: border-box;
+      transition: height 0.1s;
+      pointer-events: none;
+    }
+
+    .drag-clone {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.85;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+      border-radius: 8px;
+      background: white;
+      border: 2px solid #14b8a6;
+      list-style: none;
     }
 
     .drag-handle {
       font-size: 1.2em;
       color: #6c757d;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      cursor: grab;
     }
 
     .page-break-controls {
@@ -289,31 +316,6 @@
       font-size: 1.1em;
     }
 
-    .file-upload {
-      border: 2px dashed #14b8a6;
-      border-radius: 8px;
-      padding: 20px;
-      text-align: center;
-      background: #f0fdfa;
-      cursor: pointer;
-      transition: all 0.2s;
-      margin-bottom: 15px;
-    }
-
-    .file-upload:hover {
-      background: #ccfbf1;
-      border-color: #0d9488;
-    }
-
-    .file-upload input[type="file"] {
-      display: none;
-    }
-
-    .upload-icon {
-      font-size: 2em;
-      margin-bottom: 10px;
-    }
-
     @media (max-width: 1200px) {
       .main-content {
         flex-direction: column;
@@ -351,12 +353,10 @@
         <div class="section">
           <div class="section-title">JSON Resume Input</div>
           
-          <div class="file-upload" onclick="document.getElementById('fileInput').click()">
-            <input type="file" id="fileInput" accept=".json" />
-            <div class="upload-icon">📁</div>
-            <div>Click to upload JSON file</div>
-            <div style="font-size: 0.9em; color: #6c757d; margin-top: 5px;">or drag and drop</div>
-          </div>
+          <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()" style="margin-bottom: 15px;">
+            📁 Upload JSON file
+          </button>
+          <input type="file" id="fileInput" accept=".json" style="display:none" />
 
           <div class="input-group">
             <label for="jsonInput">Or paste JSON Resume here:</label>
@@ -411,6 +411,20 @@
       </div>
     </div>
   </div>
+
+  <!-- Tauri production bundle: provides FloukaBridge (generateHTML, validateResume, printToPDF).
+       Loaded only when running as a packaged desktop app. In dev mode (tauri dev),
+       the frontend is served from the web server and this file may not yet exist. -->
+  <script>
+    // Attempt to load the bundle. If it fails (web-server mode), continue without it.
+    (function() {
+      if (typeof window.__TAURI_INTERNALS__ !== 'undefined' && !window.FloukaBridge) {
+        const s = document.createElement('script');
+        s.src = 'bundle.js';
+        document.head.appendChild(s);
+      }
+    })();
+  </script>
 
   <script>
     // Default sections
@@ -507,7 +521,6 @@
     function createSectionItem(section) {
       const li = document.createElement('li');
       li.className = 'draggable-item';
-      li.draggable = true;
       li.dataset.section = section;
       
       li.innerHTML = `
@@ -594,48 +607,82 @@
 
     function setupDragAndDrop() {
       const list = document.getElementById('sectionList');
-      
-      list.addEventListener('dragstart', (e) => {
-        if (e.target.classList.contains('draggable-item')) {
-          draggedItem = e.target;
-          e.target.classList.add('dragging');
+
+      // Pointer-events drag with a floating clone + placeholder.
+      // Avoids HTML5 DnD (broken in WKWebView) and the flickering caused
+      // by re-inserting the live element during pointermove.
+      list.addEventListener('pointerdown', (e) => {
+        const handle = e.target.closest('.drag-handle');
+        if (!handle) return;
+
+        const item = handle.closest('.draggable-item');
+        if (!item) return;
+
+        e.preventDefault();
+
+        const itemRect = item.getBoundingClientRect();
+        const offsetY = e.clientY - itemRect.top;
+        const offsetX = e.clientX - itemRect.left;
+
+        // 1. Create a floating visual clone that follows the pointer
+        const clone = item.cloneNode(true);
+        clone.classList.add('drag-clone');
+        clone.style.width = itemRect.width + 'px';
+        clone.style.top  = itemRect.top  + 'px';
+        clone.style.left = itemRect.left + 'px';
+        document.body.appendChild(clone);
+
+        // 2. Create a same-height placeholder that stays in the list
+        const placeholder = document.createElement('li');
+        placeholder.className = 'drag-placeholder';
+        placeholder.style.height = itemRect.height + 'px';
+        item.parentNode.insertBefore(placeholder, item);
+
+        // 3. Hide the original in place
+        item.classList.add('drag-source');
+
+        // Capture so pointermove keeps firing even outside the element
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
+        document.addEventListener('pointercancel', onUp);
+
+        function onMove(e) {
+          // Move the clone with the pointer
+          clone.style.top  = (e.clientY - offsetY) + 'px';
+          clone.style.left = (e.clientX - offsetX) + 'px';
+
+          // Move the placeholder to indicate drop position
+          // Hide clone temporarily so elementFromPoint sees the list
+          clone.style.display = 'none';
+          const target = document.elementFromPoint(e.clientX, e.clientY);
+          clone.style.display = '';
+
+          const targetItem = target && target.closest('.draggable-item');
+          if (targetItem && targetItem !== item) {
+            const targetRect = targetItem.getBoundingClientRect();
+            const insertBefore = e.clientY < targetRect.top + targetRect.height / 2;
+            if (insertBefore) {
+              targetItem.parentNode.insertBefore(placeholder, targetItem);
+            } else {
+              targetItem.parentNode.insertBefore(placeholder, targetItem.nextSibling);
+            }
+          }
         }
-      });
-      
-      list.addEventListener('dragend', (e) => {
-        if (e.target.classList.contains('draggable-item')) {
-          e.target.classList.remove('dragging');
-          // Save config after reordering
+
+        function onUp() {
+          // Drop: insert real item where placeholder is, then clean up
+          placeholder.parentNode.insertBefore(item, placeholder);
+          placeholder.remove();
+          clone.remove();
+          item.classList.remove('drag-source');
+
+          document.removeEventListener('pointermove', onMove);
+          document.removeEventListener('pointerup', onUp);
+          document.removeEventListener('pointercancel', onUp);
+
           saveConfig(getConfigWithoutSaving());
         }
       });
-      
-      list.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        const afterElement = getDragAfterElement(list, e.clientY);
-        const dragging = document.querySelector('.dragging');
-        
-        if (afterElement == null) {
-          list.appendChild(dragging);
-        } else {
-          list.insertBefore(dragging, afterElement);
-        }
-      });
-    }
-
-    function getDragAfterElement(container, y) {
-      const draggableElements = [...container.querySelectorAll('.draggable-item:not(.dragging)')];
-      
-      return draggableElements.reduce((closest, child) => {
-        const box = child.getBoundingClientRect();
-        const offset = y - box.top - box.height / 2;
-        
-        if (offset < 0 && offset > closest.offset) {
-          return { offset: offset, element: child };
-        } else {
-          return closest;
-        }
-      }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
 
     async function handleFileUpload(e) {
@@ -659,14 +706,18 @@
       try {
         const resume = JSON.parse(input);
         
-        // Use server-side validation
-        const response = await fetch('/api/validate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resume })
-        });
-        
-        const validation = await response.json();
+        // Use FloukaBridge (Tauri production) or web server API (web / tauri dev)
+        let validation;
+        if (window.FloukaBridge) {
+          validation = window.FloukaBridge.validateResume(resume);
+        } else {
+          const response = await fetch('/api/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ resume })
+          });
+          validation = await response.json();
+        }
         
         if (validation.valid) {
           currentResume = resume;
@@ -793,41 +844,60 @@
       }
       
       const container = document.getElementById('previewContainer');
-      container.innerHTML = '<div class="loading">Generating PDF preview...</div>';
+      container.innerHTML = '<div class="loading">Generating preview...</div>';
       
       try {
         const config = getConfig();
         
-        const response = await fetch('/api/generate-pdf', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resume: currentResume, config })
-        });
-        
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error);
-        }
-        
-        const blob = await response.blob();
-        const pdfUrl = URL.createObjectURL(blob);
-        
-        // Create iframe for PDF preview
-        const iframe = document.createElement('iframe');
-        iframe.className = 'preview-frame';
-        iframe.src = pdfUrl;
-        iframe.style.border = 'none';
-        
-        container.innerHTML = '';
-        container.appendChild(iframe);
-        
-        // Clean up the blob URL when component updates
-        iframe.addEventListener('load', () => {
-          if (window.lastPdfUrl) {
-            URL.revokeObjectURL(window.lastPdfUrl);
+        if (window.FloukaBridge) {
+          // Tauri production: generate HTML in-browser and show it directly.
+          // This is true WYSIWYG — the preview renders in the same WebView engine
+          // that will be used to print the PDF.
+          const html = window.FloukaBridge.generateHTML(currentResume, config);
+          const blob = new Blob([html], { type: 'text/html' });
+          const htmlUrl = URL.createObjectURL(blob);
+          
+          const iframe = document.createElement('iframe');
+          iframe.className = 'preview-frame';
+          iframe.src = htmlUrl;
+          iframe.style.border = 'none';
+          
+          container.innerHTML = '';
+          container.appendChild(iframe);
+          
+          iframe.addEventListener('load', () => {
+            if (window.lastPreviewUrl) URL.revokeObjectURL(window.lastPreviewUrl);
+            window.lastPreviewUrl = htmlUrl;
+          });
+        } else {
+          // Web server / tauri dev mode: use the server-generated PDF preview.
+          const response = await fetch('/api/generate-pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ resume: currentResume, config })
+          });
+          
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error);
           }
-          window.lastPdfUrl = pdfUrl;
-        });
+          
+          const blob = await response.blob();
+          const pdfUrl = URL.createObjectURL(blob);
+          
+          const iframe = document.createElement('iframe');
+          iframe.className = 'preview-frame';
+          iframe.src = pdfUrl;
+          iframe.style.border = 'none';
+          
+          container.innerHTML = '';
+          container.appendChild(iframe);
+          
+          iframe.addEventListener('load', () => {
+            if (window.lastPdfUrl) URL.revokeObjectURL(window.lastPdfUrl);
+            window.lastPdfUrl = pdfUrl;
+          });
+        }
       } catch (error) {
         container.innerHTML = `<div class="validation-message error">Preview error: ${error.message}</div>`;
       }
@@ -842,26 +912,40 @@
       try {
         const config = getConfig();
         
-        const response = await fetch('/api/generate-pdf', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resume: currentResume, config })
-        });
-        
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error);
+        if (window.FloukaBridge) {
+          // Tauri production: WKWebView.createPDF() → pdf-lib embed → native Save dialog.
+          const defaultName = (currentResume.basics && currentResume.basics.name
+            ? currentResume.basics.name.replace(/\s+/g, '_')
+            : 'resume') + '_resume.pdf';
+          const savedPath = await window.FloukaBridge.printToPDF(currentResume, defaultName);
+          if (savedPath) {
+            // Optionally show a brief success toast (non-blocking).
+            console.log('PDF saved to:', savedPath);
+          }
+          // null means user cancelled — no error to show.
+        } else {
+          // Web server / tauri dev mode: download via server-generated PDF.
+          const response = await fetch('/api/generate-pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ resume: currentResume, config })
+          });
+          
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error);
+          }
+          
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${currentResume.basics.name.replace(/\s+/g, '_')}_resume.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
         }
-        
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${currentResume.basics.name.replace(/\s+/g, '_')}_resume.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
       } catch (error) {
         alert('PDF generation error: ' + error.message);
       }
