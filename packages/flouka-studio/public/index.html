@@ -218,12 +218,21 @@
     }
 
     .draggable-item.dragging {
-      opacity: 0.5;
+      opacity: 0.4;
+      box-shadow: 0 4px 16px rgba(20, 184, 166, 0.3);
+    }
+
+    .draggable-item.drag-over {
+      border-color: #14b8a6;
+      border-style: dashed;
     }
 
     .drag-handle {
       font-size: 1.2em;
       color: #6c757d;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     .page-break-controls {
@@ -521,7 +530,6 @@
     function createSectionItem(section) {
       const li = document.createElement('li');
       li.className = 'draggable-item';
-      li.draggable = true;
       li.dataset.section = section;
       
       li.innerHTML = `
@@ -608,42 +616,62 @@
 
     function setupDragAndDrop() {
       const list = document.getElementById('sectionList');
-      
-      list.addEventListener('dragstart', (e) => {
-        if (e.target.classList.contains('draggable-item')) {
-          draggedItem = e.target;
-          e.target.classList.add('dragging');
+
+      // Use pointer events instead of HTML5 drag-and-drop.
+      // HTML5 DnD dragover is suppressed by WKWebView (Tauri/macOS);
+      // pointer events work reliably in all environments.
+      list.addEventListener('pointerdown', (e) => {
+        const handle = e.target.closest('.drag-handle');
+        if (!handle) return;
+
+        const item = handle.closest('.draggable-item');
+        if (!item) return;
+
+        e.preventDefault();
+        item.setPointerCapture(e.pointerId);
+
+        draggedItem = item;
+        item.classList.add('dragging');
+
+        const listRect = list.getBoundingClientRect();
+        const itemRect = item.getBoundingClientRect();
+        // offset of pointer within the item so it doesn't jump
+        const offsetY = e.clientY - itemRect.top;
+
+        function onMove(e) {
+          e.preventDefault();
+          const y = e.clientY - offsetY + (itemRect.height / 2);
+          const after = getDragAfterElement(list, y);
+          if (after == null) {
+            list.appendChild(item);
+          } else if (after !== item) {
+            list.insertBefore(item, after);
+          }
         }
-      });
-      
-      list.addEventListener('dragend', (e) => {
-        if (e.target.classList.contains('draggable-item')) {
-          e.target.classList.remove('dragging');
-          // Save config after reordering
+
+        function onUp() {
+          item.classList.remove('dragging');
+          draggedItem = null;
+          item.releasePointerCapture(e.pointerId);
+          item.removeEventListener('pointermove', onMove);
+          item.removeEventListener('pointerup', onUp);
+          item.removeEventListener('pointercancel', onUp);
           saveConfig(getConfigWithoutSaving());
         }
-      });
-      
-      list.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        const afterElement = getDragAfterElement(list, e.clientY);
-        const dragging = document.querySelector('.dragging');
-        
-        if (afterElement == null) {
-          list.appendChild(dragging);
-        } else {
-          list.insertBefore(dragging, afterElement);
-        }
+
+        item.addEventListener('pointermove', onMove);
+        item.addEventListener('pointerup', onUp);
+        item.addEventListener('pointercancel', onUp);
       });
     }
 
     function getDragAfterElement(container, y) {
       const draggableElements = [...container.querySelectorAll('.draggable-item:not(.dragging)')];
-      
+
       return draggableElements.reduce((closest, child) => {
         const box = child.getBoundingClientRect();
         const offset = y - box.top - box.height / 2;
-        
+
         if (offset < 0 && offset > closest.offset) {
           return { offset: offset, element: child };
         } else {
