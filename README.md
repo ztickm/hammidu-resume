@@ -161,6 +161,49 @@ hammidu-resume/
 ```
 
 
+## Roadmap
+
+### ✅ v1 — Core pipeline (released, `main`)
+- [x] JSON Resume → HTML via Handlebars (Harvard CV style)
+- [x] HTML → PDF via Puppeteer (headless Chrome)
+- [x] `resume.json` embedded as a PDF attachment (pdf-lib)
+- [x] PDF metadata: title, author, subject, keywords
+- [x] Configurable section order, font size, line height, page breaks
+- [x] JSON Resume schema validator with practical error messages (AJV + CLI)
+- [x] PDF → JSON extractor (round-trip restoration, FlateDecode support)
+- [x] Web UI: live preview, PDF download, section ordering, font controls
+- [x] Footer with page numbers on every page
+- [x] Round-trip test: JSON → HTML → PDF → JSON ✓
+
+### 🚧 v2 — Flouka Studio desktop app (in progress, `feat/flouka-tauri-desktop`)
+Replaces the browser + Bun server with a native macOS (and later Windows/Linux) desktop app built with [Tauri](https://tauri.app). The WebView that renders the live preview is the same engine that generates the PDF — true WYSIWYG, no Chromium bundled, ~15–25 MB installer vs ~300 MB with Puppeteer.
+
+- [x] Tauri v2 app shell wrapping the existing web UI
+- [x] Dual-mode frontend: `window.FloukaBridge` in the desktop app, `fetch('/api/...')` in the browser — same `index.html` serves both
+- [x] Print-to-PDF via `WKWebView.createPDF()` on macOS (no Puppeteer, no Chromium)
+- [x] `pdf-lib` post-processing in JS: JSON attachment + metadata (unchanged from v1)
+- [x] Native Save dialog via Tauri (`dialog.save` + `fs.writeFile`)
+- [x] CSS `@page @bottom-center counter(page)` footer (replaces Puppeteer `footerTemplate`)
+- [x] Real `.icns` / `.ico` app icons; `.app` (9.8 MB) and `.dmg` (3.3 MB) produced by `tauri build`
+- [ ] Fix broken drag and drop
+- [ ] Show download dialog / open downloaded file
+- [ ] Windows: `CoreWebView2.PrintToPdfAsync()` Rust plugin
+- [ ] Linux: WebKitGTK print operation Rust plugin
+- [ ] Code signing & notarization (Apple Developer ID, Windows Authenticode)
+- [ ] Distributable installers: `.dmg`, `.msi`, `.AppImage` / `.deb`
+- [ ] Remove Puppeteer from the repo once the desktop build is validated end-to-end
+
+### 🗓 v3 — Planned
+- [ ] Multiple CV templates (beyond Harvard)
+- [ ] Custom font embedding for cross-platform consistency
+- [ ] Color scheme options
+- [ ] Internationalization (dates, section labels)
+- [ ] Better UI (it's ugly now I know)
+- [ ] Fully Keyboard accessible 
+- [ ] Published releases
+
+---
+
 ## Development
 
 Built with [Bun](https://bun.sh)
