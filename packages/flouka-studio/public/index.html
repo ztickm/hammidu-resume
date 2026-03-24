@@ -316,31 +316,6 @@
       font-size: 1.1em;
     }
 
-    .file-upload {
-      border: 2px dashed #14b8a6;
-      border-radius: 8px;
-      padding: 20px;
-      text-align: center;
-      background: #f0fdfa;
-      cursor: pointer;
-      transition: all 0.2s;
-      margin-bottom: 15px;
-    }
-
-    .file-upload:hover {
-      background: #ccfbf1;
-      border-color: #0d9488;
-    }
-
-    .file-upload input[type="file"] {
-      display: none;
-    }
-
-    .upload-icon {
-      font-size: 2em;
-      margin-bottom: 10px;
-    }
-
     @media (max-width: 1200px) {
       .main-content {
         flex-direction: column;
@@ -378,12 +353,10 @@
         <div class="section">
           <div class="section-title">JSON Resume Input</div>
           
-          <div class="file-upload" onclick="document.getElementById('fileInput').click()">
-            <input type="file" id="fileInput" accept=".json" />
-            <div class="upload-icon">📁</div>
-            <div>Click to upload JSON file</div>
-            <div style="font-size: 0.9em; color: #6c757d; margin-top: 5px;">or drag and drop</div>
-          </div>
+          <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()" style="margin-bottom: 15px;">
+            📁 Upload JSON file
+          </button>
+          <input type="file" id="fileInput" accept=".json" style="display:none" />
 
           <div class="input-group">
             <label for="jsonInput">Or paste JSON Resume here:</label>
