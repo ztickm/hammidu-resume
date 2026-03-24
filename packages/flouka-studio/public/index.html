@@ -595,13 +595,17 @@
       // File upload
       document.getElementById('fileInput').addEventListener('change', handleFileUpload);
       
-      // Range inputs
+      // Range inputs — update label and re-render preview
+      const debouncedPreview = debounce(updatePreview, 300);
+
       document.getElementById('fontSize').addEventListener('input', (e) => {
         document.getElementById('fontSizeValue').textContent = e.target.value + 'pt';
+        debouncedPreview();
       });
       
       document.getElementById('lineHeight').addEventListener('input', (e) => {
         document.getElementById('lineHeightValue').textContent = e.target.value;
+        debouncedPreview();
       });
     }
 
