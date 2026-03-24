@@ -217,14 +217,32 @@
       box-shadow: 0 2px 8px rgba(20, 184, 166, 0.2);
     }
 
-    .draggable-item.dragging {
-      opacity: 0.4;
-      box-shadow: 0 4px 16px rgba(20, 184, 166, 0.3);
+    .draggable-item.drag-source {
+      opacity: 0;
+      pointer-events: none;
     }
 
-    .draggable-item.drag-over {
-      border-color: #14b8a6;
-      border-style: dashed;
+    .drag-placeholder {
+      height: 0;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      border: 2px dashed #14b8a6;
+      background: rgba(20, 184, 166, 0.07);
+      box-sizing: border-box;
+      transition: height 0.1s;
+      pointer-events: none;
+    }
+
+    .drag-clone {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.85;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+      border-radius: 8px;
+      background: white;
+      border: 2px solid #14b8a6;
+      list-style: none;
     }
 
     .drag-handle {
@@ -233,6 +251,7 @@
       touch-action: none;
       user-select: none;
       -webkit-user-select: none;
+      cursor: grab;
     }
 
     .page-break-controls {
@@ -617,9 +636,9 @@
     function setupDragAndDrop() {
       const list = document.getElementById('sectionList');
 
-      // Use pointer events instead of HTML5 drag-and-drop.
-      // HTML5 DnD dragover is suppressed by WKWebView (Tauri/macOS);
-      // pointer events work reliably in all environments.
+      // Pointer-events drag with a floating clone + placeholder.
+      // Avoids HTML5 DnD (broken in WKWebView) and the flickering caused
+      // by re-inserting the live element during pointermove.
       list.addEventListener('pointerdown', (e) => {
         const handle = e.target.closest('.drag-handle');
         if (!handle) return;
@@ -628,56 +647,70 @@
         if (!item) return;
 
         e.preventDefault();
-        item.setPointerCapture(e.pointerId);
 
-        draggedItem = item;
-        item.classList.add('dragging');
-
-        const listRect = list.getBoundingClientRect();
         const itemRect = item.getBoundingClientRect();
-        // offset of pointer within the item so it doesn't jump
         const offsetY = e.clientY - itemRect.top;
+        const offsetX = e.clientX - itemRect.left;
+
+        // 1. Create a floating visual clone that follows the pointer
+        const clone = item.cloneNode(true);
+        clone.classList.add('drag-clone');
+        clone.style.width = itemRect.width + 'px';
+        clone.style.top  = itemRect.top  + 'px';
+        clone.style.left = itemRect.left + 'px';
+        document.body.appendChild(clone);
+
+        // 2. Create a same-height placeholder that stays in the list
+        const placeholder = document.createElement('li');
+        placeholder.className = 'drag-placeholder';
+        placeholder.style.height = itemRect.height + 'px';
+        item.parentNode.insertBefore(placeholder, item);
+
+        // 3. Hide the original in place
+        item.classList.add('drag-source');
+
+        // Capture so pointermove keeps firing even outside the element
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
+        document.addEventListener('pointercancel', onUp);
 
         function onMove(e) {
-          e.preventDefault();
-          const y = e.clientY - offsetY + (itemRect.height / 2);
-          const after = getDragAfterElement(list, y);
-          if (after == null) {
-            list.appendChild(item);
-          } else if (after !== item) {
-            list.insertBefore(item, after);
+          // Move the clone with the pointer
+          clone.style.top  = (e.clientY - offsetY) + 'px';
+          clone.style.left = (e.clientX - offsetX) + 'px';
+
+          // Move the placeholder to indicate drop position
+          // Hide clone temporarily so elementFromPoint sees the list
+          clone.style.display = 'none';
+          const target = document.elementFromPoint(e.clientX, e.clientY);
+          clone.style.display = '';
+
+          const targetItem = target && target.closest('.draggable-item');
+          if (targetItem && targetItem !== item) {
+            const targetRect = targetItem.getBoundingClientRect();
+            const insertBefore = e.clientY < targetRect.top + targetRect.height / 2;
+            if (insertBefore) {
+              targetItem.parentNode.insertBefore(placeholder, targetItem);
+            } else {
+              targetItem.parentNode.insertBefore(placeholder, targetItem.nextSibling);
+            }
           }
         }
 
         function onUp() {
-          item.classList.remove('dragging');
-          draggedItem = null;
-          item.releasePointerCapture(e.pointerId);
-          item.removeEventListener('pointermove', onMove);
-          item.removeEventListener('pointerup', onUp);
-          item.removeEventListener('pointercancel', onUp);
+          // Drop: insert real item where placeholder is, then clean up
+          placeholder.parentNode.insertBefore(item, placeholder);
+          placeholder.remove();
+          clone.remove();
+          item.classList.remove('drag-source');
+
+          document.removeEventListener('pointermove', onMove);
+          document.removeEventListener('pointerup', onUp);
+          document.removeEventListener('pointercancel', onUp);
+
           saveConfig(getConfigWithoutSaving());
         }
-
-        item.addEventListener('pointermove', onMove);
-        item.addEventListener('pointerup', onUp);
-        item.addEventListener('pointercancel', onUp);
       });
-    }
-
-    function getDragAfterElement(container, y) {
-      const draggableElements = [...container.querySelectorAll('.draggable-item:not(.dragging)')];
-
-      return draggableElements.reduce((closest, child) => {
-        const box = child.getBoundingClientRect();
-        const offset = y - box.top - box.height / 2;
-
-        if (offset < 0 && offset > closest.offset) {
-          return { offset: offset, element: child };
-        } else {
-          return closest;
-        }
-      }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
 
     async function handleFileUpload(e) {
