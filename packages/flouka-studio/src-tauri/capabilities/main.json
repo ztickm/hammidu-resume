@@ -7,7 +7,11 @@
   "permissions": [
     "core:default",
     "dialog:default",
+    "opener:default",
     "fs:default",
-    "opener:default"
+    "fs:allow-write-file",
+    "fs:scope-download-recursive",
+    "fs:scope-desktop-recursive",
+    "fs:scope-document-recursive"
   ]
 }
