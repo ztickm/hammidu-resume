@@ -2,7 +2,8 @@
 
 Your resume as a PDF that never loses its source data.
 
-[JSON Resume](https://jsonresume.org/) is an open standard for storing your CV as a structured JSON file — version-controllable, portable, and tool-friendly. Hammidu Resume takes that JSON and produces a professionally formatted PDF with the original JSON silently embedded inside it as an attachment. The PDF looks great for humans; the attachment keeps the data alive for tools (AIs, ATSs, etc).
+[JSON Resume](https://jsonresume.org/) is an open standard for storing your CV as a structured JSON file — version-controllable, portable, and tool-friendly.  
+Hammidu Resume takes that JSON and produces a professionally formatted PDF with the original JSON silently embedded inside it as an attachment. The PDF looks great for humans; the attachment keeps the data alive for tools (AIs, ATSs, etc).
 
 
 ## What problem does this solve?
@@ -200,7 +201,7 @@ Replaces the browser + Bun server with a native macOS (and later Windows/Linux) 
 - [x] Native Save dialog via Tauri (`dialog.save` + `fs.writeFile`)
 - [x] CSS `@page @bottom-center counter(page)` footer (replaces Puppeteer `footerTemplate`)
 - [x] Real `.icns` / `.ico` app icons; `.app` (9.8 MB) and `.dmg` (3.3 MB) produced by `tauri build`
-- [ ] Fix broken drag and drop
+- [x] Fix broken drag and drop
 - [ ] Show download dialog / open downloaded file
 - [ ] Windows: `CoreWebView2.PrintToPdfAsync()` Rust plugin
 - [ ] Linux: WebKitGTK print operation Rust plugin
