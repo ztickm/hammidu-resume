@@ -15,8 +15,21 @@
     body {
       font-family: 'Times New Roman', Times, serif;
 
-      font-size: {{_config.baseFontSize}}pt;
-      line-height: {{_config.lineHeight}};
+      font-size: {
+          {
+          _config.baseFontSize
+        }
+      }
+
+      pt;
+
+      line-height: {
+          {
+          _config.lineHeight
+        }
+      }
+
+      ;
       color: #000;
       max-width: 8.5in;
       margin: 0 auto;
@@ -130,6 +143,23 @@
     .entry-date {
       color: #333;
       font-size: 11pt;
+    }
+
+    /* Two-column entry row: left content | right content flush right */
+    .entry-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .entry-row-left {
+      flex: 1;
+    }
+
+    .entry-row-right {
+      flex-shrink: 0;
+      text-align: right;
+      margin-left: 1em;
     }
 
     .entry-description {
@@ -253,16 +283,20 @@
     {{#each ../work}}
     <div class="entry">
       <div class="entry-header">
-        <div class="entry-title">{{position}}</div>
-        <div class="entry-subtitle">
-          {{#if url}}
-          <a href="{{url}}" target="_blank">{{name}}</a>
-          {{else}}
-          {{name}}
-          {{/if}}
-          {{#if location}}, {{location}}{{/if}}
+        <div class="entry-row">
+          <div class="entry-row-left entry-title">
+            {{#if url}}
+            <a href="{{url}}" target="_blank">{{name}}</a>
+            {{else}}
+            {{name}}
+            {{/if}}
+          </div>
+          <div class="entry-row-right entry-date">{{#if location}}{{location}}{{/if}}</div>
         </div>
-        <div class="entry-date">{{formatDate startDate}} - {{formatDateOrPresent endDate}}</div>
+        <div class="entry-row">
+          <div class="entry-row-left entry-subtitle">{{position}}</div>
+          <div class="entry-row-right entry-date">{{formatDate startDate}} – {{formatDateOrPresent endDate}}</div>
+        </div>
       </div>
       {{#if summary}}
       <div class="entry-description">{{summary}}</div>
