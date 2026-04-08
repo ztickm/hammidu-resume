@@ -59,10 +59,8 @@
       padding: 30px;
       border-right: 1px solid #dee2e6;
       overflow-y: auto;
-      width: 400px;
+      flex: 1;
       min-width: 250px;
-      max-width: 800px;
-      flex-shrink: 0;
     }
 
     .resizer {
@@ -462,8 +460,10 @@
         const diff = e.clientX - startX;
         const newWidth = startWidth + diff;
         
-        // Enforce min and max width
-        if (newWidth >= 250 && newWidth <= 800) {
+        // Enforce min width (and leave at least 250px for the preview)
+        const maxWidth = document.querySelector('.main-content').offsetWidth - 250;
+        if (newWidth >= 250 && newWidth <= maxWidth) {
+          sidebar.style.flex = 'none';
           sidebar.style.width = newWidth + 'px';
         }
       });
@@ -482,6 +482,7 @@
       // Restore saved width
       const savedWidth = localStorage.getItem('sidebarWidth');
       if (savedWidth) {
+        sidebar.style.flex = 'none';
         sidebar.style.width = savedWidth + 'px';
       }
     }
