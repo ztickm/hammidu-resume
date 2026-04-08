@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
 import schema from "@jsonresume/schema";
