@@ -16,6 +16,8 @@
     "validator:example": "bun run --cwd packages/validator example.ts",
     "validator:validate": "bun run --cwd packages/validator cli.ts",
     "extractor:example": "bun run --cwd packages/extractor example.ts",
+    "agent:cli": "bun run --cwd packages/agent src/cli.ts",
+    "agent:example": "bun run --cwd packages/agent src/example.ts",
     "web": "bun run flouka:web",
     "example": "bun run xebec:example",
     "validate": "bun run validator:example",
@@ -23,6 +25,7 @@
   },
   "devDependencies": {
     "@jsonresume/schema": "^1.2.1",
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "bun-types": "latest"
   }
 }
