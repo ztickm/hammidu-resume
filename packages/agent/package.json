@@ -12,14 +12,13 @@
     "@langchain/anthropic": "^0.3.22",
     "@langchain/core": "^0.3.56",
     "@langchain/langgraph": "^0.2.74",
-    "@langchain/langgraph-checkpoint-sqlite": "^1.0.1",
+    "@langchain/langgraph-checkpoint": "^1.0.1",
+    "flouka-studio": "workspace:*",
     "json-resume-types": "workspace:*",
     "xebec-render": "workspace:*",
-    "flouka-studio": "workspace:*",
     "zod": "^3.24.4"
   },
   "devDependencies": {
-    "bun-types": "latest",
-    "@types/better-sqlite3": "^7.6.13"
+    "bun-types": "latest"
   }
 }

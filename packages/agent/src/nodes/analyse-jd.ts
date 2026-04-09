@@ -45,7 +45,8 @@ const JDAnalysisSchema = z.object({
 function getAnalysisModel() {
   const base = new ChatAnthropic({
     model: "claude-sonnet-4-20250514",
-    temperature: 0,
+    // temperature must be 1 when thinking is enabled (Anthropic requirement)
+    temperature: 1,
     maxTokens: 4096,
     anthropicApiKey: process.env.ANTHROPIC_API_KEY,
     // Adaptive thinking — high effort for thorough extraction

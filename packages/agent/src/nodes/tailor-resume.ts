@@ -21,7 +21,8 @@ import { TailoredResumeSchema, type TailoredResume } from "../schemas.js";
 function getTailoringModel() {
   const base = new ChatAnthropic({
     model: "claude-sonnet-4-20250514",
-    temperature: 0,
+    // temperature must be 1 when thinking is enabled (Anthropic requirement)
+    temperature: 1,
     maxTokens: 8192,
     anthropicApiKey: process.env.ANTHROPIC_API_KEY,
     // High-effort adaptive thinking for nuanced rewriting

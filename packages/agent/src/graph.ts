@@ -3,8 +3,8 @@
  * checkpointing and retry policies.
  */
 
-import { StateGraph, START, END } from "@langchain/langgraph";
-import { SqliteSaver } from "@langchain/langgraph-checkpoint-sqlite";
+import { StateGraph, START, END, MemorySaver } from "@langchain/langgraph";
+import { BunSqliteSaver } from "./bun-sqlite-saver.js";
 import { GraphState, type GraphStateType } from "./state.js";
 import { analyseJD } from "./nodes/analyse-jd.js";
 import { tailorResume } from "./nodes/tailor-resume.js";
@@ -55,9 +55,11 @@ function withRetry<S>(
 
 export function buildGraph(sqlitePath?: string) {
   // -- Checkpoint persistence -----------------------------------------------
-  const checkpointer = SqliteSaver.fromConnString(
-    sqlitePath ?? process.env.AGENT_DB_PATH ?? ":memory:"
-  );
+  const dbPath = sqlitePath ?? process.env.AGENT_DB_PATH ?? ":memory:";
+  const checkpointer =
+    dbPath === ":memory:"
+      ? new MemorySaver()
+      : BunSqliteSaver.fromConnString(dbPath);
 
   // -- Graph ----------------------------------------------------------------
   const graph = new StateGraph(GraphState)
