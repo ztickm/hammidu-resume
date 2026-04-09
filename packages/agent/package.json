@@ -1,0 +1,25 @@
+{
+  "name": "agent",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "LangGraph resume-tailoring agent — Claude Opus 4.6, stateful, headless PDF trigger",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "bun run src/cli.ts",
+    "example": "bun run src/example.ts"
+  },
+  "dependencies": {
+    "@langchain/anthropic": "^0.3.22",
+    "@langchain/core": "^0.3.56",
+    "@langchain/langgraph": "^0.2.74",
+    "@langchain/langgraph-checkpoint-sqlite": "^1.0.1",
+    "json-resume-types": "workspace:*",
+    "xebec-render": "workspace:*",
+    "flouka-studio": "workspace:*",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "@types/better-sqlite3": "^7.6.13"
+  }
+}
