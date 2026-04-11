@@ -176,13 +176,18 @@ export const TailoredResumeSchema = z
   .object({
     basics: z
       .object({
+        label: z
+          .string()
+          .describe(
+            "Professional headline under the candidate's name — update to reflect the target role title/domain"
+          ),
         summary: z
           .string()
           .describe(
-            "Rewritten professional summary emphasising alignment with the target JD"
+            "Rewritten professional summary (2-3 sentences) emphasising alignment with the target JD"
           ),
       })
-      .describe("Only the basics.summary is rewritten; other basics fields are preserved"),
+      .describe("Rewritten headline and summary; all other basics fields are preserved"),
     work: z
       .array(
         z.object({
@@ -195,12 +200,12 @@ export const TailoredResumeSchema = z
           highlights: z
             .array(z.string())
             .describe(
-              "Bullet points rewritten to align with the target JD while preserving factual accuracy"
+              "Original bullets lightly edited to foreground JD-relevant skills and impact. Preserve all facts and metrics. Reorder so the most relevant bullet comes first."
             ),
         })
       )
       .describe(
-        "One entry per work experience in the master resume, same order"
+        "One entry per work experience in the master resume, same order. Return ALL entries even if unchanged."
       ),
   })
   .describe(
