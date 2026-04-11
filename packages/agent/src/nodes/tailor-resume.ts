@@ -20,16 +20,13 @@ import { TailoredResumeSchema, type TailoredResume } from "../schemas.js";
 
 function getTailoringModel() {
   const base = new ChatAnthropic({
-    model: "claude-sonnet-4-20250514",
-    // temperature must be 1 when thinking is enabled (Anthropic requirement)
+    model: "claude-opus-4-5-20251101",
     temperature: 1,
     maxTokens: 8192,
     anthropicApiKey: process.env.ANTHROPIC_API_KEY,
-    // High-effort adaptive thinking for nuanced rewriting
-    thinking: {
-      type: "enabled",
-      budget_tokens: 4096,
-    },
+    // The SDK defaults topP to -1 which some models now reject.
+    // invocationKwargs merges last into the API body and overrides it.
+    invocationKwargs: { top_p: undefined },
   });
 
   return base.withStructuredOutput(TailoredResumeSchema, {
@@ -43,24 +40,37 @@ function getTailoringModel() {
 
 const SYSTEM_PROMPT = `You are an expert resume writer who tailors resumes for specific job applications.
 
-## Rules
+## Your task
 
-1. **summary**: Rewrite basics.summary to highlight the candidate's fit for the target role.
-   - Lead with the most relevant experience/skills.
-   - Keep it to 2-3 sentences.
-   - Use language that mirrors the JD's tone and keywords.
+You will receive:
+1. A **JD Analysis** — structured extraction of what the role needs, including key responsibilities and required skills.
+2. The **Job Description** in full.
+3. The **Master Resume** in JSON-Resume format.
 
-2. **work[].highlights**: Rewrite each bullet to emphasise relevance to the JD.
-   - Preserve factual accuracy — do NOT fabricate accomplishments or numbers.
-   - Use the JD's terminology where natural (keyword optimisation).
-   - Quantify impact wherever the original bullet already contained metrics.
-   - Reorder bullets within each role so the most relevant come first.
+Produce a tailored output with the following fields:
 
-3. **Preservation**:
-   - Do NOT change company names, job titles, dates, or any other field.
-   - Return exactly one entry per work experience, in the same order.
+### basics.label
+Update the professional headline to reflect the target role's title or domain.
+- Example: "Senior Backend Engineer" → "Software Engineer — Payroll Systems"
+- Keep it concise (3-6 words).
 
-4. **Output format**: Your output must be valid JSON matching the provided schema.`;
+### basics.summary  
+Rewrite the summary in 2-3 sentences:
+- Open with the most relevant experience for this specific role.
+- Weave in 2-3 keywords from the JD's requirements.
+- Match the tone of the JD (startup = action-oriented; enterprise = measured).
+
+### work[].highlights
+For each work entry, **lightly edit** the original bullets — do NOT rewrite from scratch:
+- Preserve every fact, metric, and number from the original.
+- Swap generic terms for the JD's specific terminology where natural (e.g. "API" → "REST API" if the JD says REST).
+- Reorder bullets so the most JD-relevant one comes first.
+- If a bullet has zero relevance to the JD, keep it unchanged — do not remove it.
+
+## Hard rules
+- Do NOT fabricate accomplishments, numbers, or technologies.
+- Company names, job titles, and dates must be copied verbatim from the master resume.
+- Return ALL work entries in the original order, even if you make no changes to them.`;
 
 // ---------------------------------------------------------------------------
 // Merge helper
@@ -72,9 +82,12 @@ function mergeResume(
 ): ResumeSchema {
   const merged: ResumeSchema = JSON.parse(JSON.stringify(master));
 
-  // Merge summary
+  // Merge basics
   if (merged.basics) {
     merged.basics.summary = tailored.basics.summary;
+    if (tailored.basics.label) {
+      merged.basics.label = tailored.basics.label;
+    }
   }
 
   // Merge work highlights — match by (name, position) pair
@@ -108,16 +121,30 @@ export async function tailorResume(
   const analysisContext = JSON.stringify(state.jd_analysis, null, 2);
   const masterJson = JSON.stringify(state.master_resume_json, null, 2);
 
+  // Render original bullets explicitly so the model edits rather than rewrites
+  const originalBullets = (
+    (state.master_resume_json as { work?: Array<{ name?: string; position?: string; highlights?: string[] }> }).work ?? []
+  )
+    .map(
+      (w, i) =>
+        `[${i}] ${w.position ?? ""} @ ${w.name ?? ""}\n` +
+        (w.highlights ?? []).map((h) => `  • ${h}`).join("\n")
+    )
+    .join("\n\n");
+
+  const keyResponsibilities = state.jd_analysis.key_responsibilities.join("\n- ");
+
   const result = (await model.invoke([
     { role: "system", content: SYSTEM_PROMPT },
     {
       role: "user",
       content: [
-        `## JD Analysis\n\n\`\`\`json\n${analysisContext}\n\`\`\``,
-        `## Job Description\n\n${state.current_jd}`,
-        `## Master Resume (JSON)\n\n\`\`\`json\n${masterJson}\n\`\`\``,
-        "",
-        "Now produce the tailored output matching the schema.",
+        `## JD Analysis\n\`\`\`json\n${analysisContext}\n\`\`\``,
+        `## Key responsibilities to foreground (from JD Analysis)\n- ${keyResponsibilities}`,
+        `## Job Description\n${state.current_jd}`,
+        `## Original work highlights (edit these — do not rewrite from scratch)\n${originalBullets}`,
+        `## Full Master Resume (JSON)\n\`\`\`json\n${masterJson}\n\`\`\``,
+        `Now produce the tailored output. Remember: edit the original bullets above, preserve all facts and metrics.`,
       ].join("\n\n"),
     },
   ])) as TailoredResume;
