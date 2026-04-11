@@ -112,7 +112,7 @@ async function main() {
 
   // -- Save tailored resume JSON
   if (result.tailored_resume_json) {
-    const outJson = resolve(import.meta.dir, "tailored_resume.json");
+    const outJson = resolve(import.meta.dir, "../../resumes/tailored_resume.json");
     writeFileSync(outJson, JSON.stringify(result.tailored_resume_json, null, 2));
     console.log(`\n✅  Tailored resume JSON → ${outJson}`);
   }

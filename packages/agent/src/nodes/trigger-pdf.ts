@@ -24,7 +24,7 @@ import type { GraphStateType } from "../state.js";
 // ---------------------------------------------------------------------------
 
 /** Directory where generated PDFs are stored. */
-const OUTPUT_DIR = process.env.AGENT_PDF_DIR ?? resolve("output");
+const OUTPUT_DIR = process.env.AGENT_PDF_DIR ?? resolve(import.meta.dir, "../../../../resumes");
 
 // ---------------------------------------------------------------------------
 // Tool definition (usable by the agent autonomously if needed)
