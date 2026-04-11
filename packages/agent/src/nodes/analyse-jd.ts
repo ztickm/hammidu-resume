@@ -44,16 +44,13 @@ const JDAnalysisSchema = z.object({
 
 function getAnalysisModel() {
   const base = new ChatAnthropic({
-    model: "claude-sonnet-4-20250514",
-    // temperature must be 1 when thinking is enabled (Anthropic requirement)
+    model: "claude-opus-4-5-20251101",
     temperature: 1,
     maxTokens: 4096,
     anthropicApiKey: process.env.ANTHROPIC_API_KEY,
-    // Adaptive thinking — high effort for thorough extraction
-    thinking: {
-      type: "enabled",
-      budget_tokens: 2048,
-    },
+    // The SDK defaults topP to -1 which some models now reject.
+    // invocationKwargs merges last into the API body and overrides it.
+    invocationKwargs: { top_p: undefined },
   });
 
   return base.withStructuredOutput(JDAnalysisSchema, {
