@@ -312,6 +312,67 @@
       margin-bottom: 10px;
     }
 
+    .btn-ai {
+      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+    }
+
+    .btn-ai:hover {
+      box-shadow: 0 5px 15px rgba(124, 58, 237, 0.4);
+    }
+
+    .btn-ai:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .tailor-status {
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-size: 0.85em;
+      display: none;
+    }
+
+    .tailor-status.running {
+      display: block;
+      background: #ede9fe;
+      color: #5b21b6;
+      border: 1px solid #c4b5fd;
+    }
+
+    .tailor-status.success {
+      display: block;
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .tailor-status.error {
+      display: block;
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .jd-textarea {
+      min-height: 150px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+      font-size: 13px !important;
+    }
+
+    .analysis-badge {
+      display: inline-block;
+      background: #7c3aed;
+      color: white;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 0.8em;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
     @media (max-width: 1200px) {
       .main-content {
         flex-direction: column;
@@ -362,6 +423,25 @@
           </div>
 
           <div id="validationMessage"></div>
+        </div>
+
+        <!-- AI Tailoring Section -->
+        <div class="section">
+          <div class="section-title">
+            ✨ AI Tailoring
+            <span id="matchBadge" class="analysis-badge" style="display:none"></span>
+          </div>
+
+          <div class="input-group">
+            <label for="jdInput">Paste Job Description:</label>
+            <textarea id="jdInput" class="jd-textarea" placeholder="Paste the full job description here…"></textarea>
+          </div>
+
+          <button class="btn btn-ai" id="tailorBtn" onclick="tailorResume()">
+            🤖 Tailor Resume
+          </button>
+
+          <div id="tailorStatus" class="tailor-status"></div>
         </div>
 
         <!-- Configuration Section -->
@@ -930,6 +1010,63 @@
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
       };
+    }
+
+    async function tailorResume() {
+      if (!currentResume) {
+        alert('Please upload or paste a valid JSON Resume first.');
+        return;
+      }
+
+      const jd = document.getElementById('jdInput').value.trim();
+      if (!jd) {
+        alert('Please paste a job description first.');
+        return;
+      }
+
+      const btn = document.getElementById('tailorBtn');
+      const status = document.getElementById('tailorStatus');
+      const badge = document.getElementById('matchBadge');
+
+      btn.disabled = true;
+      status.className = 'tailor-status running';
+      status.textContent = '🤖 Analysing JD and tailoring resume… (this takes ~30s)';
+      badge.style.display = 'none';
+
+      try {
+        const response = await fetch('/api/tailor', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resume: currentResume, jd }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Tailoring failed');
+        }
+
+        // Put the tailored resume into the JSON input field and re-validate
+        document.getElementById('jsonInput').value = JSON.stringify(data.tailored_resume, null, 2);
+        await validateJSON();
+
+        // Show match badge
+        if (data.jd_analysis?.match_score !== undefined) {
+          badge.textContent = `${data.jd_analysis.match_score}% match`;
+          badge.style.display = 'inline-block';
+        }
+
+        // Show gaps if any
+        const gaps = data.jd_analysis?.gaps ?? [];
+        const gapText = gaps.length ? `\nGaps: ${gaps.join(', ')}` : '';
+        status.className = 'tailor-status success';
+        status.textContent = `✅ ${data.status ?? 'Done'}${gapText}`;
+      } catch (err) {
+        status.className = 'tailor-status error';
+        status.textContent = `❌ ${err.message}`;
+      } finally {
+        btn.disabled = false;
+      }
     }
 
     // Initialize on load

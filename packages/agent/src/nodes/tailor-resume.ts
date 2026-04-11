@@ -128,7 +128,7 @@ export async function tailorResume(
     .map(
       (w, i) =>
         `[${i}] ${w.position ?? ""} @ ${w.name ?? ""}\n` +
-        (w.highlights ?? []).map((h) => `  • ${h}`).join("\n")
+        (Array.isArray(w.highlights) ? w.highlights : []).map((h) => `  • ${h}`).join("\n")
     )
     .join("\n\n");
 
