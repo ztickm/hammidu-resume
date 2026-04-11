@@ -18,6 +18,7 @@
     "extractor:example": "bun run --cwd packages/extractor example.ts",
     "agent:cli": "bun run --cwd packages/agent src/cli.ts",
     "agent:example": "bun run --cwd packages/agent src/example.ts",
+    "agent:run": "bun run --cwd packages/agent run.ts",
     "web": "bun run flouka:web",
     "example": "bun run xebec:example",
     "validate": "bun run validator:example",
