@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hammidu Rais - JSON Resume to PDF Converter</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/editor/editor.main.css">
+  <!-- Monaco AMD loader — must load before the inline script that calls require() -->
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
   <style>
     * {
       margin: 0;
@@ -144,6 +147,19 @@
     textarea {
       min-height: 200px;
       resize: vertical;
+    }
+
+    #jsonEditorContainer {
+      width: 100%;
+      height: 320px;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    #jsonEditorContainer.focused {
+      border-color: #14b8a6;
     }
 
     .btn {
@@ -418,8 +434,8 @@
           </div>
 
           <div class="input-group">
-            <label for="jsonInput">Or paste JSON Resume here:</label>
-            <textarea id="jsonInput" placeholder='{\n  "basics": {\n    "name": "Your Name",\n    ...\n  }\n}'></textarea>
+            <label for="jsonEditorContainer">Or paste JSON Resume here:</label>
+            <div id="jsonEditorContainer"></div>
           </div>
 
           <div id="validationMessage"></div>
@@ -657,8 +673,16 @@
     }
 
     function setupEventListeners() {
-      // JSON input
-      document.getElementById('jsonInput').addEventListener('input', debounce(validateJSON, 500));
+      // Monaco editor change — validate on every edit (debounced)
+      monacoEditor.onDidChangeModelContent(debounce(validateJSON, 500));
+
+      // Monaco focus/blur — highlight container border
+      monacoEditor.onDidFocusEditorWidget(() => {
+        document.getElementById('jsonEditorContainer').classList.add('focused');
+      });
+      monacoEditor.onDidBlurEditorWidget(() => {
+        document.getElementById('jsonEditorContainer').classList.remove('focused');
+      });
       
       // File upload
       document.getElementById('fileInput').addEventListener('change', handleFileUpload);
@@ -728,12 +752,12 @@
       if (!file) return;
       
       const text = await file.text();
-      document.getElementById('jsonInput').value = text;
+      monacoEditor.setValue(text);
       validateJSON();
     }
 
     async function validateJSON() {
-      const input = document.getElementById('jsonInput').value.trim();
+      const input = monacoEditor.getValue().trim();
       const messageDiv = document.getElementById('validationMessage');
       
       if (!input) {
@@ -996,7 +1020,7 @@
         ]
       };
       
-      document.getElementById('jsonInput').value = JSON.stringify(example, null, 2);
+      monacoEditor.setValue(JSON.stringify(example, null, 2));
       validateJSON();
     }
 
@@ -1046,8 +1070,8 @@
           throw new Error(data.error || 'Tailoring failed');
         }
 
-        // Put the tailored resume into the JSON input field and re-validate
-        document.getElementById('jsonInput').value = JSON.stringify(data.tailored_resume, null, 2);
+        // Put the tailored resume into the Monaco editor and re-validate
+        monacoEditor.setValue(JSON.stringify(data.tailored_resume, null, 2));
         await validateJSON();
 
         // Show match badge
@@ -1069,8 +1093,33 @@
       }
     }
 
-    // Initialize on load
-    init();
+    // Bootstrap Monaco, then initialize the app
+    // monacoEditor is the global editor instance used everywhere
+    let monacoEditor;
+
+    require.config({
+      paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs' }
+    });
+
+    require(['vs/editor/editor.main'], () => {
+      monacoEditor = monaco.editor.create(
+        document.getElementById('jsonEditorContainer'),
+        {
+          language: 'json',
+          theme: 'vs',
+          automaticLayout: true,
+          minimap: { enabled: false },
+          scrollBeyondLastLine: false,
+          fontSize: 13,
+          fontFamily: "'Monaco', 'Courier New', monospace",
+          tabSize: 2,
+          wordWrap: 'off',
+        }
+      );
+
+      // Wire up the rest of the app now that the editor is ready
+      init();
+    });
   </script>
 </body>
 </html>
