@@ -1,0 +1,8 @@
+{
+  // Disable format-on-save for Handlebars templates.
+  // Prettier breaks {{expression}} syntax inside CSS/style blocks.
+  // (The .prettierignore already covers the CLI — this covers the editor extension.)
+  "[handlebars]": {
+    "editor.formatOnSave": false
+  }
+}

@@ -28,4 +28,8 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # Finder (MacOS) folder config
 .DS_Store
 
+# Agent outputs
+packages/agent/output/
+packages/agent/agent.sqlite
+
 _*.md
