@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{_config.locale}}"{{#if _config.rtl}} dir="rtl"{{/if}}>
 
 <head>
   <meta charset="UTF-8">
@@ -55,18 +55,12 @@
       text-decoration: none;
     }
 
-    /* Links styling - blue with underline and icon */
+    /* Links styling - blue with underline */
     a {
       color: #0066cc;
       text-decoration: underline;
     }
 
-    a::after {
-      content: "🔗";
-      font-size: 0.7em;
-      margin-left: 0.2em;
-      vertical-align: super;
-    }
 
     /* Section Headers */
     .section {
@@ -237,7 +231,7 @@
   {{#if ../education}}
   <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore " education")}} page-break-before{{/if}}{{#if
     (hasPageBreak ../_config.pageBreakAfter "education" )}} page-break-after{{/if}}">
-    <h2 class="section-title">Education</h2>
+    <h2 class="section-title">{{../_config.labels.education}}</h2>
     {{#each ../education}}
     <div class="entry">
       <div class="entry-header">
@@ -265,14 +259,14 @@
   {{#if ../work}}
   <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore " work")}} page-break-before{{/if}}{{#if
     (hasPageBreak ../_config.pageBreakAfter "work" )}} page-break-after{{/if}}">
-    <h2 class="section-title">Experience</h2>
+    <h2 class="section-title">{{../_config.labels.work}}</h2>
     {{#each ../work}}
     <div class="entry">
       <div class="entry-header">
         <div class="entry-row">
           <div class="entry-row-left entry-title">
             {{#if url}}
-            <a href="{{url}}" target="_blank">{{name}}</a>
+            {{name}} <a href="{{url}}" target="_blank">{{url}}</a>
             {{else}}
             {{name}}
             {{/if}}
@@ -281,7 +275,7 @@
         </div>
         <div class="entry-row">
           <div class="entry-row-left entry-subtitle">{{position}}</div>
-          <div class="entry-row-right entry-date">{{formatDate startDate}} – {{formatDateOrPresent endDate}}</div>
+          <div class="entry-row-right entry-date">{{formatDate startDate}} – {{formatDateOrPresent endDate ../_config.labels.present}}</div>
         </div>
       </div>
       {{#if summary}}
@@ -304,7 +298,7 @@
   {{#if ../skills}}
   <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore " skills")}} page-break-before{{/if}}{{#if
     (hasPageBreak ../_config.pageBreakAfter "skills" )}} page-break-after{{/if}}">
-    <h2 class="section-title">Skills</h2>
+    <h2 class="section-title">{{../_config.labels.skills}}</h2>
     {{#each ../skills}}
     <div class="skill-item">
       <span class="skill-name">{{name}}</span>
@@ -322,13 +316,13 @@
   {{#if ../volunteer}}
   <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore " volunteer")}} page-break-before{{/if}}{{#if
     (hasPageBreak ../_config.pageBreakAfter "volunteer" )}} page-break-after{{/if}}">
-    <h2 class="section-title">Volunteer Work</h2>
+    <h2 class="section-title">{{../_config.labels.volunteer}}</h2>
     {{#each ../volunteer}}
     <div class="entry">
       <div class="entry-header">
         <div class="entry-title">{{position}}</div>
         <div class="entry-subtitle">{{organization}}</div>
-        <div class="entry-date">{{formatDate startDate}} - {{formatDateOrPresent endDate}}</div>
+        <div class="entry-date">{{formatDate startDate}} - {{formatDateOrPresent endDate ../_config.labels.present}}</div>
       </div>
       {{#if summary}}
       <div class="entry-description">{{summary}}</div>
@@ -350,7 +344,7 @@
   {{#if ../awards}}
   <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore " awards")}} page-break-before{{/if}}{{#if
     (hasPageBreak ../_config.pageBreakAfter "awards" )}} page-break-after{{/if}}">
-    <h2 class="section-title">Awards & Honors</h2>
+    <h2 class="section-title">{{../_config.labels.awards}}</h2>
     {{#each ../awards}}
     <div class="entry">
       <div class="entry-header">
@@ -371,7 +365,7 @@
   {{#if ../publications}}
   <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore " publications")}} page-break-before{{/if}}{{#if
     (hasPageBreak ../_config.pageBreakAfter "publications" )}} page-break-after{{/if}}">
-    <h2 class="section-title">Publications</h2>
+    <h2 class="section-title">{{../_config.labels.publications}}</h2>
     {{#each ../publications}}
     <div class="entry">
       <div class="entry-header">
@@ -392,19 +386,19 @@
   {{#if ../projects}}
   <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore " projects")}} page-break-before{{/if}}{{#if
     (hasPageBreak ../_config.pageBreakAfter "projects" )}} page-break-after{{/if}}">
-    <h2 class="section-title">Projects</h2>
+    <h2 class="section-title">{{../_config.labels.projects}}</h2>
     {{#each ../projects}}
     <div class="entry">
       <div class="entry-header">
         <div class="entry-title">
           {{#if url}}
-          <a href="{{url}}" target="_blank">{{name}}</a>
+          {{name}} <a href="{{url}}" target="_blank">{{url}}</a>
           {{else}}
           {{name}}
           {{/if}}
         </div>
         {{#if entity}}<div class="entry-subtitle">{{entity}}</div>{{/if}}
-        {{#if startDate}}<div class="entry-date">{{formatDate startDate}} - {{formatDateOrPresent endDate}}</div>{{/if}}
+        {{#if startDate}}<div class="entry-date">{{formatDate startDate}} - {{formatDateOrPresent endDate ../_config.labels.present}}</div>{{/if}}
       </div>
       {{#if description}}
       <div class="entry-description">{{description}}</div>
@@ -426,7 +420,7 @@
   {{#if ../languages}}
   <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore " languages")}} page-break-before{{/if}}{{#if
     (hasPageBreak ../_config.pageBreakAfter "languages" )}} page-break-after{{/if}}">
-    <h2 class="section-title">Languages</h2>
+    <h2 class="section-title">{{../_config.labels.languages}}</h2>
     {{#each ../languages}}
     <div class="language-item">
       <span class="skill-name">{{language}}</span>
@@ -441,7 +435,7 @@
   {{#if ../certificates}}
   <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore " certificates")}} page-break-before{{/if}}{{#if
     (hasPageBreak ../_config.pageBreakAfter "certificates" )}} page-break-after{{/if}}">
-    <h2 class="section-title">Certificates</h2>
+    <h2 class="section-title">{{../_config.labels.certificates}}</h2>
     {{#each ../certificates}}
     <div class="entry">
       <div class="entry-header">
@@ -459,7 +453,7 @@
   {{#if ../interests}}
   <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore " interests")}} page-break-before{{/if}}{{#if
     (hasPageBreak ../_config.pageBreakAfter "interests" )}} page-break-after{{/if}}">
-    <h2 class="section-title">Interests</h2>
+    <h2 class="section-title">{{../_config.labels.interests}}</h2>
     {{#each ../interests}}
     <div class="skill-item">
       <span class="skill-name">{{name}}</span>
@@ -476,7 +470,7 @@
   {{#if ../references}}
   <div class="section{{#if (hasPageBreak ../_config.pageBreakBefore " references")}} page-break-before{{/if}}{{#if
     (hasPageBreak ../_config.pageBreakAfter "references" )}} page-break-after{{/if}}">
-    <h2 class="section-title">References</h2>
+    <h2 class="section-title">{{../_config.labels.references}}</h2>
     {{#each ../references}}
     <div class="entry">
       <div class="entry-title">{{name}}</div>

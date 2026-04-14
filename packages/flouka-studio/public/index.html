@@ -473,6 +473,16 @@
             <label>Line Height: <span class="range-value" id="lineHeightValue">1.5</span></label>
             <input type="range" id="lineHeight" min="1" max="2.5" value="1.5" step="0.1">
           </div>
+
+          <div class="input-group">
+            <label for="localeSelect">Output Language</label>
+            <select id="localeSelect">
+              <option value="en">🇬🇧 English</option>
+              <option value="de">🇩🇪 Deutsch</option>
+              <option value="fr">🇫🇷 Français</option>
+              <option value="ar">🇸🇦 العربية</option>
+            </select>
+          </div>
         </div>
 
         <!-- Section Order -->
@@ -668,7 +678,8 @@
         pageBreakBefore,
         pageBreakAfter,
         baseFontSize: parseFloat(document.getElementById('fontSize').value),
-        lineHeight: parseFloat(document.getElementById('lineHeight').value)
+        lineHeight: parseFloat(document.getElementById('lineHeight').value),
+        locale: document.getElementById('localeSelect').value,
       };
     }
 
@@ -698,6 +709,11 @@
       document.getElementById('lineHeight').addEventListener('input', (e) => {
         document.getElementById('lineHeightValue').textContent = e.target.value;
         debouncedPreview();
+      });
+
+      // Language selector — re-render preview immediately on change
+      document.getElementById('localeSelect').addEventListener('change', () => {
+        updatePreview();
       });
     }
 
@@ -828,7 +844,8 @@
         pageBreakBefore,
         pageBreakAfter,
         baseFontSize: parseFloat(document.getElementById('fontSize').value),
-        lineHeight: parseFloat(document.getElementById('lineHeight').value)
+        lineHeight: parseFloat(document.getElementById('lineHeight').value),
+        locale: document.getElementById('localeSelect').value,
       };
       
       // Save to localStorage

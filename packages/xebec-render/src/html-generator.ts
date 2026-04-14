@@ -4,7 +4,7 @@ import { formatDate, formatDateOrPresent, joinArray } from "./helpers";
 import { readFileSync } from "fs";
 import { join } from "path";
 import type { GenerateConfig, SectionName } from "./config";
-import { DEFAULT_CONFIG } from "./config";
+import { DEFAULT_CONFIG, LABELS } from "./config";
 import { validateResumeStrict } from "validator";
 
 // Load the Handlebars template
@@ -39,7 +39,10 @@ export function generateHTML(
     pageBreakAfter: config.pageBreakAfter ?? DEFAULT_CONFIG.pageBreakAfter,
     baseFontSize: config.baseFontSize ?? DEFAULT_CONFIG.baseFontSize,
     lineHeight: config.lineHeight ?? DEFAULT_CONFIG.lineHeight,
+    locale: config.locale ?? DEFAULT_CONFIG.locale,
   };
+
+  const labels = LABELS[finalConfig.locale] ?? LABELS.en;
 
   // Create a context object with resume data and configuration
   const context = {
@@ -50,6 +53,9 @@ export function generateHTML(
       pageBreakAfter: new Set(finalConfig.pageBreakAfter),
       baseFontSize: finalConfig.baseFontSize,
       lineHeight: finalConfig.lineHeight,
+      locale: finalConfig.locale,
+      rtl: finalConfig.locale === "ar",
+      labels,
     },
   };
 

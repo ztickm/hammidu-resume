@@ -39,10 +39,10 @@ export function formatDate(dateString: ISO8601 | undefined): string {
 }
 
 /**
- * Format a date or show "Present" if undefined/empty
+ * Format a date or show a localised "present" label if undefined/empty
  */
-export function formatDateOrPresent(dateString: ISO8601 | undefined): string {
-  if (!dateString) return "Present";
+export function formatDateOrPresent(dateString: ISO8601 | undefined, presentLabel?: string): string {
+  if (!dateString) return presentLabel ?? "Present";
   return formatDate(dateString);
 }
 

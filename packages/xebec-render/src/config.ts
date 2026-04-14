@@ -16,6 +16,82 @@ export type SectionName =
   | "interests"
   | "references";
 
+export type Locale = "en" | "de" | "fr" | "ar";
+
+export interface SectionLabels {
+  education: string;
+  work: string;
+  volunteer: string;
+  skills: string;
+  languages: string;
+  awards: string;
+  publications: string;
+  projects: string;
+  certificates: string;
+  interests: string;
+  references: string;
+  present: string;
+}
+
+export const LABELS: Record<Locale, SectionLabels> = {
+  en: {
+    education:    "Education",
+    work:         "Experience",
+    volunteer:    "Volunteer Work",
+    skills:       "Skills",
+    languages:    "Languages",
+    awards:       "Awards & Honors",
+    publications: "Publications",
+    projects:     "Projects",
+    certificates: "Certificates",
+    interests:    "Interests",
+    references:   "References",
+    present:      "Present",
+  },
+  de: {
+    education:    "Ausbildung",
+    work:         "Berufserfahrung",
+    volunteer:    "Ehrenamtliche Tätigkeit",
+    skills:       "Fähigkeiten",
+    languages:    "Sprachen",
+    awards:       "Auszeichnungen",
+    publications: "Publikationen",
+    projects:     "Projekte",
+    certificates: "Zertifikate",
+    interests:    "Interessen",
+    references:   "Referenzen",
+    present:      "Heute",
+  },
+  fr: {
+    education:    "Formation",
+    work:         "Expérience professionnelle",
+    volunteer:    "Bénévolat",
+    skills:       "Compétences",
+    languages:    "Langues",
+    awards:       "Prix & Distinctions",
+    publications: "Publications",
+    projects:     "Projets",
+    certificates: "Certifications",
+    interests:    "Centres d'intérêt",
+    references:   "Références",
+    present:      "Aujourd'hui",
+  },
+  ar: {
+    education:    "التعليم",
+    work:         "الخبرة المهنية",
+    volunteer:    "العمل التطوعي",
+    skills:       "المهارات",
+    languages:    "اللغات",
+    awards:       "الجوائز والتكريمات",
+    publications: "المنشورات",
+    projects:     "المشاريع",
+    certificates: "الشهادات",
+    interests:    "الاهتمامات",
+    references:   "المراجع",
+    present:      "الآن",
+  },
+};
+
 export interface GenerateConfig {
   /**
    * Order of sections in the resume. Sections not listed will not be included.
@@ -37,7 +113,7 @@ export interface GenerateConfig {
   pageBreakAfter?: SectionName[];
 
   /**
-   * Base font size in pixels
+   * Base font size in pt
    * Default: 12
    */
   baseFontSize?: number;
@@ -47,6 +123,12 @@ export interface GenerateConfig {
    * Default: 1.5
    */
   lineHeight?: number;
+
+  /**
+   * Output language for section headings
+   * Default: "en"
+   */
+  locale?: Locale;
 }
 
 export const DEFAULT_SECTION_ORDER: SectionName[] = [
@@ -70,4 +152,5 @@ export const DEFAULT_CONFIG: Required<GenerateConfig> = {
   pageBreakAfter: [],
   baseFontSize: 12,
   lineHeight: 1.5,
+  locale: "en",
 };
