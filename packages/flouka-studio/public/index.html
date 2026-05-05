@@ -40,6 +40,70 @@
       flex-shrink: 0;
     }
 
+    /* Header toolbar for quick actions */
+    .header-toolbar {
+      position: absolute;
+      right: 30px;
+      top: 18px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      background: rgba(0,0,0,0.12); /* subtle contrast against header */
+      padding: 6px;
+      border-radius: 10px;
+    }
+
+    /* Unified button/select sizing for header toolbar */
+    .header-toolbar .btn,
+    .header-toolbar select {
+      height: 36px;
+      min-width: 44px;
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95em;
+      border-radius: 6px;
+      cursor: pointer;
+      width: auto;        /* override global .btn width:100% */
+      margin: 0;          /* remove global .btn margin-top */
+      align-self: center; /* ensure vertical centering */
+    }
+
+    /* Primary (white) buttons */
+    .header-toolbar .btn {
+      background: #ffffff;
+      color: #0b1220;
+      border: none;
+      box-shadow: 0 1px 2px rgba(11,18,32,0.08);
+    }
+
+    /* Secondary buttons (transparent on header) */
+    .header-toolbar .btn.btn-secondary {
+      background: transparent;
+      color: #ffffff;
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow: none;
+    }
+
+    .header-toolbar select {
+      background: #ffffff;
+      color: #0b1220;
+      border: 1px solid rgba(11,18,32,0.08);
+      box-sizing: border-box;
+      padding: 0 12px; /* ensure same horizontal padding as buttons */
+      line-height: 20px;
+      -webkit-appearance: none;
+      appearance: none;
+      align-self: center;
+    }
+
+    .header-toolbar .btn:focus,
+    .header-toolbar select:focus {
+      outline: 3px solid rgba(255,255,255,0.18);
+      outline-offset: 2px;
+    }
+
     .header h1 {
       font-size: 2em;
       margin-bottom: 5px;
@@ -420,6 +484,18 @@
       <p>Upload or paste your JSON Resume, customize the layout, and generate a professional PDF</p>
     </div>
 
+    <div class="header-toolbar">
+      <select id="localeSelect" title="Output language">
+        <option value="en">🇬🇧 English</option>
+        <option value="de">🇩🇪 Deutsch</option>
+        <option value="fr">🇫🇷 Français</option>
+        <option value="ar">🇸🇦 العربية</option>
+      </select>
+      <button class="btn" onclick="updatePreview()">🔄 Preview</button>
+      <button class="btn" onclick="generatePDF()">📥 PDF</button>
+      <button class="btn btn-secondary" onclick="loadExample()">📋 Example</button>
+    </div>
+
     <div class="main-content">
       <div class="sidebar">
         <!-- JSON Input Section -->
@@ -474,15 +550,7 @@
             <input type="range" id="lineHeight" min="1" max="2.5" value="1.5" step="0.1">
           </div>
 
-          <div class="input-group">
-            <label for="localeSelect">Output Language</label>
-            <select id="localeSelect">
-              <option value="en">🇬🇧 English</option>
-              <option value="de">🇩🇪 Deutsch</option>
-              <option value="fr">🇫🇷 Français</option>
-              <option value="ar">🇸🇦 العربية</option>
-            </select>
-          </div>
+          <!-- locale selector moved to header toolbar -->
         </div>
 
         <!-- Section Order -->
@@ -497,12 +565,7 @@
           </button>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="section">
-          <button class="btn" onclick="updatePreview()">🔄 Update Preview</button>
-          <button class="btn" onclick="generatePDF()">📥 Download PDF</button>
-          <button class="btn btn-secondary" onclick="loadExample()">📋 Load Example</button>
-        </div>
+        <!-- Action buttons moved to header toolbar -->
       </div>
 
       <div class="resizer" id="resizer"></div>
@@ -860,6 +923,9 @@
           sectionOrder: config.sectionOrder,
           pageBreakBefore: config.pageBreakBefore,
           pageBreakAfter: config.pageBreakAfter,
+          baseFontSize: config.baseFontSize,
+          lineHeight: config.lineHeight,
+          locale: config.locale,
           removedSections: removedSections
         }));
       } catch (e) {
@@ -910,6 +976,28 @@
           const checkbox = document.querySelector(`.break-after[data-section="${section}"]`);
           if (checkbox) checkbox.checked = true;
         });
+      }
+
+      // Restore font size, line height and locale if present
+      if (config.baseFontSize) {
+        const fs = document.getElementById('fontSize');
+        if (fs) {
+          fs.value = String(config.baseFontSize);
+          document.getElementById('fontSizeValue').textContent = fs.value + 'pt';
+        }
+      }
+
+      if (config.lineHeight) {
+        const lh = document.getElementById('lineHeight');
+        if (lh) {
+          lh.value = String(config.lineHeight);
+          document.getElementById('lineHeightValue').textContent = lh.value;
+        }
+      }
+
+      if (config.locale) {
+        const sel = document.getElementById('localeSelect');
+        if (sel) sel.value = config.locale;
       }
     }
 
