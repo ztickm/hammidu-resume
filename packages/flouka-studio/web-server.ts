@@ -11,6 +11,7 @@ import { generatePDF } from "./src/index.ts";
 import { validateResume } from "validator";
 import { analyseJD } from "../agent/src/nodes/analyse-jd.js";
 import { tailorResume } from "../agent/src/nodes/tailor-resume.js";
+import { MODEL_KEYS, DEFAULT_MODEL, type ModelKey } from "../agent/src/model.js";
 
 const server = Bun.serve({
   port: 3001,
@@ -116,16 +117,24 @@ const server = Bun.serve({
 
     // API: Tailor resume with AI agent (Nodes A + B only, no PDF)
     if (url.pathname === "/api/tailor" && req.method === "POST") {
-      if (!process.env.ANTHROPIC_API_KEY) {
-        return new Response(
-          JSON.stringify({ error: "ANTHROPIC_API_KEY is not set on the server." }),
-          { status: 503, headers: { "Content-Type": "application/json" } }
-        );
-      }
-
       try {
-        const body = (await req.json()) as { resume: ResumeSchema; jd: string };
+        const body = (await req.json()) as { resume: ResumeSchema; jd: string; model?: string };
         const { resume, jd } = body;
+
+        const modelKey: ModelKey = (MODEL_KEYS as readonly string[]).includes(body.model ?? "")
+          ? (body.model as ModelKey)
+          : DEFAULT_MODEL;
+
+        const isDeepSeek = modelKey.startsWith("deepseek");
+        const apiKey = isDeepSeek ? process.env.DEEPSEEK_API_KEY : process.env.ANTHROPIC_API_KEY;
+        const keyName = isDeepSeek ? "DEEPSEEK_API_KEY" : "ANTHROPIC_API_KEY";
+
+        if (!apiKey) {
+          return new Response(
+            JSON.stringify({ error: `${keyName} is not set on the server.` }),
+            { status: 503, headers: { "Content-Type": "application/json" } }
+          );
+        }
 
         if (!jd?.trim()) {
           return new Response(
@@ -134,8 +143,8 @@ const server = Bun.serve({
           );
         }
 
-        // Build a minimal graph state manually — no LangGraph overhead needed
-        // since we're calling the node functions directly.
+        const nodeConfig = { configurable: { model_key: modelKey } };
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const state: any = {
           user_id: "web_user",
@@ -148,11 +157,11 @@ const server = Bun.serve({
         };
 
         // Node A — analyse JD
-        const analysisResult = await analyseJD(state as Parameters<typeof analyseJD>[0]);
+        const analysisResult = await analyseJD(state, nodeConfig);
         const stateAfterA = { ...state, ...analysisResult };
 
         // Node B — tailor resume (no PDF)
-        const tailorResult = await tailorResume(stateAfterA as Parameters<typeof tailorResume>[0]);
+        const tailorResult = await tailorResume(stateAfterA, nodeConfig);
 
         return new Response(
           JSON.stringify({

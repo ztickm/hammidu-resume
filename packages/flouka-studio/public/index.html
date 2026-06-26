@@ -529,6 +529,16 @@
             <textarea id="jdInput" class="jd-textarea" placeholder="Paste the full job description here…"></textarea>
           </div>
 
+          <div class="input-group" style="margin-bottom: 10px;">
+            <label for="modelSelect">AI Model:</label>
+            <select id="modelSelect" style="width:100%;padding:8px 10px;border:2px solid #dee2e6;border-radius:8px;font-size:0.9em;">
+              <option value="claude-opus-4-5">Claude Opus 4.5 (Anthropic)</option>
+              <option value="claude-sonnet-4-5">Claude Sonnet 4.5 (Anthropic)</option>
+              <option value="deepseek-chat">DeepSeek Chat (DeepSeek-V3)</option>
+              <option value="deepseek-reasoner">DeepSeek Reasoner (R1)</option>
+            </select>
+          </div>
+
           <button class="btn btn-ai" id="tailorBtn" onclick="tailorResume()">
             🤖 Tailor Resume
           </button>
@@ -743,6 +753,7 @@
         baseFontSize: parseFloat(document.getElementById('fontSize').value),
         lineHeight: parseFloat(document.getElementById('lineHeight').value),
         locale: document.getElementById('localeSelect').value,
+        modelKey: document.getElementById('modelSelect').value,
       };
     }
 
@@ -909,8 +920,9 @@
         baseFontSize: parseFloat(document.getElementById('fontSize').value),
         lineHeight: parseFloat(document.getElementById('lineHeight').value),
         locale: document.getElementById('localeSelect').value,
+        modelKey: document.getElementById('modelSelect').value,
       };
-      
+
       // Save to localStorage
       saveConfig(config);
       
@@ -926,6 +938,7 @@
           baseFontSize: config.baseFontSize,
           lineHeight: config.lineHeight,
           locale: config.locale,
+          modelKey: config.modelKey,
           removedSections: removedSections
         }));
       } catch (e) {
@@ -998,6 +1011,11 @@
       if (config.locale) {
         const sel = document.getElementById('localeSelect');
         if (sel) sel.value = config.locale;
+      }
+
+      if (config.modelKey) {
+        const sel = document.getElementById('modelSelect');
+        if (sel) sel.value = config.modelKey;
       }
     }
 
@@ -1153,20 +1171,24 @@
         return;
       }
 
+      const modelKey = document.getElementById('modelSelect').value;
+      // Persist model selection
+      saveConfig(getConfigWithoutSaving());
+
       const btn = document.getElementById('tailorBtn');
       const status = document.getElementById('tailorStatus');
       const badge = document.getElementById('matchBadge');
 
       btn.disabled = true;
       status.className = 'tailor-status running';
-      status.textContent = '🤖 Analysing JD and tailoring resume… (this takes ~30s)';
+      status.textContent = `🤖 Analysing JD and tailoring resume with ${modelKey}… (this takes ~30s)`;
       badge.style.display = 'none';
 
       try {
         const response = await fetch('/api/tailor', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resume: currentResume, jd }),
+          body: JSON.stringify({ resume: currentResume, jd, model: modelKey }),
         });
 
         const data = await response.json();
