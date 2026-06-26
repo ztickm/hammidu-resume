@@ -9,10 +9,11 @@
     "example": "bun run src/example.ts"
   },
   "dependencies": {
-    "@langchain/anthropic": "^0.3.22",
-    "@langchain/core": "^0.3.56",
-    "@langchain/langgraph": "^0.2.74",
-    "@langchain/langgraph-checkpoint": "^1.0.1",
+    "@langchain/anthropic": "^1.4.0",
+    "@langchain/core": "^1.1.48",
+    "@langchain/langgraph": "^1.4.1",
+    "@langchain/langgraph-checkpoint": "^1.1.0",
+    "@langchain/openai": "^1.4.5",
     "flouka-studio": "workspace:*",
     "json-resume-types": "workspace:*",
     "xebec-render": "workspace:*",

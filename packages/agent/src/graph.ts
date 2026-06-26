@@ -9,6 +9,10 @@ import { GraphState, type GraphStateType } from "./state.js";
 import { analyseJD } from "./nodes/analyse-jd.js";
 import { tailorResume } from "./nodes/tailor-resume.js";
 import { triggerPdf } from "./nodes/trigger-pdf.js";
+import { DEFAULT_MODEL, MODEL_KEYS, type ModelKey } from "./model.js";
+
+export { MODEL_KEYS, DEFAULT_MODEL };
+export type { ModelKey };
 
 // ---------------------------------------------------------------------------
 // Retry wrapper
@@ -91,6 +95,8 @@ export interface RunInput {
   current_jd: string;
   /** Optional LangGraph thread_id — defaults to `user_id` */
   thread_id?: string;
+  /** Which LLM to use for both nodes (defaults to claude-opus-4-5) */
+  model_key?: ModelKey;
 }
 
 export async function runAgent(input: RunInput): Promise<GraphStateType> {
@@ -109,6 +115,7 @@ export async function runAgent(input: RunInput): Promise<GraphStateType> {
     {
       configurable: {
         thread_id: input.thread_id ?? input.user_id,
+        model_key: input.model_key ?? DEFAULT_MODEL,
       },
     }
   );

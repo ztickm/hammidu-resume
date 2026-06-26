@@ -9,29 +9,16 @@
  * merged back into the full master resume to produce tailored_resume_json.
  */
 
-import { ChatAnthropic } from "@langchain/anthropic";
 import type { ResumeSchema, Work } from "json-resume-types";
 import type { GraphStateType } from "../state.js";
 import { TailoredResumeSchema, type TailoredResume } from "../schemas.js";
+import { createChatModel, structuredOutputMethod, fieldNamesInstruction, DEFAULT_MODEL, type ModelKey } from "../model.js";
 
-// ---------------------------------------------------------------------------
-// Model — Claude Opus 4.6 with high-effort adaptive thinking
-// ---------------------------------------------------------------------------
-
-function getTailoringModel() {
-  const base = new ChatAnthropic({
-    model: "claude-opus-4-5-20251101",
-    temperature: 1,
-    maxTokens: 8192,
-    anthropicApiKey: process.env.ANTHROPIC_API_KEY,
-    // The SDK defaults topP to -1 which some models now reject.
-    // invocationKwargs merges last into the API body and overrides it.
-    invocationKwargs: { top_p: undefined },
-  });
-
-  return base.withStructuredOutput(TailoredResumeSchema, {
-    name: "tailored_resume",
-  });
+function getTailoringModel(modelKey: ModelKey) {
+  return createChatModel(modelKey, { maxTokens: 8192 }).withStructuredOutput(
+    TailoredResumeSchema,
+    { name: "tailored_resume", ...structuredOutputMethod(modelKey) }
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -61,11 +48,11 @@ Rewrite the summary in 2-3 sentences:
 - Match the tone of the JD (startup = action-oriented; enterprise = measured).
 
 ### work[].highlights
-For each work entry, **lightly edit** the original bullets — do NOT rewrite from scratch:
+- For each work entry, select the most relevant 3 or 4 bullets to the JD and JD analysis then **lightly edit** the original bullets — do NOT rewrite from scratch
 - Preserve every fact, metric, and number from the original.
 - Swap generic terms for the JD's specific terminology where natural (e.g. "API" → "REST API" if the JD says REST).
 - Reorder bullets so the most JD-relevant one comes first.
-- If a bullet has zero relevance to the JD, keep it unchanged — do not remove it.
+- If a bullet has zero relevance to the JD, and shows no value of the applicant, remove it if there are already enough bullets for that role. (Aim for 3-4 strong bullets per role, but fewer if the original had fewer.)
 
 ## Hard rules
 - Do NOT fabricate accomplishments, numbers, or technologies.
@@ -110,13 +97,15 @@ function mergeResume(
 // ---------------------------------------------------------------------------
 
 export async function tailorResume(
-  state: GraphStateType
+  state: GraphStateType,
+  config?: { configurable?: { model_key?: ModelKey } }
 ): Promise<Partial<GraphStateType>> {
   if (!state.jd_analysis) {
     throw new Error("tailorResume called before JD analysis — missing jd_analysis in state");
   }
 
-  const model = getTailoringModel();
+  const modelKey: ModelKey = config?.configurable?.model_key ?? DEFAULT_MODEL;
+  const model = getTailoringModel(modelKey);
 
   const analysisContext = JSON.stringify(state.jd_analysis, null, 2);
   const masterJson = JSON.stringify(state.master_resume_json, null, 2);
@@ -134,8 +123,13 @@ export async function tailorResume(
 
   const keyResponsibilities = state.jd_analysis.key_responsibilities.join("\n- ");
 
+  const systemContent = SYSTEM_PROMPT + fieldNamesInstruction(
+    modelKey,
+    ["basics (with fields: label, summary)", "work (array of objects with fields: name, position, highlights)"]
+  );
+
   const result = (await model.invoke([
-    { role: "system", content: SYSTEM_PROMPT },
+    { role: "system", content: systemContent },
     {
       role: "user",
       content: [

@@ -18,7 +18,7 @@
 import { readFileSync, existsSync } from "fs";
 import { resolve } from "path";
 import "./env.js"; // load root .env before anything reads process.env
-import { runAgent } from "./graph.js";
+import { runAgent, MODEL_KEYS, DEFAULT_MODEL, type ModelKey } from "./graph.js";
 
 // ---------------------------------------------------------------------------
 // Arg parsing (minimal — no external dep)
@@ -67,6 +67,17 @@ async function main() {
   const userId = args.user ?? "default_user";
   const dbPath = args.db ?? process.env.AGENT_DB_PATH ?? "agent.sqlite";
 
+  const modelKey = (args.model as ModelKey | undefined) ?? DEFAULT_MODEL;
+  if (!MODEL_KEYS.includes(modelKey as ModelKey)) {
+    console.error(`❌ Unknown model "${modelKey}". Valid options: ${MODEL_KEYS.join(", ")}`);
+    process.exit(1);
+  }
+
+  if (modelKey.startsWith("deepseek") && !process.env.DEEPSEEK_API_KEY) {
+    console.error("❌ DEEPSEEK_API_KEY env var is required for DeepSeek models");
+    process.exit(1);
+  }
+
   // -- Load resume ------------------------------------------------------------
   const masterResume = JSON.parse(readFileSync(fullPath, "utf-8"));
 
@@ -76,6 +87,7 @@ async function main() {
   console.log("🚀 Starting resume-tailoring agent…");
   console.log(`   User:    ${userId}`);
   console.log(`   Resume:  ${fullPath}`);
+  console.log(`   Model:   ${modelKey}`);
   console.log(`   DB:      ${dbPath}`);
   console.log("");
 
@@ -85,6 +97,7 @@ async function main() {
     master_resume_json: masterResume,
     current_jd: jdText,
     thread_id: `${userId}_${Date.now()}`,
+    model_key: modelKey,
   });
 
   // -- Output -----------------------------------------------------------------

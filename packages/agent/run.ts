@@ -11,11 +11,18 @@
 import { readFileSync, writeFileSync } from "fs";
 import { resolve } from "path";
 import "./src/env.js"; // loads root .env
-import { buildGraph } from "./src/graph.js";
+import { buildGraph, type ModelKey } from "./src/graph.js";
 
 // ---------------------------------------------------------------------------
 // ✏️  EDIT THESE
 // ---------------------------------------------------------------------------
+
+/**
+ * Choose the LLM for this run.
+ * Options: "claude-opus-4-5" | "claude-sonnet-4-5" | "deepseek-chat" | "deepseek-reasoner"
+ * DeepSeek requires DEEPSEEK_API_KEY in .env
+ */
+const MODEL: ModelKey = "claude-opus-4-5";
 
 const RESUME_PATH = resolve(import.meta.dir, "../../resumes/json_resume_BA.json");
 
@@ -82,7 +89,8 @@ async function main() {
   const masterResume = JSON.parse(readFileSync(RESUME_PATH, "utf-8"));
 
   console.log("🚀  Starting agent…");
-  console.log(`    Resume: ${RESUME_PATH}\n`);
+  console.log(`    Resume: ${RESUME_PATH}`);
+  console.log(`    Model:  ${MODEL}\n`);
 
   const app = buildGraph(":memory:");
 
@@ -96,7 +104,7 @@ async function main() {
       pdf_output_url: null,
       status: "Starting…",
     },
-    { configurable: { thread_id: "run_thread" } }
+    { configurable: { thread_id: "run_thread", model_key: MODEL } }
   );
 
   // -- Print JD analysis

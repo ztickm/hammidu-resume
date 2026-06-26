@@ -5,10 +5,10 @@
  * master resume to produce a JDAnalysis object that Node B consumes.
  */
 
-import { ChatAnthropic } from "@langchain/anthropic";
 import { z } from "zod";
 import type { GraphStateType } from "../state.js";
 import type { JDAnalysis } from "../state.js";
+import { createChatModel, structuredOutputMethod, fieldNamesInstruction, DEFAULT_MODEL, type ModelKey } from "../model.js";
 
 // ---------------------------------------------------------------------------
 // Zod schema for structured JD analysis output
@@ -38,24 +38,11 @@ const JDAnalysisSchema = z.object({
     .describe("Estimated match percentage (0-100) between resume and JD"),
 });
 
-// ---------------------------------------------------------------------------
-// Model — Claude Opus 4.6 with adaptive thinking
-// ---------------------------------------------------------------------------
-
-function getAnalysisModel() {
-  const base = new ChatAnthropic({
-    model: "claude-opus-4-5-20251101",
-    temperature: 1,
-    maxTokens: 4096,
-    anthropicApiKey: process.env.ANTHROPIC_API_KEY,
-    // The SDK defaults topP to -1 which some models now reject.
-    // invocationKwargs merges last into the API body and overrides it.
-    invocationKwargs: { top_p: undefined },
-  });
-
-  return base.withStructuredOutput(JDAnalysisSchema, {
-    name: "jd_analysis",
-  });
+function getAnalysisModel(modelKey: ModelKey) {
+  return createChatModel(modelKey, { maxTokens: 4096 }).withStructuredOutput(
+    JDAnalysisSchema,
+    { name: "jd_analysis", ...structuredOutputMethod(modelKey) }
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -81,14 +68,21 @@ Be precise. Do not hallucinate skills the candidate has or does not have.`;
 // ---------------------------------------------------------------------------
 
 export async function analyseJD(
-  state: GraphStateType
+  state: GraphStateType,
+  config?: { configurable?: { model_key?: ModelKey } }
 ): Promise<Partial<GraphStateType>> {
-  const model = getAnalysisModel();
+  const modelKey: ModelKey = config?.configurable?.model_key ?? DEFAULT_MODEL;
+  const model = getAnalysisModel(modelKey);
 
   const masterSummary = JSON.stringify(state.master_resume_json, null, 2);
 
+  const systemContent = SYSTEM_PROMPT + fieldNamesInstruction(
+    modelKey,
+    ["role_title", "company", "required_skills", "preferred_qualities", "key_responsibilities", "gaps", "match_score"]
+  );
+
   const result = (await model.invoke([
-    { role: "system", content: SYSTEM_PROMPT },
+    { role: "system", content: systemContent },
     {
       role: "user",
       content: `## Job Description\n\n${state.current_jd}\n\n## Master Resume (JSON)\n\n\`\`\`json\n${masterSummary}\n\`\`\``,
