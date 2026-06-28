@@ -98,13 +98,14 @@ function mergeResume(
 
 export async function tailorResume(
   state: GraphStateType,
-  config?: { configurable?: { model_key?: ModelKey } }
+  config?: { configurable?: { model_key?: ModelKey; prompt_addition?: string } }
 ): Promise<Partial<GraphStateType>> {
   if (!state.jd_analysis) {
     throw new Error("tailorResume called before JD analysis — missing jd_analysis in state");
   }
 
   const modelKey: ModelKey = config?.configurable?.model_key ?? DEFAULT_MODEL;
+  const promptAddition = config?.configurable?.prompt_addition ?? "";
   const model = getTailoringModel(modelKey);
 
   const analysisContext = JSON.stringify(state.jd_analysis, null, 2);
@@ -123,10 +124,12 @@ export async function tailorResume(
 
   const keyResponsibilities = state.jd_analysis.key_responsibilities.join("\n- ");
 
-  const systemContent = SYSTEM_PROMPT + fieldNamesInstruction(
-    modelKey,
-    ["basics (with fields: label, summary)", "work (array of objects with fields: name, position, highlights)"]
-  );
+  const systemContent = SYSTEM_PROMPT +
+    (promptAddition ? `\n\n## Additional Instructions from User\n${promptAddition}` : "") +
+    fieldNamesInstruction(
+      modelKey,
+      ["basics (with fields: label, summary)", "work (array of objects with fields: name, position, highlights)"]
+    );
 
   const result = (await model.invoke([
     { role: "system", content: systemContent },

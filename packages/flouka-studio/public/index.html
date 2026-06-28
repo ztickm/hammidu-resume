@@ -3,1250 +3,1898 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hammidu Rais - JSON Resume to PDF Converter</title>
+  <title>Flouka — Resume Studio</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/editor/editor.main.css">
-  <!-- Monaco AMD loader — must load before the inline script that calls require() -->
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    :root {
+      --teal: #14b8a6;
+      --teal-dark: #0d9488;
+      --teal-light: #f0fdfa;
+      --purple: #7c3aed;
+      --purple-light: #ede9fe;
+      --red: #dc3545;
+      --red-light: #f8d7da;
+      --green-light: #d4edda;
+      --green-text: #155724;
+      --border: #e2e8f0;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
     }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: #ffffff;
-      min-height: 100vh;
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-    }
-
-    .container {
-      width: 100vw;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
       height: 100vh;
-      background: white;
-      display: flex;
-      flex-direction: column;
       overflow: hidden;
     }
 
-    .header {
-      background: linear-gradient(135deg, #14b8a6 0%, #10b981 100%);
-      color: white;
-      padding: 20px 30px;
-      text-align: center;
-      flex-shrink: 0;
-    }
+    /* ── PAGE SYSTEM ── */
+    .pg { display: none; height: 100vh; flex-direction: column; overflow: hidden; }
+    .pg.active { display: flex; }
+    .pg-scroll { overflow-y: auto; }
 
-    /* Header toolbar for quick actions */
-    .header-toolbar {
-      position: absolute;
-      right: 30px;
-      top: 18px;
+    /* ── NAVBAR ── */
+    .nav {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 56px;
       display: flex;
-      gap: 8px;
       align-items: center;
-      background: rgba(0,0,0,0.12); /* subtle contrast against header */
-      padding: 6px;
-      border-radius: 10px;
+      gap: 12px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 10;
     }
-
-    /* Unified button/select sizing for header toolbar */
-    .header-toolbar .btn,
-    .header-toolbar select {
-      height: 36px;
-      min-width: 44px;
-      padding: 0 12px;
-      display: inline-flex;
+    .nav-brand {
+      font-size: 1.25em;
+      font-weight: 700;
+      color: var(--teal-dark);
+      letter-spacing: -0.5px;
+      margin-right: auto;
+    }
+    .nav-brand span { color: var(--text); }
+    .nav-back {
+      display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 0.95em;
+      gap: 6px;
+      color: var(--text-muted);
+      font-size: 0.9em;
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 6px 10px;
       border-radius: 6px;
-      cursor: pointer;
-      width: auto;        /* override global .btn width:100% */
-      margin: 0;          /* remove global .btn margin-top */
-      align-self: center; /* ensure vertical centering */
+      transition: background 0.15s;
+      margin-right: 8px;
     }
+    .nav-back:hover { background: var(--bg); color: var(--text); }
+    .nav-title { font-weight: 600; font-size: 0.95em; flex: 1; }
+    .nav-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 
-    /* Primary (white) buttons */
-    .header-toolbar .btn {
-      background: #ffffff;
-      color: #0b1220;
-      border: none;
-      box-shadow: 0 1px 2px rgba(11,18,32,0.08);
-    }
-
-    /* Secondary buttons (transparent on header) */
-    .header-toolbar .btn.btn-secondary {
-      background: transparent;
-      color: #ffffff;
-      border: 1px solid rgba(255,255,255,0.18);
-      box-shadow: none;
-    }
-
-    .header-toolbar select {
-      background: #ffffff;
-      color: #0b1220;
-      border: 1px solid rgba(11,18,32,0.08);
-      box-sizing: border-box;
-      padding: 0 12px; /* ensure same horizontal padding as buttons */
-      line-height: 20px;
-      -webkit-appearance: none;
-      appearance: none;
-      align-self: center;
-    }
-
-    .header-toolbar .btn:focus,
-    .header-toolbar select:focus {
-      outline: 3px solid rgba(255,255,255,0.18);
-      outline-offset: 2px;
-    }
-
-    .header h1 {
-      font-size: 2em;
-      margin-bottom: 5px;
-    }
-
-    .header p {
-      font-size: 1em;
-      opacity: 0.9;
-    }
-
-    .main-content {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .sidebar {
-      background: #f8f9fa;
-      padding: 30px;
-      border-right: 1px solid #dee2e6;
-      overflow-y: auto;
-      flex: 1;
-      min-width: 250px;
-    }
-
-    .resizer {
-      width: 5px;
-      background: #dee2e6;
-      cursor: col-resize;
-      position: relative;
-      flex-shrink: 0;
-      transition: background 0.2s;
-    }
-
-    .resizer:hover {
-      background: #14b8a6;
-    }
-
-    .resizer::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -5px;
-      right: -5px;
-      bottom: 0;
-    }
-
-    .preview-area {
-      padding: 30px;
-      background: white;
-      overflow-y: auto;
-      flex: 1;
-    }
-
-    .section {
-      margin-bottom: 30px;
-    }
-
-    .section-title {
-      font-size: 1.2em;
-      font-weight: 600;
-      margin-bottom: 15px;
-      color: #333;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .section-title::before {
-      content: "";
-      width: 4px;
-      height: 20px;
-      background: #14b8a6;
-      border-radius: 2px;
-    }
-
-    .input-group {
-      margin-bottom: 20px;
-    }
-
-    label {
-      display: block;
-      font-weight: 500;
-      margin-bottom: 8px;
-      color: #495057;
-      font-size: 0.9em;
-    }
-
-    textarea, input[type="number"], input[type="range"] {
-      width: 100%;
-      padding: 12px;
-      border: 2px solid #dee2e6;
-      border-radius: 8px;
-      font-family: 'Monaco', 'Courier New', monospace;
-      font-size: 13px;
-      transition: border-color 0.2s;
-    }
-
-    textarea:focus, input:focus {
-      outline: none;
-      border-color: #14b8a6;
-    }
-
-    textarea {
-      min-height: 200px;
-      resize: vertical;
-    }
-
-    #jsonEditorContainer {
-      width: 100%;
-      height: 320px;
-      border: 2px solid #dee2e6;
-      border-radius: 8px;
-      overflow: hidden;
-      transition: border-color 0.2s;
-    }
-
-    #jsonEditorContainer.focused {
-      border-color: #14b8a6;
-    }
-
+    /* ── BUTTONS ── */
     .btn {
-      background: linear-gradient(135deg, #14b8a6 0%, #10b981 100%);
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 8px; font-size: 0.9em;
+      font-weight: 500; cursor: pointer; border: none;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--teal) 0%, #10b981 100%);
       color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-size: 1em;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-      width: 100%;
-      margin-top: 10px;
     }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(20,184,166,0.4); }
+    .btn-secondary { background: white; color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--bg); }
+    .btn-ai { background: linear-gradient(135deg, var(--purple) 0%, #4f46e5 100%); color: white; }
+    .btn-ai:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(124,58,237,0.4); }
+    .btn-ai:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-danger { background: var(--red); color: white; }
+    .btn-danger:hover { background: #c82333; }
+    .btn-ghost { background: transparent; color: var(--text-muted); }
+    .btn-ghost:hover { background: var(--bg); color: var(--text); }
+    .btn-sm { padding: 5px 10px; font-size: 0.82em; border-radius: 6px; }
+    .btn-lg { padding: 12px 24px; font-size: 1em; }
+    .btn-wide { width: 100%; justify-content: center; }
 
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(20, 184, 166, 0.4);
+    /* ── BADGE ── */
+    .badge {
+      display: inline-block; padding: 2px 10px; border-radius: 999px;
+      font-size: 0.78em; font-weight: 600;
     }
+    .badge-green { background: #d1fae5; color: #065f46; }
+    .badge-yellow { background: #fef3c7; color: #92400e; }
+    .badge-red { background: #fee2e2; color: #991b1b; }
+    .badge-purple { background: var(--purple-light); color: #5b21b6; }
 
-    .btn:active {
-      transform: translateY(0);
+    /* ── FORM ELEMENTS ── */
+    .form-group { margin-bottom: 18px; }
+    .form-label { display: block; font-size: 0.85em; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; }
+    .form-input, .form-select, .form-textarea {
+      width: 100%; padding: 9px 12px;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: 0.9em; color: var(--text);
+      background: white; transition: border-color 0.15s;
     }
-
-    .btn-secondary {
-      background: #6c757d;
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none; border-color: var(--teal);
     }
+    .form-textarea { min-height: 100px; resize: vertical; font-family: inherit; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-select { appearance: none; -webkit-appearance: none; }
 
-    .validation-message {
-      padding: 12px;
-      border-radius: 8px;
-      margin-top: 10px;
-      font-size: 0.9em;
+    /* ── CARDS ── */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: var(--shadow);
     }
+    .card-hover { transition: box-shadow 0.2s, transform 0.2s; cursor: pointer; }
+    .card-hover:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
 
-    .validation-message.error {
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
+    /* ── DIVIDER ── */
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+    /* ── VALIDATION MESSAGES ── */
+    .msg { padding: 10px 14px; border-radius: 8px; font-size: 0.875em; margin-top: 8px; }
+    .msg-success { background: var(--green-light); color: var(--green-text); border: 1px solid #c3e6cb; }
+    .msg-error { background: var(--red-light); color: #721c24; border: 1px solid #f5c6cb; }
+    .msg-info { background: var(--purple-light); color: #5b21b6; border: 1px solid #c4b5fd; }
+
+    /* ══════════════════════════════════════════════
+       ONBOARDING PAGE
+    ══════════════════════════════════════════════ */
+    .onb-wrap {
+      flex: 1; overflow-y: auto;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 48px 24px;
     }
-
-    .validation-message.success {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-
-    .draggable-list {
-      list-style: none;
-      padding: 0;
-    }
-
-    .draggable-item {
-      background: white;
-      padding: 12px 15px;
+    .onb-logo {
+      font-size: 2em; font-weight: 800; color: var(--teal-dark);
       margin-bottom: 8px;
-      border-radius: 8px;
-      cursor: move;
-      border: 2px solid #dee2e6;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    }
+    .onb-tagline {
+      font-size: 1em; color: var(--text-muted); margin-bottom: 40px;
+    }
+    .onb-options {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 16px; width: 100%; max-width: 720px; margin-bottom: 32px;
+    }
+    .onb-card {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 28px 20px; gap: 12px; text-align: center;
+      cursor: pointer; border: 2px solid var(--border);
+      border-radius: 12px; background: white;
       transition: all 0.2s;
     }
-
-    .draggable-item:hover {
-      border-color: #14b8a6;
-      box-shadow: 0 2px 8px rgba(20, 184, 166, 0.2);
+    .onb-card:hover, .onb-card.selected {
+      border-color: var(--teal); background: var(--teal-light);
     }
-
-    .draggable-item.dragging {
-      opacity: 0.5;
+    .onb-card-icon { font-size: 2em; }
+    .onb-card-title { font-weight: 600; font-size: 0.95em; }
+    .onb-card-sub { font-size: 0.82em; color: var(--text-muted); }
+    .onb-method { width: 100%; max-width: 720px; }
+    #onb-editor-container {
+      width: 100%; height: 340px;
+      border: 2px solid var(--border); border-radius: 8px; overflow: hidden;
+      transition: border-color 0.2s;
     }
-
-    .drag-handle {
-      font-size: 1.2em;
-      color: #6c757d;
+    #onb-editor-container.focused { border-color: var(--teal); }
+    .onb-file-drop {
+      border: 2px dashed var(--teal); border-radius: 10px;
+      padding: 32px; text-align: center; background: var(--teal-light);
+      cursor: pointer; transition: all 0.2s; margin-bottom: 16px;
     }
+    .onb-file-drop:hover { background: #ccfbf1; }
+    .onb-actions { display: flex; gap: 10px; margin-top: 16px; }
 
-    .page-break-controls {
-      display: flex;
-      gap: 10px;
-      margin-left: auto;
+    /* Builder Wizard */
+    .wizard-step { display: none; }
+    .wizard-step.active { display: block; }
+    .wizard-progress {
+      display: flex; gap: 8px; align-items: center; margin-bottom: 24px;
     }
-
-    .checkbox-label {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 0.85em;
-      color: #6c757d;
-      cursor: pointer;
-    }
-
-    .checkbox-label input[type="checkbox"] {
-      width: auto;
-      cursor: pointer;
-    }
-
-    .remove-btn {
-      background: #dc3545;
-      color: white;
-      border: none;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 0.8em;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .remove-btn:hover {
-      background: #c82333;
-    }
-
-    .range-group {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .range-value {
-      min-width: 50px;
-      text-align: center;
-      font-weight: 600;
-      color: #14b8a6;
-    }
-
-    .preview-frame {
-      width: 100%;
-      border: 2px solid #dee2e6;
-      border-radius: 8px;
-      min-height: 800px;
-      background: white;
-    }
-
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #6c757d;
-      font-size: 1.1em;
-    }
-
-    .file-upload {
-      border: 2px dashed #14b8a6;
-      border-radius: 8px;
-      padding: 20px;
-      text-align: center;
-      background: #f0fdfa;
-      cursor: pointer;
+    .wizard-step-dot {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8em; font-weight: 600;
+      background: var(--border); color: var(--text-muted);
       transition: all 0.2s;
-      margin-bottom: 15px;
     }
-
-    .file-upload:hover {
-      background: #ccfbf1;
-      border-color: #0d9488;
+    .wizard-step-dot.done { background: var(--teal); color: white; }
+    .wizard-step-dot.active { background: var(--teal-dark); color: white; }
+    .wizard-step-line { flex: 1; height: 2px; background: var(--border); }
+    .wizard-step-line.done { background: var(--teal); }
+    .entry-card {
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 16px; margin-bottom: 12px; background: var(--bg);
+      position: relative;
     }
-
-    .file-upload input[type="file"] {
-      display: none;
+    .entry-remove {
+      position: absolute; top: 12px; right: 12px;
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 1.1em;
     }
+    .entry-remove:hover { color: var(--red); }
 
-    .upload-icon {
-      font-size: 2em;
-      margin-bottom: 10px;
+    /* ══════════════════════════════════════════════
+       DASHBOARD PAGE
+    ══════════════════════════════════════════════ */
+    .dash-content {
+      flex: 1; overflow-y: auto; padding: 32px 40px; max-width: 1100px;
+      width: 100%; margin: 0 auto;
     }
-
-    .btn-ai {
-      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+    .dash-hero {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 32px;
     }
-
-    .btn-ai:hover {
-      box-shadow: 0 5px 15px rgba(124, 58, 237, 0.4);
+    .dash-hero-text h2 { font-size: 1.6em; font-weight: 700; margin-bottom: 4px; }
+    .dash-hero-text p { color: var(--text-muted); font-size: 0.92em; }
+    .apps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
     }
-
-    .btn-ai:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
+    .app-card {
+      background: white; border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px;
+      display: flex; flex-direction: column; gap: 12px;
+      transition: box-shadow 0.2s, transform 0.2s;
+      cursor: pointer;
     }
+    .app-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .app-card-header { display: flex; align-items: flex-start; gap: 10px; }
+    .app-card-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--teal) 0%, #10b981 100%);
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 1.1em; flex-shrink: 0;
+    }
+    .app-card-title { font-weight: 600; font-size: 0.95em; line-height: 1.3; }
+    .app-card-sub { font-size: 0.8em; color: var(--text-muted); margin-top: 2px; }
+    .app-card-meta {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.8em; color: var(--text-muted);
+    }
+    .app-card-actions {
+      display: flex; gap: 6px; padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .empty-state {
+      text-align: center; padding: 60px 20px; color: var(--text-muted);
+    }
+    .empty-state-icon { font-size: 3em; margin-bottom: 12px; }
+    .empty-state h3 { font-size: 1.1em; margin-bottom: 8px; color: var(--text); }
+    .empty-state p { font-size: 0.9em; margin-bottom: 20px; }
 
+    /* ══════════════════════════════════════════════
+       NEW APPLICATION PAGE
+    ══════════════════════════════════════════════ */
+    .new-content {
+      flex: 1; overflow-y: auto;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 40px 24px;
+    }
+    .new-inner { width: 100%; max-width: 680px; }
+    .new-inner h2 { font-size: 1.4em; font-weight: 700; margin-bottom: 6px; }
+    .new-inner .sub { color: var(--text-muted); margin-bottom: 28px; font-size: 0.92em; }
+    #jd-textarea {
+      width: 100%; min-height: 260px; padding: 14px;
+      border: 2px solid var(--border); border-radius: 10px;
+      font-family: inherit; font-size: 0.9em; resize: vertical;
+    }
+    #jd-textarea:focus { outline: none; border-color: var(--teal); }
     .tailor-status {
-      padding: 10px 12px;
-      border-radius: 8px;
-      margin-top: 10px;
-      font-size: 0.85em;
+      padding: 12px 14px; border-radius: 8px; font-size: 0.875em;
+      display: none; margin-top: 12px;
+    }
+    .tailor-status.running { display: block; background: var(--purple-light); color: #5b21b6; border: 1px solid #c4b5fd; }
+    .tailor-status.error { display: block; background: var(--red-light); color: #721c24; border: 1px solid #f5c6cb; }
+
+    /* ══════════════════════════════════════════════
+       APP DETAIL PAGE
+    ══════════════════════════════════════════════ */
+    .pg-app { overflow: hidden; }
+    .app-topbar {
+      background: white; border-bottom: 1px solid var(--border);
+      padding: 0 20px; height: 56px; display: flex;
+      align-items: center; gap: 10px; flex-shrink: 0; z-index: 10;
+    }
+    .app-topbar-title { font-weight: 600; font-size: 0.95em; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .app-topbar-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+    .app-mode-tabs {
+      background: white; border-bottom: 1px solid var(--border);
+      padding: 0 20px; display: flex; gap: 0; flex-shrink: 0;
+    }
+    .app-mode-tab {
+      padding: 12px 18px; font-size: 0.88em; font-weight: 500;
+      cursor: pointer; border: none; background: none;
+      color: var(--text-muted); border-bottom: 2px solid transparent;
+      transition: all 0.15s; margin-bottom: -1px;
+    }
+    .app-mode-tab.active { color: var(--teal-dark); border-bottom-color: var(--teal); }
+    .app-mode-tab:hover:not(.active) { color: var(--text); background: var(--bg); }
+
+    /* Preview mode */
+    #app-view-preview {
+      flex: 1; overflow: hidden; background: var(--bg);
+      padding: 20px; display: none;
+    }
+    #app-view-preview.active { display: flex; flex-direction: column; }
+    #app-preview-frame {
+      flex: 1; width: 100%; border: 1px solid var(--border);
+      border-radius: 8px; background: white;
+    }
+    .preview-placeholder {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted); font-size: 0.95em;
+    }
+
+    /* Edit mode */
+    #app-view-edit {
+      flex: 1; overflow: hidden; display: none;
+      flex-direction: column;
+    }
+    #app-view-edit.active { display: flex; }
+    #app-editor-container {
+      flex: 1; border-top: 1px solid var(--border);
+    }
+    .edit-bar {
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      padding: 8px 20px; display: flex; align-items: center; gap: 10px;
+      font-size: 0.85em; color: var(--text-muted); flex-shrink: 0;
+    }
+    #app-edit-validation { flex: 1; }
+
+    /* Configure mode */
+    #app-view-configure {
+      flex: 1; overflow: hidden; display: none;
+    }
+    #app-view-configure.active {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+    }
+    .config-sidebar {
+      overflow-y: auto; padding: 20px; border-right: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .config-preview { overflow: hidden; padding: 20px; display: flex; flex-direction: column; }
+    #config-preview-frame {
+      flex: 1; width: 100%; border: 1px solid var(--border);
+      border-radius: 8px; background: white;
+    }
+    .config-section { margin-bottom: 24px; }
+    .config-section-title {
+      font-size: 0.8em; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 12px;
+    }
+    .range-row { display: flex; align-items: center; gap: 10px; }
+    .range-val { min-width: 44px; font-weight: 600; color: var(--teal-dark); font-size: 0.9em; text-align: right; }
+
+    /* JD Info panel */
+    #app-view-info {
+      flex: 1; overflow-y: auto; padding: 24px; display: none;
+    }
+    #app-view-info.active { display: block; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .info-card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .info-card-label { font-size: 0.78em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 8px; }
+    .info-card-value { font-size: 1.2em; font-weight: 700; }
+    .skills-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .skill-tag { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 3px 10px; font-size: 0.82em; }
+    .gap-tag { background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; border-radius: 6px; padding: 3px 10px; font-size: 0.82em; }
+
+    /* ══════════════════════════════════════════════
+       SETTINGS PAGE
+    ══════════════════════════════════════════════ */
+    .settings-content {
+      flex: 1; overflow-y: auto; padding: 32px 40px;
+      max-width: 720px; width: 100%; margin: 0 auto;
+    }
+    .settings-section { margin-bottom: 36px; }
+    .settings-section h3 { font-size: 1em; font-weight: 600; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+
+    /* ══════════════════════════════════════════════
+       MASTER RESUME PAGE
+    ══════════════════════════════════════════════ */
+    .resume-main {
+      flex: 1; overflow: hidden; display: flex; flex-direction: column;
+    }
+    .resume-toolbar {
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      padding: 10px 20px; display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+    }
+    #master-validation { flex: 1; font-size: 0.85em; }
+    #master-editor-container { flex: 1; }
+
+    /* ══════════════════════════════════════════════
+       SECTION DRAG-AND-DROP LIST
+    ══════════════════════════════════════════════ */
+    .section-list { list-style: none; }
+    .section-item {
+      background: white; border: 1.5px solid var(--border);
+      border-radius: 8px; padding: 10px 12px; margin-bottom: 6px;
+      display: flex; align-items: center; gap: 8px;
+      cursor: move; transition: all 0.15s;
+    }
+    .section-item:hover { border-color: var(--teal); }
+    .section-item.dragging { opacity: 0.4; }
+    .section-drag-handle { color: var(--text-muted); cursor: grab; font-size: 1em; }
+    .section-name { flex: 1; font-size: 0.88em; text-transform: capitalize; font-weight: 500; }
+    .section-breaks { display: flex; gap: 6px; }
+    .break-label { display: flex; align-items: center; gap: 4px; font-size: 0.78em; color: var(--text-muted); cursor: pointer; }
+    .break-label input { cursor: pointer; }
+    .section-remove { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 0.9em; padding: 2px 4px; border-radius: 4px; }
+    .section-remove:hover { color: var(--red); background: var(--red-light); }
+
+    /* ── DROPDOWN MENU ── */
+    .dropdown { position: relative; display: inline-block; }
+    .dropdown-menu {
+      position: absolute; top: calc(100% + 4px); right: 0;
+      background: white; border: 1px solid var(--border);
+      border-radius: 8px; box-shadow: var(--shadow-md);
+      min-width: 160px; z-index: 100; overflow: hidden;
       display: none;
     }
-
-    .tailor-status.running {
-      display: block;
-      background: #ede9fe;
-      color: #5b21b6;
-      border: 1px solid #c4b5fd;
+    .dropdown-menu.open { display: block; }
+    .dropdown-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; font-size: 0.875em; cursor: pointer;
+      transition: background 0.1s;
     }
+    .dropdown-item:hover { background: var(--bg); }
 
-    .tailor-status.success {
-      display: block;
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
+    /* ── UTILITIES ── */
+    .hidden { display: none !important; }
+    .mt-8 { margin-top: 8px; }
+    .mt-12 { margin-top: 12px; }
+    .mt-16 { margin-top: 16px; }
+    .text-muted { color: var(--text-muted); font-size: 0.875em; }
+    .spinner { animation: spin 1s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    .tailor-status.error {
-      display: block;
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
+    /* ── SCROLL FIX: flex children that need to scroll must have min-height:0 ── */
+    .dash-content, .new-content, .settings-content,
+    .onb-wrap, .resume-main,
+    #app-view-info, .config-sidebar { min-height: 0; }
 
-    .jd-textarea {
-      min-height: 150px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-      font-size: 13px !important;
-    }
+    /* ── RESUME PAGE: Monaco fills remaining height ── */
+    .resume-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+    #master-editor-container { flex: 1; min-height: 0; }
 
-    .analysis-badge {
-      display: inline-block;
-      background: #7c3aed;
-      color: white;
-      border-radius: 999px;
-      padding: 2px 10px;
-      font-size: 0.8em;
-      font-weight: 600;
-      margin-left: 8px;
-    }
+    /* ── APP CONFIGURE: grid fills remaining height, children scroll within ── */
+    #app-view-configure.active { overflow: hidden; grid-template-rows: 1fr; }
+    .config-sidebar { min-height: 0; }
+    .config-preview { min-height: 0; }
+    #config-preview-frame { min-height: 0; }
 
-    @media (max-width: 1200px) {
-      .main-content {
-        flex-direction: column;
-      }
-      
-      .sidebar {
-        border-right: none;
-        border-bottom: 1px solid #dee2e6;
-        width: 100% !important;
-        max-width: 100%;
-        height: 300px;
-        overflow-y: auto;
-      }
-
-      .resizer {
-        display: none;
-      }
-
-      .preview-area {
-        flex: 1;
-      }
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .onb-options { grid-template-columns: 1fr; }
+      .apps-grid { grid-template-columns: 1fr; }
+      .info-grid { grid-template-columns: 1fr; }
+      #app-view-configure.active { grid-template-columns: 1fr; }
+      .config-preview { display: none; }
+      .dash-content { padding: 20px; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>📄 Hammidu Rais - JSON Resume to PDF</h1>
-      <p>Upload or paste your JSON Resume, customize the layout, and generate a professional PDF</p>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: ONBOARDING
+════════════════════════════════════════════════════════ -->
+<div id="pg-onboarding" class="pg">
+  <div class="onb-wrap">
+    <div class="onb-logo">Flouka</div>
+    <div class="onb-tagline">Your AI-powered resume studio</div>
+
+    <div class="onb-options">
+      <div class="onb-card" id="onb-opt-paste" onclick="Onboarding.select('paste')">
+        <span class="onb-card-icon">📋</span>
+        <div class="onb-card-title">Paste JSON</div>
+        <div class="onb-card-sub">I have a JSON Resume ready</div>
+      </div>
+      <div class="onb-card" id="onb-opt-upload" onclick="Onboarding.select('upload')">
+        <span class="onb-card-icon">📁</span>
+        <div class="onb-card-title">Upload File</div>
+        <div class="onb-card-sub">Upload a .json resume file</div>
+      </div>
+      <div class="onb-card" id="onb-opt-build" onclick="Onboarding.select('build')">
+        <span class="onb-card-icon">✏️</span>
+        <div class="onb-card-title">Build from Scratch</div>
+        <div class="onb-card-sub">Fill in a guided form</div>
+      </div>
     </div>
 
-    <div class="header-toolbar">
-      <select id="localeSelect" title="Output language">
-        <option value="en">🇬🇧 English</option>
-        <option value="de">🇩🇪 Deutsch</option>
-        <option value="fr">🇫🇷 Français</option>
-        <option value="ar">🇸🇦 العربية</option>
-      </select>
-      <button class="btn" onclick="updatePreview()">🔄 Preview</button>
-      <button class="btn" onclick="generatePDF()">📥 PDF</button>
-      <button class="btn btn-secondary" onclick="loadExample()">📋 Example</button>
+    <!-- PASTE / UPLOAD METHOD -->
+    <div id="onb-method-paste" class="onb-method hidden">
+      <div class="onb-file-drop" id="onb-drop" onclick="document.getElementById('onb-file-input').click()">
+        <input type="file" id="onb-file-input" accept=".json" style="display:none">
+        <div style="font-size:1.8em;margin-bottom:8px">📂</div>
+        <div style="font-size:0.9em">Drop a .json file here or <strong>click to upload</strong></div>
+      </div>
+      <div style="text-align:center;margin-bottom:12px;font-size:0.85em;color:var(--text-muted)">— or paste JSON below —</div>
+      <div id="onb-editor-container"></div>
+      <div id="onb-validation" class="mt-8"></div>
+      <div class="onb-actions">
+        <button class="btn btn-secondary" onclick="Onboarding.loadExample()">Load Example</button>
+        <button class="btn btn-primary" id="onb-save-btn" onclick="Onboarding.save()" style="flex:1">Save Resume & Continue →</button>
+      </div>
     </div>
 
-    <div class="main-content">
-      <div class="sidebar">
-        <!-- JSON Input Section -->
-        <div class="section">
-          <div class="section-title">JSON Resume Input</div>
-          
-          <div class="file-upload" onclick="document.getElementById('fileInput').click()">
-            <input type="file" id="fileInput" accept=".json" />
-            <div class="upload-icon">📁</div>
-            <div>Click to upload JSON file</div>
-            <div style="font-size: 0.9em; color: #6c757d; margin-top: 5px;">or drag and drop</div>
+    <!-- BUILD METHOD -->
+    <div id="onb-method-build" class="onb-method hidden">
+      <div class="wizard-progress" id="wizard-progress"></div>
+      <div id="wizard-step-1" class="wizard-step active">
+        <h3 style="margin-bottom:16px;font-size:1em;font-weight:600">Step 1 — Basic Information</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <input class="form-input" id="b-name" placeholder="Jane Doe">
           </div>
-
-          <div class="input-group">
-            <label for="jsonEditorContainer">Or paste JSON Resume here:</label>
-            <div id="jsonEditorContainer"></div>
+          <div class="form-group">
+            <label class="form-label">Professional Title</label>
+            <input class="form-input" id="b-label" placeholder="Software Engineer">
           </div>
-
-          <div id="validationMessage"></div>
         </div>
-
-        <!-- AI Tailoring Section -->
-        <div class="section">
-          <div class="section-title">
-            ✨ AI Tailoring
-            <span id="matchBadge" class="analysis-badge" style="display:none"></span>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Email *</label>
+            <input class="form-input" id="b-email" type="email" placeholder="jane@example.com">
           </div>
-
-          <div class="input-group">
-            <label for="jdInput">Paste Job Description:</label>
-            <textarea id="jdInput" class="jd-textarea" placeholder="Paste the full job description here…"></textarea>
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input class="form-input" id="b-phone" placeholder="+1 (555) 123-4567">
           </div>
-
-          <div class="input-group" style="margin-bottom: 10px;">
-            <label for="modelSelect">AI Model:</label>
-            <select id="modelSelect" style="width:100%;padding:8px 10px;border:2px solid #dee2e6;border-radius:8px;font-size:0.9em;">
-              <option value="claude-opus-4-5">Claude Opus 4.5 (Anthropic)</option>
-              <option value="claude-sonnet-4-5">Claude Sonnet 4.5 (Anthropic)</option>
-              <option value="deepseek-chat">DeepSeek Chat (DeepSeek-V3)</option>
-              <option value="deepseek-reasoner">DeepSeek Reasoner (R1)</option>
-            </select>
-          </div>
-
-          <button class="btn btn-ai" id="tailorBtn" onclick="tailorResume()">
-            🤖 Tailor Resume
-          </button>
-
-          <div id="tailorStatus" class="tailor-status"></div>
         </div>
-
-        <!-- Configuration Section -->
-        <div class="section">
-          <div class="section-title">Configuration</div>
-
-          <div class="input-group">
-            <label>Font Size: <span class="range-value" id="fontSizeValue">12pt</span></label>
-            <input type="range" id="fontSize" min="8" max="18" value="12" step="0.5">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Website</label>
+            <input class="form-input" id="b-url" placeholder="https://yourwebsite.com">
           </div>
-
-          <div class="input-group">
-            <label>Line Height: <span class="range-value" id="lineHeightValue">1.5</span></label>
-            <input type="range" id="lineHeight" min="1" max="2.5" value="1.5" step="0.1">
+          <div class="form-group">
+            <label class="form-label">City</label>
+            <input class="form-input" id="b-city" placeholder="San Francisco">
           </div>
-
-          <!-- locale selector moved to header toolbar -->
         </div>
-
-        <!-- Section Order -->
-        <div class="section">
-          <div class="section-title">Section Order & Page Breaks</div>
-          <p style="font-size: 0.9em; color: #6c757d; margin-bottom: 15px;">
-            Drag to reorder sections. Check boxes to add page breaks. Click ✕ to remove.
-          </p>
-          <ul id="sectionList" class="draggable-list"></ul>
-          <button class="btn btn-secondary" onclick="restoreAllSections()" style="margin-top: 10px; font-size: 0.9em;">
-            ↺ Restore Removed Sections
-          </button>
+        <div class="form-group">
+          <label class="form-label">Country Code</label>
+          <input class="form-input" id="b-country" placeholder="US" style="max-width:100px">
         </div>
-
-        <!-- Action buttons moved to header toolbar -->
-      </div>
-
-      <div class="resizer" id="resizer"></div>
-
-      <div class="preview-area">
-        <div class="section-title">Preview</div>
-        <div id="previewContainer" class="loading">
-          Upload or paste a JSON Resume to see the preview
+        <div class="form-group">
+          <label class="form-label">Professional Summary</label>
+          <textarea class="form-textarea" id="b-summary" rows="4" placeholder="Briefly describe your background and expertise…"></textarea>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+          <button class="btn btn-primary" onclick="Onboarding.wizardNext(1)">Next: Work Experience →</button>
         </div>
       </div>
+
+      <div id="wizard-step-2" class="wizard-step">
+        <h3 style="margin-bottom:16px;font-size:1em;font-weight:600">Step 2 — Work Experience</h3>
+        <div id="work-entries"></div>
+        <button class="btn btn-secondary btn-sm mt-8" onclick="Onboarding.addWork()">+ Add Position</button>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+          <button class="btn btn-ghost btn-sm" onclick="Onboarding.wizardBack(2)">← Back</button>
+          <button class="btn btn-primary" onclick="Onboarding.wizardNext(2)">Next: Education →</button>
+        </div>
+      </div>
+
+      <div id="wizard-step-3" class="wizard-step">
+        <h3 style="margin-bottom:16px;font-size:1em;font-weight:600">Step 3 — Education</h3>
+        <div id="edu-entries"></div>
+        <button class="btn btn-secondary btn-sm mt-8" onclick="Onboarding.addEdu()">+ Add Education</button>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+          <button class="btn btn-ghost btn-sm" onclick="Onboarding.wizardBack(3)">← Back</button>
+          <button class="btn btn-primary" onclick="Onboarding.wizardNext(3)">Next: Skills →</button>
+        </div>
+      </div>
+
+      <div id="wizard-step-4" class="wizard-step">
+        <h3 style="margin-bottom:16px;font-size:1em;font-weight:600">Step 4 — Skills</h3>
+        <div id="skill-entries"></div>
+        <button class="btn btn-secondary btn-sm mt-8" onclick="Onboarding.addSkill()">+ Add Skill Group</button>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+          <button class="btn btn-ghost btn-sm" onclick="Onboarding.wizardBack(4)">← Back</button>
+          <button class="btn btn-primary" onclick="Onboarding.wizardBuild()">Build & Save Resume →</button>
+        </div>
+      </div>
+
+      <div id="wizard-error" class="msg msg-error hidden mt-8"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: DASHBOARD
+════════════════════════════════════════════════════════ -->
+<div id="pg-dashboard" class="pg">
+  <nav class="nav">
+    <div class="nav-brand">Flouka</div>
+    <div class="nav-actions">
+      <button class="btn btn-ghost btn-sm" onclick="Router.go('#resume')">Edit Resume</button>
+      <button class="btn btn-ghost btn-sm" onclick="Router.go('#settings')">⚙️ Settings</button>
+    </div>
+  </nav>
+  <div class="dash-content pg-scroll">
+    <div class="dash-hero">
+      <div class="dash-hero-text">
+        <h2 id="dash-welcome">Welcome back!</h2>
+        <p>Manage your job applications and tailored resumes</p>
+      </div>
+      <button class="btn btn-primary btn-lg" onclick="Router.go('#new')">+ New Application</button>
+    </div>
+    <div id="apps-grid" class="apps-grid"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: NEW APPLICATION
+════════════════════════════════════════════════════════ -->
+<div id="pg-new" class="pg">
+  <nav class="nav">
+    <button class="nav-back" onclick="Router.go('#dashboard')">← Applications</button>
+    <span class="nav-title">New Application</span>
+  </nav>
+  <div class="new-content pg-scroll">
+    <div class="new-inner">
+      <h2>Tailor your resume</h2>
+      <p class="sub">Paste the full job description and the AI will tailor your resume for this specific role.</p>
+      <div class="form-group">
+        <label class="form-label">Job Description *</label>
+        <textarea id="jd-textarea" placeholder="Paste the full job description here…"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">AI Model</label>
+        <select class="form-select" id="new-model-select" style="max-width:360px"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Additional Instructions <span style="color:var(--text-muted);font-weight:400">(optional override)</span></label>
+        <textarea class="form-textarea" id="new-prompt-addition" rows="2" placeholder="e.g. Emphasize leadership experience. Focus on backend skills."></textarea>
+      </div>
+      <button class="btn btn-ai btn-wide btn-lg" id="tailor-btn" onclick="NewApp.submit()">🤖 Tailor Resume</button>
+      <div id="tailor-status" class="tailor-status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: APPLICATION DETAIL
+════════════════════════════════════════════════════════ -->
+<div id="pg-app" class="pg pg-app">
+  <div class="app-topbar">
+    <button class="nav-back" onclick="Router.go('#dashboard')" style="margin-right:0">← Apps</button>
+    <div class="app-topbar-title" id="app-title">Application</div>
+    <span id="app-match-badge"></span>
+    <div class="app-topbar-actions">
+      <div class="dropdown" id="dl-dropdown">
+        <button class="btn btn-secondary btn-sm" onclick="AppDetail.toggleDownload()">↓ Download</button>
+        <div class="dropdown-menu" id="dl-menu">
+          <div class="dropdown-item" onclick="AppDetail.downloadPDF()">📄 Download PDF</div>
+          <div class="dropdown-item" onclick="AppDetail.downloadJSON()">📋 Download JSON</div>
+          <div class="dropdown-item" onclick="AppDetail.downloadHTML()">🌐 Download HTML</div>
+        </div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="AppDetail.del()">🗑 Delete</button>
     </div>
   </div>
 
-  <script>
-    // Default sections
-    const DEFAULT_SECTIONS = [
-      "summary", "education", "work", "skills", "languages",
-      "volunteer", "awards", "publications", "projects",
-      "certificates", "interests", "references"
-    ];
+  <div class="app-mode-tabs">
+    <button class="app-mode-tab active" data-tab="preview" onclick="AppDetail.setTab('preview')">Preview</button>
+    <button class="app-mode-tab" data-tab="edit" onclick="AppDetail.setTab('edit')">Edit JSON</button>
+    <button class="app-mode-tab" data-tab="configure" onclick="AppDetail.setTab('configure')">Configure Layout</button>
+    <button class="app-mode-tab" data-tab="info" onclick="AppDetail.setTab('info')">JD Analysis</button>
+  </div>
 
-    // State
-    let currentResume = null;
-    let draggedItem = null;
-    let removedSections = [];
+  <!-- Preview tab -->
+  <div id="app-view-preview">
+    <div id="preview-loading" class="preview-placeholder">Generating preview…</div>
+    <iframe id="app-preview-frame" class="hidden" style="flex:1;width:100%;border:1px solid var(--border);border-radius:8px;background:white"></iframe>
+  </div>
 
-    // Initialize
-    function init() {
-      const savedConfig = loadConfig();
-      initializeSectionList(savedConfig);
-      setupEventListeners();
-      setupDragAndDrop();
-      setupResizer();
-      
-      // Apply saved config after DOM is ready
-      if (savedConfig) {
-        setTimeout(() => applyConfig(savedConfig), 0);
-      }
-    }
+  <!-- Edit tab -->
+  <div id="app-view-edit">
+    <div class="edit-bar">
+      <div id="app-edit-validation">Edit the tailored resume JSON below.</div>
+      <button class="btn btn-primary btn-sm" onclick="AppDetail.saveEdit()">Save Changes</button>
+      <button class="btn btn-secondary btn-sm" onclick="AppDetail.setTab('preview')">Cancel</button>
+    </div>
+    <div id="app-editor-container"></div>
+  </div>
 
-    // Resizable sidebar
-    function setupResizer() {
-      const resizer = document.getElementById('resizer');
-      const sidebar = document.querySelector('.sidebar');
-      let isResizing = false;
-      let startX = 0;
-      let startWidth = 0;
-
-      resizer.addEventListener('mousedown', (e) => {
-        isResizing = true;
-        startX = e.clientX;
-        startWidth = sidebar.offsetWidth;
-        document.body.style.cursor = 'col-resize';
-        document.body.style.userSelect = 'none';
-        e.preventDefault();
-      });
-
-      document.addEventListener('mousemove', (e) => {
-        if (!isResizing) return;
-        
-        const diff = e.clientX - startX;
-        const newWidth = startWidth + diff;
-        
-        // Enforce min width (and leave at least 250px for the preview)
-        const maxWidth = document.querySelector('.main-content').offsetWidth - 250;
-        if (newWidth >= 250 && newWidth <= maxWidth) {
-          sidebar.style.flex = 'none';
-          sidebar.style.width = newWidth + 'px';
-        }
-      });
-
-      document.addEventListener('mouseup', () => {
-        if (isResizing) {
-          isResizing = false;
-          document.body.style.cursor = '';
-          document.body.style.userSelect = '';
-          
-          // Save the width to localStorage
-          localStorage.setItem('sidebarWidth', sidebar.offsetWidth);
-        }
-      });
-
-      // Restore saved width
-      const savedWidth = localStorage.getItem('sidebarWidth');
-      if (savedWidth) {
-        sidebar.style.flex = 'none';
-        sidebar.style.width = savedWidth + 'px';
-      }
-    }
-
-    function initializeSectionList(savedConfig) {
-      const list = document.getElementById('sectionList');
-      list.innerHTML = '';
-      
-      // Use saved section order if available, otherwise use defaults
-      const sections = savedConfig?.sectionOrder || DEFAULT_SECTIONS;
-      
-      sections.forEach(section => {
-        const li = createSectionItem(section);
-        list.appendChild(li);
-      });
-      
-      // Restore removed sections
-      if (savedConfig?.removedSections) {
-        removedSections = savedConfig.removedSections;
-      }
-    }
-
-    function createSectionItem(section) {
-      const li = document.createElement('li');
-      li.className = 'draggable-item';
-      li.draggable = true;
-      li.dataset.section = section;
-      
-      li.innerHTML = `
-        <span class="drag-handle">☰</span>
-        <span style="flex: 1; text-transform: capitalize;">${section}</span>
-        <div class="page-break-controls">
-          <label class="checkbox-label">
-            <input type="checkbox" class="break-before" data-section="${section}">
-            <span>Before</span>
-          </label>
-          <label class="checkbox-label">
-            <input type="checkbox" class="break-after" data-section="${section}">
-            <span>After</span>
-          </label>
-          <button class="remove-btn" data-section="${section}">✕</button>
+  <!-- Configure tab -->
+  <div id="app-view-configure">
+    <div class="config-sidebar pg-scroll">
+      <div class="config-section">
+        <div class="config-section-title">Typography</div>
+        <div class="form-group">
+          <label class="form-label">Font Size <span class="range-val" id="cfg-fs-val">12pt</span></label>
+          <input type="range" id="cfg-font-size" min="8" max="18" step="0.5" value="12" style="width:100%" oninput="AppDetail.configChanged()">
         </div>
+        <div class="form-group">
+          <label class="form-label">Line Height <span class="range-val" id="cfg-lh-val">1.5</span></label>
+          <input type="range" id="cfg-line-height" min="1" max="2.5" step="0.1" value="1.5" style="width:100%" oninput="AppDetail.configChanged()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Output Language</label>
+          <select class="form-select" id="cfg-locale" onchange="AppDetail.configChanged()">
+            <option value="en">English</option>
+            <option value="de">Deutsch</option>
+            <option value="fr">Français</option>
+            <option value="ar">العربية</option>
+          </select>
+        </div>
+      </div>
+      <div class="config-section">
+        <div class="config-section-title">Section Order &amp; Page Breaks</div>
+        <p style="font-size:0.8em;color:var(--text-muted);margin-bottom:10px">Drag to reorder. Click ✕ to hide.</p>
+        <ul id="cfg-section-list" class="section-list"></ul>
+        <button class="btn btn-ghost btn-sm mt-8" onclick="AppDetail.restoreSections()">↺ Restore hidden sections</button>
+      </div>
+    </div>
+    <div class="config-preview">
+      <div id="config-loading" class="preview-placeholder">Loading preview…</div>
+      <iframe id="config-preview-frame" class="hidden" style="flex:1;width:100%;border:1px solid var(--border);border-radius:8px;background:white"></iframe>
+    </div>
+  </div>
+
+  <!-- JD Analysis tab -->
+  <div id="app-view-info" class="pg-scroll">
+    <div style="max-width:800px;padding-bottom:32px">
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-card-label">Match Score</div>
+          <div class="info-card-value" id="info-match">—</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-label">Role</div>
+          <div class="info-card-value" id="info-role" style="font-size:0.95em">—</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-label">Company</div>
+          <div class="info-card-value" id="info-company" style="font-size:0.95em">—</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-label">Gaps to Address</div>
+          <div id="info-gaps" class="skills-list mt-8"></div>
+        </div>
+      </div>
+      <div class="info-card" style="margin-bottom:16px">
+        <div class="info-card-label">Required Skills</div>
+        <div id="info-skills" class="skills-list mt-8"></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-label">Key Responsibilities</div>
+        <ul id="info-responsibilities" style="margin-top:8px;padding-left:18px;font-size:0.875em;line-height:1.7"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: SETTINGS
+════════════════════════════════════════════════════════ -->
+<div id="pg-settings" class="pg">
+  <nav class="nav">
+    <button class="nav-back" onclick="Router.go('#dashboard')">← Dashboard</button>
+    <span class="nav-title">Settings</span>
+    <div class="nav-actions">
+      <button class="btn btn-primary btn-sm" onclick="SettingsPage.save()">Save Settings</button>
+    </div>
+  </nav>
+  <div class="settings-content pg-scroll">
+    <div class="settings-section">
+      <h3>AI Tailoring</h3>
+      <div class="form-group">
+        <label class="form-label">Default AI Model</label>
+        <select class="form-select" id="settings-model" style="max-width:360px"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Additional Tailoring Instructions</label>
+        <textarea class="form-textarea" id="settings-prompt-addition" rows="3" placeholder="Extra instructions appended to every tailoring prompt (e.g. 'Always emphasize leadership and team management skills.')"></textarea>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Default Rendering</h3>
+      <div class="form-group">
+        <label class="form-label">Font Size <span class="range-val" id="s-fs-val">12pt</span></label>
+        <input type="range" id="s-font-size" min="8" max="18" step="0.5" value="12" style="width:100%;max-width:400px"
+          oninput="document.getElementById('s-fs-val').textContent=this.value+'pt'">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Line Height <span class="range-val" id="s-lh-val">1.5</span></label>
+        <input type="range" id="s-line-height" min="1" max="2.5" step="0.1" value="1.5" style="width:100%;max-width:400px"
+          oninput="document.getElementById('s-lh-val').textContent=this.value">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Output Language</label>
+        <select class="form-select" id="s-locale" style="max-width:200px">
+          <option value="en">English</option>
+          <option value="de">Deutsch</option>
+          <option value="fr">Français</option>
+          <option value="ar">العربية</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Default Section Order</h3>
+      <p style="font-size:0.85em;color:var(--text-muted);margin-bottom:12px">Drag to reorder. Click ✕ to hide sections by default. Applied to new applications.</p>
+      <ul id="s-section-list" class="section-list" style="max-width:500px"></ul>
+      <button class="btn btn-ghost btn-sm mt-8" onclick="SettingsPage.restoreSections()">↺ Restore hidden sections</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: MASTER RESUME
+════════════════════════════════════════════════════════ -->
+<div id="pg-resume" class="pg">
+  <nav class="nav">
+    <button class="nav-back" onclick="Router.go('#dashboard')">← Dashboard</button>
+    <span class="nav-title">Master Resume</span>
+    <div class="nav-actions">
+      <button class="btn btn-secondary btn-sm" onclick="MasterResumePage.downloadJSON()">↓ JSON</button>
+      <button class="btn btn-primary btn-sm" onclick="MasterResumePage.save()">Save</button>
+    </div>
+  </nav>
+  <div class="resume-main">
+    <div class="resume-toolbar">
+      <div id="master-validation" class="text-muted">Your base resume — used as the foundation for all AI tailoring.</div>
+      <label class="btn btn-secondary btn-sm" style="cursor:pointer">
+        Upload JSON <input type="file" id="master-file-input" accept=".json" style="display:none" onchange="MasterResumePage.uploadFile(event)">
+      </label>
+    </div>
+    <div id="master-editor-container"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════════════════
+const ALL_SECTIONS = ['summary','work','education','volunteer','skills','languages','awards','publications','projects','certificates','interests','references'];
+
+const DEFAULT_SETTINGS = {
+  modelKey: 'claude-opus-4-5',
+  promptAddition: '',
+  baseFontSize: 12,
+  lineHeight: 1.5,
+  locale: 'en',
+  sectionOrder: [...ALL_SECTIONS],
+  pageBreakBefore: [],
+  pageBreakAfter: [],
+  removedSections: [],
+};
+
+const MODEL_OPTIONS = [
+  { value: 'claude-opus-4-5', label: 'Claude Opus 4.5 (Anthropic)' },
+  { value: 'claude-sonnet-4-5', label: 'Claude Sonnet 4.5 (Anthropic)' },
+  { value: 'deepseek-chat', label: 'DeepSeek Chat (V3)' },
+  { value: 'deepseek-reasoner', label: 'DeepSeek Reasoner (R1)' },
+];
+
+const EXAMPLE_RESUME = {
+  basics: { name: "Alex Rivera", label: "Full-Stack Engineer", email: "alex@example.com", phone: "+1 (555) 987-6543", url: "https://alexrivera.dev", summary: "Full-stack engineer with 7+ years building scalable web applications and leading cross-functional teams.", location: { city: "Austin", countryCode: "US" } },
+  work: [{ name: "CloudBase Inc.", position: "Senior Software Engineer", startDate: "2021-03", summary: "Led backend platform team", highlights: ["Architected microservices migration reducing latency by 40%", "Led team of 5 engineers to deliver 3 major product features", "Implemented CI/CD pipelines cutting release cycles from 2 weeks to 2 days"] }, { name: "DataPulse", position: "Software Engineer", startDate: "2018-06", endDate: "2021-02", highlights: ["Built real-time analytics dashboard serving 10k+ daily users", "Designed REST API consumed by 3 mobile apps"] }],
+  education: [{ institution: "University of Texas at Austin", studyType: "Bachelor", area: "Computer Science", startDate: "2014-09", endDate: "2018-05" }],
+  skills: [{ name: "Languages", keywords: ["TypeScript", "Python", "Go", "SQL"] }, { name: "Frameworks", keywords: ["React", "Node.js", "FastAPI", "PostgreSQL"] }]
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════════════════════════════════
+const Store = {
+  getMaster()   { try { return JSON.parse(localStorage.getItem('flouka_master') || 'null'); } catch { return null; } },
+  setMaster(r)  { localStorage.setItem('flouka_master', JSON.stringify(r)); },
+  getSettings() { try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem('flouka_settings') || '{}') }; } catch { return { ...DEFAULT_SETTINGS }; } },
+  setSettings(s){ localStorage.setItem('flouka_settings', JSON.stringify(s)); },
+  getApps()     { try { return JSON.parse(localStorage.getItem('flouka_apps') || '[]'); } catch { return []; } },
+  setApps(a)    { localStorage.setItem('flouka_apps', JSON.stringify(a)); },
+  getApp(id)    { return this.getApps().find(a => a.id === id) || null; },
+  addApp(app)   { const apps = this.getApps(); apps.unshift(app); this.setApps(apps); return app; },
+  updateApp(id, patch) {
+    const apps = this.getApps();
+    const i = apps.findIndex(a => a.id === id);
+    if (i >= 0) { apps[i] = { ...apps[i], ...patch }; this.setApps(apps); }
+  },
+  deleteApp(id) { this.setApps(this.getApps().filter(a => a.id !== id)); },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════════════════════
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+function debounce(fn, ms) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+function scoreClass(n) {
+  if (n >= 80) return 'badge-green';
+  if (n >= 60) return 'badge-yellow';
+  return 'badge-red';
+}
+
+function fmtDate(iso) {
+  try { return new Date(iso).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }); } catch { return iso; }
+}
+
+function deriveAppName(resume, jdAnalysis) {
+  const name = resume?.basics?.name || 'Resume';
+  const role = jdAnalysis?.role_title || '';
+  const company = jdAnalysis?.company || '';
+  if (role && company) return `${name} — ${role} @ ${company}`;
+  if (company) return `${name} @ ${company}`;
+  if (role) return `${name} — ${role}`;
+  return name;
+}
+
+function populateModelSelect(selectEl, currentVal) {
+  selectEl.innerHTML = MODEL_OPTIONS.map(m =>
+    `<option value="${m.value}"${m.value === currentVal ? ' selected' : ''}>${m.label}</option>`
+  ).join('');
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION LIST (reusable drag-and-drop)
+// ═══════════════════════════════════════════════════════════════════════════
+function createSectionList(ulEl, initConfig, onChange) {
+  let removed = [...(initConfig.removedSections || [])];
+  let dragged = null;
+
+  function render() {
+    ulEl.innerHTML = '';
+    const order = initConfig.sectionOrder || ALL_SECTIONS;
+    order.forEach(sec => {
+      const li = document.createElement('li');
+      li.className = 'section-item';
+      li.draggable = true;
+      li.dataset.section = sec;
+      const breakBefore = (initConfig.pageBreakBefore || []).includes(sec);
+      const breakAfter  = (initConfig.pageBreakAfter  || []).includes(sec);
+      li.innerHTML = `
+        <span class="section-drag-handle">⠿</span>
+        <span class="section-name">${sec}</span>
+        <div class="section-breaks">
+          <label class="break-label"><input type="checkbox" class="brk-before" data-sec="${sec}"${breakBefore?' checked':''}> <span>Before</span></label>
+          <label class="break-label"><input type="checkbox" class="brk-after"  data-sec="${sec}"${breakAfter ?' checked':''}> <span>After</span></label>
+        </div>
+        <button class="section-remove" title="Hide section" onclick="sectionListRemove('${sec}',this)">✕</button>
       `;
-      
-      // Add click handler for remove button
-      li.querySelector('.remove-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        removeSection(section);
-      });
-      
-      return li;
-    }
+      // checkbox change
+      li.querySelectorAll('input[type=checkbox]').forEach(cb => cb.addEventListener('change', () => { notifyChange(); }));
+      ulEl.appendChild(li);
+    });
+    setupDND();
+  }
 
-    function removeSection(section) {
-      const item = document.querySelector(`[data-section="${section}"]`);
-      if (item) {
-        item.remove();
-        removedSections.push(section);
-        // Save config after removing section
-        saveConfig(getConfigWithoutSaving());
+  // expose remove to inline onclick (scoped via closure trick via dataset)
+  ulEl.dataset.listId = uid();
+  window._sectionLists = window._sectionLists || {};
+  window._sectionLists[ulEl.dataset.listId] = { remove: removeSection, restore };
+
+  function removeSection(sec) {
+    removed.push(sec);
+    initConfig.sectionOrder = (initConfig.sectionOrder || []).filter(s => s !== sec);
+    initConfig.removedSections = [...removed];
+    render();
+    notifyChange();
+  }
+
+  function restore() {
+    const toRestore = [...removed];
+    removed = [];
+    initConfig.sectionOrder = [...(initConfig.sectionOrder || []), ...toRestore];
+    initConfig.removedSections = [];
+    render();
+    notifyChange();
+  }
+
+  function getConfig() {
+    const items = [...ulEl.querySelectorAll('.section-item')].map(i => i.dataset.section);
+    const before = [...ulEl.querySelectorAll('.brk-before:checked')].map(i => i.dataset.sec);
+    const after  = [...ulEl.querySelectorAll('.brk-after:checked')].map(i => i.dataset.sec);
+    return {
+      sectionOrder: items,
+      pageBreakBefore: before,
+      pageBreakAfter: after,
+      removedSections: [...removed],
+    };
+  }
+
+  function notifyChange() {
+    const cfg = getConfig();
+    // sync back into initConfig so restore() sees latest order
+    initConfig.sectionOrder = cfg.sectionOrder;
+    initConfig.removedSections = cfg.removedSections;
+    initConfig.pageBreakBefore = cfg.pageBreakBefore;
+    initConfig.pageBreakAfter  = cfg.pageBreakAfter;
+    if (onChange) onChange(cfg);
+  }
+
+  function setupDND() {
+    ulEl.addEventListener('dragstart', e => {
+      if (e.target.classList.contains('section-item')) {
+        dragged = e.target; e.target.classList.add('dragging');
       }
+    });
+    ulEl.addEventListener('dragend', e => {
+      if (e.target.classList.contains('section-item')) {
+        e.target.classList.remove('dragging');
+        notifyChange();
+      }
+    });
+    ulEl.addEventListener('dragover', e => {
+      e.preventDefault();
+      const after = getDragAfter(ulEl, e.clientY);
+      const drag = ulEl.querySelector('.dragging');
+      if (!drag) return;
+      if (after == null) ulEl.appendChild(drag);
+      else ulEl.insertBefore(drag, after);
+    });
+  }
+
+  render();
+  return { getConfig, restore };
+}
+
+function getDragAfter(container, y) {
+  return [...container.querySelectorAll('.section-item:not(.dragging)')].reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const off = y - box.top - box.height / 2;
+    return off < 0 && off > closest.off ? { off, el: child } : closest;
+  }, { off: -Infinity, el: null }).el;
+}
+
+// Global remove handler (called from inline onclick in section list items)
+function sectionListRemove(sec, btn) {
+  const ul = btn.closest('.section-list');
+  if (!ul?.dataset.listId) return;
+  window._sectionLists[ul.dataset.listId]?.remove(sec);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// API HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+const API = {
+  async validate(resume) {
+    const r = await fetch('/api/validate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({resume}) });
+    return r.json();
+  },
+  async generatePDFBlob(resume, config) {
+    const r = await fetch('/api/generate-pdf', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({resume, config}) });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.error || 'PDF generation failed'); }
+    return r.blob();
+  },
+  async generateHTMLBlob(resume, config) {
+    const r = await fetch('/api/generate-html', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({resume, config}) });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.error || 'HTML generation failed'); }
+    return r.blob();
+  },
+  async tailor(resume, jd, model, promptAddition) {
+    const r = await fetch('/api/tailor', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({resume, jd, model, promptAddition}) });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Tailoring failed');
+    return data;
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ROUTER
+// ═══════════════════════════════════════════════════════════════════════════
+const Router = {
+  go(hash) { window.location.hash = hash; },
+  init() {
+    window.addEventListener('hashchange', () => Router._render());
+    Router._render();
+  },
+  _render() {
+    const hash = window.location.hash.slice(1) || '';
+    const hasMaster = !!Store.getMaster();
+    if (!hasMaster) { Router._show('onboarding'); Onboarding.show(); return; }
+    if (hash === 'settings') { Router._show('settings'); SettingsPage.show(); return; }
+    if (hash === 'resume')   { Router._show('resume'); MasterResumePage.show(); return; }
+    if (hash === 'new')      { Router._show('new'); NewApp.show(); return; }
+    if (hash.startsWith('app/')) {
+      const id = hash.slice(4);
+      Router._show('app');
+      AppDetail.show(id);
+      return;
     }
+    Router._show('dashboard');
+    Dashboard.show();
+  },
+  _show(name) {
+    document.querySelectorAll('.pg').forEach(p => p.classList.remove('active'));
+    document.getElementById(`pg-${name}`)?.classList.add('active');
+    // Close any open dropdowns
+    document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  },
+};
 
-    function restoreAllSections() {
-      removedSections.forEach(section => {
-        const list = document.getElementById('sectionList');
-        const li = createSectionItem(section);
-        list.appendChild(li);
-      });
-      removedSections = [];
-      // Save config after restoring sections
-      saveConfig(getConfigWithoutSaving());
+// ═══════════════════════════════════════════════════════════════════════════
+// ONBOARDING
+// ═══════════════════════════════════════════════════════════════════════════
+const Onboarding = {
+  method: null,
+  _onbEditor: null,
+  _wizardStep: 1,
+
+  show() {
+    // reset selection
+    this.method = null;
+    document.querySelectorAll('.onb-card').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.onb-method').forEach(m => m.classList.add('hidden'));
+  },
+
+  select(method) {
+    this.method = method;
+    document.querySelectorAll('.onb-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById(`onb-opt-${method}`)?.classList.add('selected');
+    document.querySelectorAll('.onb-method').forEach(m => m.classList.add('hidden'));
+
+    if (method === 'paste' || method === 'upload') {
+      document.getElementById('onb-method-paste').classList.remove('hidden');
+      this._initEditor();
+      if (method === 'upload') document.getElementById('onb-file-input').click();
+    } else if (method === 'build') {
+      document.getElementById('onb-method-build').classList.remove('hidden');
+      this._wizardStep = 1;
+      this._renderWizardProgress();
+      this._showWizardStep(1);
     }
+  },
 
-    function getConfigWithoutSaving() {
-      const sections = [...document.querySelectorAll('#sectionList .draggable-item')]
-        .map(item => item.dataset.section);
-      
-      const pageBreakBefore = [...document.querySelectorAll('.break-before:checked')]
-        .map(cb => cb.dataset.section);
-      
-      const pageBreakAfter = [...document.querySelectorAll('.break-after:checked')]
-        .map(cb => cb.dataset.section);
-      
-      return {
-        sectionOrder: sections,
-        pageBreakBefore,
-        pageBreakAfter,
-        baseFontSize: parseFloat(document.getElementById('fontSize').value),
-        lineHeight: parseFloat(document.getElementById('lineHeight').value),
-        locale: document.getElementById('localeSelect').value,
-        modelKey: document.getElementById('modelSelect').value,
-      };
-    }
+  _initEditor() {
+    if (this._onbEditor) { this._onbEditor.layout(); return; }
+    this._onbEditor = monaco.editor.create(document.getElementById('onb-editor-container'), {
+      language: 'json', theme: 'vs', automaticLayout: true,
+      minimap: { enabled: false }, scrollBeyondLastLine: false,
+      fontSize: 13, tabSize: 2, wordWrap: 'off',
+    });
+    this._onbEditor.onDidChangeModelContent(debounce(() => this._validateEditor(), 600));
+    this._onbEditor.onDidFocusEditorWidget(() => document.getElementById('onb-editor-container').classList.add('focused'));
+    this._onbEditor.onDidBlurEditorWidget(()  => document.getElementById('onb-editor-container').classList.remove('focused'));
 
-    function setupEventListeners() {
-      // Monaco editor change — validate on every edit (debounced)
-      monacoEditor.onDidChangeModelContent(debounce(validateJSON, 500));
-
-      // Monaco focus/blur — highlight container border
-      monacoEditor.onDidFocusEditorWidget(() => {
-        document.getElementById('jsonEditorContainer').classList.add('focused');
-      });
-      monacoEditor.onDidBlurEditorWidget(() => {
-        document.getElementById('jsonEditorContainer').classList.remove('focused');
-      });
-      
-      // File upload
-      document.getElementById('fileInput').addEventListener('change', handleFileUpload);
-      
-      // Range inputs — update label and re-render preview
-      const debouncedPreview = debounce(updatePreview, 300);
-
-      document.getElementById('fontSize').addEventListener('input', (e) => {
-        document.getElementById('fontSizeValue').textContent = e.target.value + 'pt';
-        debouncedPreview();
-      });
-      
-      document.getElementById('lineHeight').addEventListener('input', (e) => {
-        document.getElementById('lineHeightValue').textContent = e.target.value;
-        debouncedPreview();
-      });
-
-      // Language selector — re-render preview immediately on change
-      document.getElementById('localeSelect').addEventListener('change', () => {
-        updatePreview();
-      });
-    }
-
-    function setupDragAndDrop() {
-      const list = document.getElementById('sectionList');
-      
-      list.addEventListener('dragstart', (e) => {
-        if (e.target.classList.contains('draggable-item')) {
-          draggedItem = e.target;
-          e.target.classList.add('dragging');
-        }
-      });
-      
-      list.addEventListener('dragend', (e) => {
-        if (e.target.classList.contains('draggable-item')) {
-          e.target.classList.remove('dragging');
-          // Save config after reordering
-          saveConfig(getConfigWithoutSaving());
-        }
-      });
-      
-      list.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        const afterElement = getDragAfterElement(list, e.clientY);
-        const dragging = document.querySelector('.dragging');
-        
-        if (afterElement == null) {
-          list.appendChild(dragging);
-        } else {
-          list.insertBefore(dragging, afterElement);
-        }
-      });
-    }
-
-    function getDragAfterElement(container, y) {
-      const draggableElements = [...container.querySelectorAll('.draggable-item:not(.dragging)')];
-      
-      return draggableElements.reduce((closest, child) => {
-        const box = child.getBoundingClientRect();
-        const offset = y - box.top - box.height / 2;
-        
-        if (offset < 0 && offset > closest.offset) {
-          return { offset: offset, element: child };
-        } else {
-          return closest;
-        }
-      }, { offset: Number.NEGATIVE_INFINITY }).element;
-    }
-
-    async function handleFileUpload(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      
+    // file upload
+    document.getElementById('onb-file-input').addEventListener('change', async (e) => {
+      const file = e.target.files[0]; if (!file) return;
       const text = await file.text();
-      monacoEditor.setValue(text);
-      validateJSON();
-    }
+      this._onbEditor.setValue(text);
+      this._validateEditor();
+    });
 
-    async function validateJSON() {
-      const input = monacoEditor.getValue().trim();
-      const messageDiv = document.getElementById('validationMessage');
-      
-      if (!input) {
-        messageDiv.innerHTML = '';
-        return;
+    // drag-and-drop on the drop zone
+    const drop = document.getElementById('onb-drop');
+    drop.addEventListener('dragover', e => { e.preventDefault(); drop.style.background = '#ccfbf1'; });
+    drop.addEventListener('dragleave', () => { drop.style.background = ''; });
+    drop.addEventListener('drop', async (e) => {
+      e.preventDefault(); drop.style.background = '';
+      const file = e.dataTransfer.files[0]; if (!file) return;
+      const text = await file.text();
+      this._onbEditor.setValue(text);
+      this._validateEditor();
+    });
+  },
+
+  async _validateEditor() {
+    const val = document.getElementById('onb-validation');
+    const text = this._onbEditor?.getValue().trim();
+    if (!text) { val.innerHTML = ''; return; }
+    try {
+      const resume = JSON.parse(text);
+      const result = await API.validate(resume);
+      if (result.valid) {
+        val.innerHTML = '<div class="msg msg-success">✓ Valid JSON Resume — ready to save</div>';
+      } else {
+        let html = '<div class="msg msg-error"><strong>Invalid JSON Resume</strong>';
+        (result.errors || []).forEach(e => { html += `<br><small><code>${e.path}</code>: ${e.message}</small>`; });
+        html += '</div>';
+        val.innerHTML = html;
       }
-      
-      try {
-        const resume = JSON.parse(input);
-        
-        // Use server-side validation
-        const response = await fetch('/api/validate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resume })
-        });
-        
-        const validation = await response.json();
-        
-        if (validation.valid) {
-          currentResume = resume;
-          messageDiv.innerHTML = '<div class="validation-message success">✓ Valid JSON Resume</div>';
-          updatePreview();
-        } else {
-          currentResume = null;
-          
-          // Build error/warning messages
-          let errorHtml = '<div class="validation-message error">';
-          errorHtml += '<strong>✗ Invalid JSON Resume</strong><br><br>';
-          
-          if (validation.errors && validation.errors.length > 0) {
-            errorHtml += '<strong>Schema Errors:</strong><ul style="margin: 10px 0; padding-left: 20px;">';
-            validation.errors.forEach(err => {
-              errorHtml += `<li><code>${err.path}</code>: ${err.message}</li>`;
-            });
-            errorHtml += '</ul>';
-          }
-          
-          if (validation.warnings && validation.warnings.length > 0) {
-            errorHtml += '<strong>Warnings:</strong><ul style="margin: 10px 0; padding-left: 20px;">';
-            validation.warnings.forEach(warning => {
-              errorHtml += `<li>${warning}</li>`;
-            });
-            errorHtml += '</ul>';
-          }
-          
-          errorHtml += '</div>';
-          messageDiv.innerHTML = errorHtml;
-        }
-      } catch (error) {
-        currentResume = null;
-        messageDiv.innerHTML = `<div class="validation-message error">✗ ${error.message}</div>`;
-      }
+    } catch (e) {
+      val.innerHTML = `<div class="msg msg-error">✗ ${e.message}</div>`;
     }
+  },
 
-    function getConfig() {
-      const sections = [...document.querySelectorAll('#sectionList .draggable-item')]
-        .map(item => item.dataset.section);
-      
-      const pageBreakBefore = [...document.querySelectorAll('.break-before:checked')]
-        .map(cb => cb.dataset.section);
-      
-      const pageBreakAfter = [...document.querySelectorAll('.break-after:checked')]
-        .map(cb => cb.dataset.section);
-      
-      const config = {
-        sectionOrder: sections,
-        pageBreakBefore,
-        pageBreakAfter,
-        baseFontSize: parseFloat(document.getElementById('fontSize').value),
-        lineHeight: parseFloat(document.getElementById('lineHeight').value),
-        locale: document.getElementById('localeSelect').value,
-        modelKey: document.getElementById('modelSelect').value,
-      };
-
-      // Save to localStorage
-      saveConfig(config);
-      
-      return config;
+  async save() {
+    const text = this._onbEditor?.getValue().trim();
+    if (!text) { alert('Please paste or upload a JSON Resume first.'); return; }
+    try {
+      const resume = JSON.parse(text);
+      const result = await API.validate(resume);
+      if (!result.valid) { alert('Please fix validation errors before saving.'); return; }
+      Store.setMaster(resume);
+      Router.go('#dashboard');
+    } catch(e) {
+      alert('Error: ' + e.message);
     }
+  },
 
-    function saveConfig(config) {
-      try {
-        localStorage.setItem('resumeConfig', JSON.stringify({
-          sectionOrder: config.sectionOrder,
-          pageBreakBefore: config.pageBreakBefore,
-          pageBreakAfter: config.pageBreakAfter,
-          baseFontSize: config.baseFontSize,
-          lineHeight: config.lineHeight,
-          locale: config.locale,
-          modelKey: config.modelKey,
-          removedSections: removedSections
-        }));
-      } catch (e) {
-        console.error('Failed to save config to localStorage:', e);
+  loadExample() {
+    if (!this._onbEditor) this._initEditor();
+    this._onbEditor.setValue(JSON.stringify(EXAMPLE_RESUME, null, 2));
+    this._validateEditor();
+  },
+
+  // ── WIZARD ──
+  _renderWizardProgress() {
+    const labels = ['Basics', 'Experience', 'Education', 'Skills'];
+    const prog = document.getElementById('wizard-progress');
+    prog.innerHTML = labels.map((l, i) => {
+      const n = i + 1;
+      const cls = n < this._wizardStep ? 'done' : n === this._wizardStep ? 'active' : '';
+      return (i > 0 ? `<div class="wizard-step-line${n <= this._wizardStep ? ' done' : ''}"></div>` : '') +
+        `<div class="wizard-step-dot ${cls}" title="${l}">${n < this._wizardStep ? '✓' : n}</div>`;
+    }).join('');
+  },
+
+  _showWizardStep(n) {
+    document.querySelectorAll('.wizard-step').forEach((el, i) => {
+      el.classList.toggle('active', i + 1 === n);
+    });
+  },
+
+  wizardNext(fromStep) {
+    document.getElementById('wizard-error').classList.add('hidden');
+    if (fromStep === 1) {
+      if (!document.getElementById('b-name').value.trim()) {
+        this._showErr('Name is required.'); return;
       }
     }
-
-    function loadConfig() {
-      try {
-        const saved = localStorage.getItem('resumeConfig');
-        if (!saved) return null;
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to load config from localStorage:', e);
-        return null;
+    if (fromStep === 2) {
+      if (document.getElementById('work-entries').children.length === 0) {
+        this.addWork(); // add at least one empty entry hint
       }
     }
+    this._wizardStep = fromStep + 1;
+    this._renderWizardProgress();
+    this._showWizardStep(this._wizardStep);
+  },
 
-    function applyConfig(config) {
-      if (!config) return;
-      
-      // Restore removed sections
-      if (config.removedSections) {
-        removedSections = config.removedSections;
-      }
-      
-      // Restore section order
-      if (config.sectionOrder) {
-        const list = document.getElementById('sectionList');
-        list.innerHTML = '';
-        
-        config.sectionOrder.forEach(section => {
-          const li = createSectionItem(section);
-          list.appendChild(li);
-        });
-      }
-      
-      // Restore page breaks
-      if (config.pageBreakBefore) {
-        config.pageBreakBefore.forEach(section => {
-          const checkbox = document.querySelector(`.break-before[data-section="${section}"]`);
-          if (checkbox) checkbox.checked = true;
-        });
-      }
-      
-      if (config.pageBreakAfter) {
-        config.pageBreakAfter.forEach(section => {
-          const checkbox = document.querySelector(`.break-after[data-section="${section}"]`);
-          if (checkbox) checkbox.checked = true;
-        });
-      }
+  wizardBack(fromStep) {
+    this._wizardStep = fromStep - 1;
+    this._renderWizardProgress();
+    this._showWizardStep(this._wizardStep);
+  },
 
-      // Restore font size, line height and locale if present
-      if (config.baseFontSize) {
-        const fs = document.getElementById('fontSize');
-        if (fs) {
-          fs.value = String(config.baseFontSize);
-          document.getElementById('fontSizeValue').textContent = fs.value + 'pt';
-        }
-      }
+  _showErr(msg) {
+    const el = document.getElementById('wizard-error');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  },
 
-      if (config.lineHeight) {
-        const lh = document.getElementById('lineHeight');
-        if (lh) {
-          lh.value = String(config.lineHeight);
-          document.getElementById('lineHeightValue').textContent = lh.value;
-        }
-      }
+  addWork() {
+    const id = uid();
+    const container = document.getElementById('work-entries');
+    const div = document.createElement('div');
+    div.className = 'entry-card'; div.dataset.entryId = id;
+    div.innerHTML = `
+      <button class="entry-remove" onclick="this.closest('.entry-card').remove()" title="Remove">✕</button>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Company *</label><input class="form-input" name="company" placeholder="Acme Corp"></div>
+        <div class="form-group"><label class="form-label">Position *</label><input class="form-input" name="position" placeholder="Software Engineer"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Start Date</label><input class="form-input" name="startDate" placeholder="2020-01"></div>
+        <div class="form-group"><label class="form-label">End Date <small style="color:var(--text-muted)">(blank = present)</small></label><input class="form-input" name="endDate" placeholder="2023-06"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Summary</label><input class="form-input" name="summary" placeholder="Brief description of role"></div>
+      <div class="form-group"><label class="form-label">Key Highlights <small style="color:var(--text-muted)">(one per line)</small></label><textarea class="form-textarea" name="highlights" rows="3" placeholder="Reduced load time by 40%&#10;Led team of 5 engineers"></textarea></div>
+    `;
+    container.appendChild(div);
+  },
 
-      if (config.locale) {
-        const sel = document.getElementById('localeSelect');
-        if (sel) sel.value = config.locale;
-      }
+  addEdu() {
+    const container = document.getElementById('edu-entries');
+    const div = document.createElement('div');
+    div.className = 'entry-card';
+    div.innerHTML = `
+      <button class="entry-remove" onclick="this.closest('.entry-card').remove()" title="Remove">✕</button>
+      <div class="form-group"><label class="form-label">Institution *</label><input class="form-input" name="institution" placeholder="MIT"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Degree</label>
+          <select class="form-select" name="studyType"><option>Bachelor</option><option>Master</option><option>PhD</option><option>Diploma</option><option>Certificate</option><option>Other</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Field of Study</label><input class="form-input" name="area" placeholder="Computer Science"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Start Date</label><input class="form-input" name="startDate" placeholder="2018-09"></div>
+        <div class="form-group"><label class="form-label">End Date</label><input class="form-input" name="endDate" placeholder="2022-06"></div>
+      </div>
+    `;
+    container.appendChild(div);
+  },
 
-      if (config.modelKey) {
-        const sel = document.getElementById('modelSelect');
-        if (sel) sel.value = config.modelKey;
-      }
-    }
+  addSkill() {
+    const container = document.getElementById('skill-entries');
+    const div = document.createElement('div');
+    div.className = 'entry-card';
+    div.innerHTML = `
+      <button class="entry-remove" onclick="this.closest('.entry-card').remove()" title="Remove">✕</button>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Category Name</label><input class="form-input" name="skillName" placeholder="Programming Languages"></div>
+        <div class="form-group"><label class="form-label">Keywords <small style="color:var(--text-muted)">(comma-separated)</small></label><input class="form-input" name="keywords" placeholder="JavaScript, TypeScript, Python"></div>
+      </div>
+    `;
+    container.appendChild(div);
+  },
 
-    async function updatePreview() {
-      if (!currentResume) {
-        return;
-      }
-      
-      const container = document.getElementById('previewContainer');
-      container.innerHTML = '<div class="loading">Generating PDF preview...</div>';
-      
-      try {
-        const config = getConfig();
-        
-        const response = await fetch('/api/generate-pdf', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resume: currentResume, config })
-        });
-        
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error);
-        }
-        
-        const blob = await response.blob();
-        const pdfUrl = URL.createObjectURL(blob);
-        
-        // Create iframe for PDF preview
-        const iframe = document.createElement('iframe');
-        iframe.className = 'preview-frame';
-        iframe.src = pdfUrl;
-        iframe.style.border = 'none';
-        
-        container.innerHTML = '';
-        container.appendChild(iframe);
-        
-        // Clean up the blob URL when component updates
-        iframe.addEventListener('load', () => {
-          if (window.lastPdfUrl) {
-            URL.revokeObjectURL(window.lastPdfUrl);
-          }
-          window.lastPdfUrl = pdfUrl;
-        });
-      } catch (error) {
-        container.innerHTML = `<div class="validation-message error">Preview error: ${error.message}</div>`;
-      }
-    }
+  wizardBuild() {
+    document.getElementById('wizard-error').classList.add('hidden');
+    const name = document.getElementById('b-name').value.trim();
+    if (!name) { this._showErr('Name is required.'); this.wizardBack(4); return; }
 
-    async function generatePDF() {
-      if (!currentResume) {
-        alert('Please upload or paste a valid JSON Resume first');
-        return;
-      }
-      
-      try {
-        const config = getConfig();
-        
-        const response = await fetch('/api/generate-pdf', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resume: currentResume, config })
-        });
-        
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error);
-        }
-        
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${currentResume.basics.name.replace(/\s+/g, '_')}_resume.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      } catch (error) {
-        alert('PDF generation error: ' + error.message);
-      }
-    }
-
-    function loadExample() {
-      const example = {
-        "basics": {
-          "name": "John Doe",
-          "label": "Software Engineer",
-          "email": "john.doe@example.com",
-          "phone": "(555) 123-4567",
-          "url": "https://johndoe.com",
-          "summary": "Experienced software engineer with a passion for building scalable web applications and leading technical teams.",
-          "location": {
-            "city": "San Francisco",
-            "countryCode": "US"
-          }
+    const resume = {
+      basics: {
+        name,
+        label: document.getElementById('b-label').value.trim() || undefined,
+        email: document.getElementById('b-email').value.trim() || undefined,
+        phone: document.getElementById('b-phone').value.trim() || undefined,
+        url:   document.getElementById('b-url').value.trim() || undefined,
+        summary: document.getElementById('b-summary').value.trim() || undefined,
+        location: {
+          city: document.getElementById('b-city').value.trim() || undefined,
+          countryCode: document.getElementById('b-country').value.trim() || undefined,
         },
-        "work": [
-          {
-            "name": "Tech Corp",
-            "position": "Senior Software Engineer",
-            "url": "https://techcorp.example.com",
-            "startDate": "2020-01",
-            "summary": "Led development of cloud-based applications",
-            "highlights": [
-              "Architected microservices platform",
-              "Mentored junior developers"
-            ]
-          }
-        ],
-        "education": [
-          {
-            "institution": "University of Technology",
-            "area": "Computer Science",
-            "studyType": "Bachelor",
-            "startDate": "2012-09",
-            "endDate": "2016-06"
-          }
-        ],
-        "skills": [
-          {
-            "name": "Programming",
-            "keywords": ["JavaScript", "TypeScript", "Python", "Go"]
-          }
-        ]
-      };
-      
-      monacoEditor.setValue(JSON.stringify(example, null, 2));
-      validateJSON();
+      },
+      work: [...document.getElementById('work-entries').querySelectorAll('.entry-card')].map(card => ({
+        name:      card.querySelector('[name=company]').value.trim(),
+        position:  card.querySelector('[name=position]').value.trim(),
+        startDate: card.querySelector('[name=startDate]').value.trim() || undefined,
+        endDate:   card.querySelector('[name=endDate]').value.trim() || undefined,
+        summary:   card.querySelector('[name=summary]').value.trim() || undefined,
+        highlights: card.querySelector('[name=highlights]').value.split('\n').map(s => s.trim()).filter(Boolean),
+      })).filter(w => w.name),
+      education: [...document.getElementById('edu-entries').querySelectorAll('.entry-card')].map(card => ({
+        institution: card.querySelector('[name=institution]').value.trim(),
+        studyType:   card.querySelector('[name=studyType]').value,
+        area:        card.querySelector('[name=area]').value.trim() || undefined,
+        startDate:   card.querySelector('[name=startDate]').value.trim() || undefined,
+        endDate:     card.querySelector('[name=endDate]').value.trim() || undefined,
+      })).filter(e => e.institution),
+      skills: [...document.getElementById('skill-entries').querySelectorAll('.entry-card')].map(card => ({
+        name:     card.querySelector('[name=skillName]').value.trim(),
+        keywords: card.querySelector('[name=keywords]').value.split(',').map(s => s.trim()).filter(Boolean),
+      })).filter(s => s.name),
+    };
+
+    Store.setMaster(resume);
+    Router.go('#dashboard');
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════════════════════
+const Dashboard = {
+  show() {
+    const master = Store.getMaster();
+    const firstName = master?.basics?.name?.split(' ')[0] || 'there';
+    document.getElementById('dash-welcome').textContent = `Welcome back, ${firstName}!`;
+    this.renderApps();
+  },
+
+  renderApps() {
+    const grid = document.getElementById('apps-grid');
+    const apps = Store.getApps();
+    if (!apps.length) {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+        <div class="empty-state-icon">📝</div>
+        <h3>No applications yet</h3>
+        <p>Start by tailoring your resume for a specific job.</p>
+        <button class="btn btn-primary" onclick="Router.go('#new')">+ New Application</button>
+      </div>`;
+      return;
+    }
+    grid.innerHTML = apps.map(app => {
+      const score = app.jdAnalysis?.match_score;
+      const badgeCls = score != null ? scoreClass(score) : 'badge-purple';
+      const badgeTxt = score != null ? `${score}%` : 'Pending';
+      const company = app.jdAnalysis?.company || '';
+      const role    = app.jdAnalysis?.role_title || '';
+      const sub     = [role, company].filter(Boolean).join(' @ ');
+      return `<div class="app-card" onclick="Router.go('#app/${app.id}')">
+        <div class="app-card-header">
+          <div class="app-card-icon">📄</div>
+          <div>
+            <div class="app-card-title">${escHtml(app.name)}</div>
+            <div class="app-card-sub">${escHtml(sub)}</div>
+          </div>
+          <span class="badge ${badgeCls}" style="margin-left:auto">${badgeTxt}</span>
+        </div>
+        <div class="app-card-meta">
+          <span>${fmtDate(app.createdAt)}</span>
+        </div>
+        <div class="app-card-actions" onclick="event.stopPropagation()">
+          <button class="btn btn-secondary btn-sm" onclick="Router.go('#app/${app.id}')">View</button>
+          <button class="btn btn-secondary btn-sm" onclick="Dashboard.quickPDF('${app.id}')">↓ PDF</button>
+          <button class="btn btn-danger btn-sm" onclick="Dashboard.deleteApp('${app.id}')">Delete</button>
+        </div>
+      </div>`;
+    }).join('');
+  },
+
+  async quickPDF(id) {
+    const app = Store.getApp(id);
+    if (!app?.tailoredResume) return;
+    try {
+      const blob = await API.generatePDFBlob(app.tailoredResume, appRenderConfig(app.config));
+      const name = (app.tailoredResume.basics?.name || 'resume').replace(/\s+/g,'_');
+      downloadBlob(blob, `${name}_resume.pdf`);
+    } catch(e) { alert('PDF error: ' + e.message); }
+  },
+
+  deleteApp(id) {
+    if (!confirm('Delete this application?')) return;
+    Store.deleteApp(id);
+    this.renderApps();
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NEW APPLICATION
+// ═══════════════════════════════════════════════════════════════════════════
+const NewApp = {
+  show() {
+    const settings = Store.getSettings();
+    populateModelSelect(document.getElementById('new-model-select'), settings.modelKey);
+    document.getElementById('new-prompt-addition').value = settings.promptAddition || '';
+    document.getElementById('jd-textarea').value = '';
+    document.getElementById('tailor-status').className = 'tailor-status';
+    document.getElementById('tailor-btn').disabled = false;
+  },
+
+  async submit() {
+    const jd = document.getElementById('jd-textarea').value.trim();
+    if (!jd) { alert('Please paste a job description.'); return; }
+
+    const master = Store.getMaster();
+    if (!master) { Router.go('#onboarding'); return; }
+
+    const model = document.getElementById('new-model-select').value;
+    const promptAddition = document.getElementById('new-prompt-addition').value.trim();
+
+    const btn    = document.getElementById('tailor-btn');
+    const status = document.getElementById('tailor-status');
+    btn.disabled = true;
+    status.className = 'tailor-status running';
+    status.textContent = `🤖 Analysing JD and tailoring resume with ${model}… (~30s)`;
+
+    try {
+      const data = await API.tailor(master, jd, model, promptAddition);
+      const settings = Store.getSettings();
+      const app = Store.addApp({
+        id: uid(),
+        name: deriveAppName(master, data.jd_analysis),
+        createdAt: new Date().toISOString(),
+        jd,
+        jdAnalysis: data.jd_analysis,
+        tailoredResume: data.tailored_resume,
+        config: {
+          sectionOrder:    [...settings.sectionOrder],
+          pageBreakBefore: [...settings.pageBreakBefore],
+          pageBreakAfter:  [...settings.pageBreakAfter],
+          removedSections: [...settings.removedSections],
+          baseFontSize:    settings.baseFontSize,
+          lineHeight:      settings.lineHeight,
+          locale:          settings.locale,
+        },
+      });
+      Router.go(`#app/${app.id}`);
+    } catch(e) {
+      status.className = 'tailor-status error';
+      status.textContent = `❌ ${e.message}`;
+      btn.disabled = false;
+    }
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// APP DETAIL
+// ═══════════════════════════════════════════════════════════════════════════
+function appRenderConfig(cfg) {
+  return {
+    sectionOrder:    cfg?.sectionOrder,
+    pageBreakBefore: cfg?.pageBreakBefore,
+    pageBreakAfter:  cfg?.pageBreakAfter,
+    baseFontSize:    cfg?.baseFontSize,
+    lineHeight:      cfg?.lineHeight,
+    locale:          cfg?.locale,
+  };
+}
+
+const _configPreviewDebounced = debounce(() => AppDetail._loadConfigPreview(), 800);
+
+const AppDetail = {
+  _id: null,
+  _tab: 'preview',
+  _editor: null,
+  _sectionList: null,
+  _previewLoaded: false,
+
+  show(id) {
+    const app = Store.getApp(id);
+    if (!app) { Router.go('#dashboard'); return; }
+    this._id = id;
+
+    // Update header
+    document.getElementById('app-title').textContent = app.name;
+    const score = app.jdAnalysis?.match_score;
+    const badge = document.getElementById('app-match-badge');
+    if (score != null) {
+      badge.className = `badge ${scoreClass(score)}`;
+      badge.textContent = `${score}% match`;
+    } else {
+      badge.textContent = '';
     }
 
-    function debounce(func, wait) {
-      let timeout;
-      return function executedFunction(...args) {
-        const later = () => {
-          clearTimeout(timeout);
-          func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-      };
-    }
+    // Switch to preview by default
+    this.setTab('preview');
+  },
 
-    async function tailorResume() {
-      if (!currentResume) {
-        alert('Please upload or paste a valid JSON Resume first.');
+  setTab(tab) {
+    this._tab = tab;
+    // update tab buttons
+    document.querySelectorAll('.app-mode-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === tab);
+    });
+    // hide all views
+    ['preview','edit','configure','info'].forEach(v => {
+      document.getElementById(`app-view-${v}`)?.classList.remove('active');
+    });
+    document.getElementById(`app-view-${tab}`)?.classList.add('active');
+
+    if (tab === 'preview')   this._loadPreview();
+    if (tab === 'edit')      this._initEdit();
+    if (tab === 'configure') this._initConfigure();
+    if (tab === 'info')      this._renderInfo();
+  },
+
+  async _loadPreview() {
+    const app = Store.getApp(this._id);
+    if (!app?.tailoredResume) return;
+    const loading = document.getElementById('preview-loading');
+    const frame   = document.getElementById('app-preview-frame');
+    loading.classList.remove('hidden'); frame.classList.add('hidden');
+    try {
+      const blob = await API.generatePDFBlob(app.tailoredResume, appRenderConfig(app.config));
+      const url = URL.createObjectURL(blob);
+      frame.src = url;
+      frame.onload = () => {
+        loading.classList.add('hidden');
+        frame.classList.remove('hidden');
+      };
+    } catch(e) {
+      loading.textContent = 'Preview error: ' + e.message;
+    }
+  },
+
+  _initEdit() {
+    const app = Store.getApp(this._id);
+    if (!app) return;
+    const json = JSON.stringify(app.tailoredResume, null, 2);
+    if (!this._editor) {
+      this._editor = monaco.editor.create(document.getElementById('app-editor-container'), {
+        language: 'json', theme: 'vs', automaticLayout: true,
+        minimap: { enabled: false }, scrollBeyondLastLine: false,
+        fontSize: 13, tabSize: 2,
+      });
+      this._editor.onDidChangeModelContent(debounce(() => this._validateEdit(), 600));
+    }
+    this._editor.setValue(json);
+    this._editor.layout();
+    document.getElementById('app-edit-validation').textContent = 'Edit the resume JSON. Click Save when done.';
+  },
+
+  async _validateEdit() {
+    const val = document.getElementById('app-edit-validation');
+    try {
+      const resume = JSON.parse(this._editor.getValue());
+      const result = await API.validate(resume);
+      val.innerHTML = result.valid
+        ? '<span style="color:var(--teal-dark)">✓ Valid</span>'
+        : `<span style="color:var(--red)">✗ ${result.errors?.[0]?.message || 'Invalid'}</span>`;
+    } catch(e) {
+      val.innerHTML = `<span style="color:var(--red)">✗ ${e.message}</span>`;
+    }
+  },
+
+  async saveEdit() {
+    const text = this._editor?.getValue();
+    if (!text) return;
+    try {
+      const resume = JSON.parse(text);
+      const result = await API.validate(resume);
+      if (!result.valid) {
+        alert('Resume has validation errors. Please fix them before saving.');
         return;
       }
-
-      const jd = document.getElementById('jdInput').value.trim();
-      if (!jd) {
-        alert('Please paste a job description first.');
-        return;
-      }
-
-      const modelKey = document.getElementById('modelSelect').value;
-      // Persist model selection
-      saveConfig(getConfigWithoutSaving());
-
-      const btn = document.getElementById('tailorBtn');
-      const status = document.getElementById('tailorStatus');
-      const badge = document.getElementById('matchBadge');
-
-      btn.disabled = true;
-      status.className = 'tailor-status running';
-      status.textContent = `🤖 Analysing JD and tailoring resume with ${modelKey}… (this takes ~30s)`;
-      badge.style.display = 'none';
-
-      try {
-        const response = await fetch('/api/tailor', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resume: currentResume, jd, model: modelKey }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Tailoring failed');
-        }
-
-        // Put the tailored resume into the Monaco editor and re-validate
-        monacoEditor.setValue(JSON.stringify(data.tailored_resume, null, 2));
-        await validateJSON();
-
-        // Show match badge
-        if (data.jd_analysis?.match_score !== undefined) {
-          badge.textContent = `${data.jd_analysis.match_score}% match`;
-          badge.style.display = 'inline-block';
-        }
-
-        // Show gaps if any
-        const gaps = data.jd_analysis?.gaps ?? [];
-        const gapText = gaps.length ? `\nGaps: ${gaps.join(', ')}` : '';
-        status.className = 'tailor-status success';
-        status.textContent = `✅ ${data.status ?? 'Done'}${gapText}`;
-      } catch (err) {
-        status.className = 'tailor-status error';
-        status.textContent = `❌ ${err.message}`;
-      } finally {
-        btn.disabled = false;
-      }
+      Store.updateApp(this._id, { tailoredResume: resume });
+      this.setTab('preview');
+    } catch(e) {
+      alert('JSON parse error: ' + e.message);
     }
+  },
 
-    // Bootstrap Monaco, then initialize the app
-    // monacoEditor is the global editor instance used everywhere
-    let monacoEditor;
+  _initConfigure() {
+    const app = Store.getApp(this._id);
+    if (!app) return;
 
-    require.config({
-      paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs' }
+    // Set slider values
+    const fs = document.getElementById('cfg-font-size');
+    const lh = document.getElementById('cfg-line-height');
+    const lc = document.getElementById('cfg-locale');
+    fs.value = app.config?.baseFontSize ?? 12;
+    lh.value = app.config?.lineHeight ?? 1.5;
+    lc.value = app.config?.locale ?? 'en';
+    document.getElementById('cfg-fs-val').textContent = fs.value + 'pt';
+    document.getElementById('cfg-lh-val').textContent = lh.value;
+
+    // Init section list
+    const ul = document.getElementById('cfg-section-list');
+    const cfgCopy = { ...app.config };
+    this._sectionList = createSectionList(ul, cfgCopy, (updated) => {
+      Store.updateApp(this._id, {
+        config: { ...app.config, ...updated }
+      });
+      _configPreviewDebounced();
     });
 
-    require(['vs/editor/editor.main'], () => {
-      monacoEditor = monaco.editor.create(
-        document.getElementById('jsonEditorContainer'),
-        {
-          language: 'json',
-          theme: 'vs',
-          automaticLayout: true,
-          minimap: { enabled: false },
-          scrollBeyondLastLine: false,
-          fontSize: 13,
-          fontFamily: "'Monaco', 'Courier New', monospace",
-          tabSize: 2,
-          wordWrap: 'off',
-        }
-      );
+    // Load config preview
+    this._loadConfigPreview();
+  },
 
-      // Wire up the rest of the app now that the editor is ready
-      init();
+  configChanged() {
+    const app = Store.getApp(this._id);
+    if (!app) return;
+    const fs = parseFloat(document.getElementById('cfg-font-size').value);
+    const lh = parseFloat(document.getElementById('cfg-line-height').value);
+    const lc = document.getElementById('cfg-locale').value;
+    document.getElementById('cfg-fs-val').textContent = fs + 'pt';
+    document.getElementById('cfg-lh-val').textContent = lh;
+    const updated = { ...app.config, baseFontSize: fs, lineHeight: lh, locale: lc };
+    Store.updateApp(this._id, { config: updated });
+    _configPreviewDebounced();
+  },
+
+  async _loadConfigPreview() {
+    const app = Store.getApp(this._id);
+    if (!app?.tailoredResume) return;
+    const loading = document.getElementById('config-loading');
+    const frame   = document.getElementById('config-preview-frame');
+    loading.classList.remove('hidden'); frame.classList.add('hidden');
+    try {
+      const blob = await API.generatePDFBlob(app.tailoredResume, appRenderConfig(app.config));
+      const url = URL.createObjectURL(blob);
+      frame.src = url;
+      frame.onload = () => {
+        loading.classList.add('hidden');
+        frame.classList.remove('hidden');
+      };
+    } catch(e) {
+      loading.textContent = 'Preview error: ' + e.message;
+    }
+  },
+
+  restoreSections() {
+    this._sectionList?.restore();
+  },
+
+  _renderInfo() {
+    const app = Store.getApp(this._id);
+    const jd = app?.jdAnalysis;
+    if (!jd) { document.getElementById('info-match').textContent = '—'; return; }
+
+    document.getElementById('info-match').textContent   = jd.match_score != null ? `${jd.match_score}%` : '—';
+    document.getElementById('info-role').textContent    = jd.role_title  || '—';
+    document.getElementById('info-company').textContent = jd.company     || '—';
+
+    const gaps = document.getElementById('info-gaps');
+    gaps.innerHTML = (jd.gaps || []).map(g => `<span class="gap-tag">${escHtml(g)}</span>`).join('') || '<span class="text-muted">None identified</span>';
+
+    const skills = document.getElementById('info-skills');
+    skills.innerHTML = (jd.required_skills || []).map(s => `<span class="skill-tag">${escHtml(s)}</span>`).join('');
+
+    const resp = document.getElementById('info-responsibilities');
+    resp.innerHTML = (jd.key_responsibilities || []).map(r => `<li>${escHtml(r)}</li>`).join('');
+  },
+
+  toggleDownload() {
+    const menu = document.getElementById('dl-menu');
+    menu.classList.toggle('open');
+    // close on outside click
+    const close = (e) => {
+      if (!document.getElementById('dl-dropdown').contains(e.target)) {
+        menu.classList.remove('open');
+        document.removeEventListener('click', close);
+      }
+    };
+    if (menu.classList.contains('open')) setTimeout(() => document.addEventListener('click', close), 0);
+  },
+
+  async downloadPDF() {
+    document.getElementById('dl-menu').classList.remove('open');
+    const app = Store.getApp(this._id);
+    if (!app?.tailoredResume) return;
+    try {
+      const blob = await API.generatePDFBlob(app.tailoredResume, appRenderConfig(app.config));
+      const name = (app.tailoredResume.basics?.name || 'resume').replace(/\s+/g,'_');
+      downloadBlob(blob, `${name}_resume.pdf`);
+    } catch(e) { alert('PDF error: ' + e.message); }
+  },
+
+  downloadJSON() {
+    document.getElementById('dl-menu').classList.remove('open');
+    const app = Store.getApp(this._id);
+    if (!app?.tailoredResume) return;
+    const name = (app.tailoredResume.basics?.name || 'resume').replace(/\s+/g,'_');
+    downloadBlob(new Blob([JSON.stringify(app.tailoredResume, null, 2)], { type: 'application/json' }), `${name}_resume.json`);
+  },
+
+  async downloadHTML() {
+    document.getElementById('dl-menu').classList.remove('open');
+    const app = Store.getApp(this._id);
+    if (!app?.tailoredResume) return;
+    try {
+      const blob = await API.generateHTMLBlob(app.tailoredResume, appRenderConfig(app.config));
+      const name = (app.tailoredResume.basics?.name || 'resume').replace(/\s+/g,'_');
+      downloadBlob(blob, `${name}_resume.html`);
+    } catch(e) { alert('HTML error: ' + e.message); }
+  },
+
+  del() {
+    if (!confirm('Delete this application? This cannot be undone.')) return;
+    Store.deleteApp(this._id);
+    Router.go('#dashboard');
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SETTINGS PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+let _settingsSectionList = null;
+
+const SettingsPage = {
+  _sectionList: null,
+
+  show() {
+    const s = Store.getSettings();
+    populateModelSelect(document.getElementById('settings-model'), s.modelKey);
+    document.getElementById('settings-prompt-addition').value = s.promptAddition || '';
+
+    const fs = document.getElementById('s-font-size');
+    const lh = document.getElementById('s-line-height');
+    fs.value = s.baseFontSize; lh.value = s.lineHeight;
+    document.getElementById('s-fs-val').textContent = fs.value + 'pt';
+    document.getElementById('s-lh-val').textContent = lh.value;
+    document.getElementById('s-locale').value = s.locale;
+
+    const ul = document.getElementById('s-section-list');
+    const cfgCopy = {
+      sectionOrder:    [...s.sectionOrder],
+      pageBreakBefore: [...s.pageBreakBefore],
+      pageBreakAfter:  [...s.pageBreakAfter],
+      removedSections: [...s.removedSections],
+    };
+    this._sectionList = createSectionList(ul, cfgCopy, () => {});
+  },
+
+  restoreSections() {
+    this._sectionList?.restore();
+  },
+
+  save() {
+    const secCfg = this._sectionList?.getConfig() || {};
+    const settings = {
+      modelKey:        document.getElementById('settings-model').value,
+      promptAddition:  document.getElementById('settings-prompt-addition').value.trim(),
+      baseFontSize:    parseFloat(document.getElementById('s-font-size').value),
+      lineHeight:      parseFloat(document.getElementById('s-line-height').value),
+      locale:          document.getElementById('s-locale').value,
+      sectionOrder:    secCfg.sectionOrder    || Store.getSettings().sectionOrder,
+      pageBreakBefore: secCfg.pageBreakBefore || [],
+      pageBreakAfter:  secCfg.pageBreakAfter  || [],
+      removedSections: secCfg.removedSections || [],
+    };
+    Store.setSettings(settings);
+    Router.go('#dashboard');
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MASTER RESUME PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+const MasterResumePage = {
+  _editor: null,
+
+  show() {
+    const master = Store.getMaster();
+    if (!this._editor) {
+      this._editor = monaco.editor.create(document.getElementById('master-editor-container'), {
+        language: 'json', theme: 'vs', automaticLayout: true,
+        minimap: { enabled: false }, scrollBeyondLastLine: false,
+        fontSize: 13, tabSize: 2,
+      });
+      this._editor.onDidChangeModelContent(debounce(() => this._validate(), 600));
+    }
+    this._editor.setValue(master ? JSON.stringify(master, null, 2) : '');
+    this._editor.layout();
+    document.getElementById('master-validation').textContent = 'Your base resume — used as the foundation for all AI tailoring.';
+  },
+
+  async _validate() {
+    const val = document.getElementById('master-validation');
+    try {
+      const resume = JSON.parse(this._editor.getValue());
+      const result = await API.validate(resume);
+      val.innerHTML = result.valid
+        ? '<span style="color:var(--teal-dark)">✓ Valid JSON Resume</span>'
+        : `<span style="color:var(--red)">✗ ${result.errors?.[0]?.message || 'Invalid'}</span>`;
+    } catch(e) {
+      val.innerHTML = `<span style="color:var(--red)">✗ ${e.message}</span>`;
+    }
+  },
+
+  async save() {
+    const text = this._editor?.getValue().trim();
+    if (!text) { alert('Resume is empty.'); return; }
+    try {
+      const resume = JSON.parse(text);
+      const result = await API.validate(resume);
+      if (!result.valid) { alert('Please fix validation errors before saving.'); return; }
+      Store.setMaster(resume);
+      Router.go('#dashboard');
+    } catch(e) { alert(e.message); }
+  },
+
+  uploadFile(e) {
+    const file = e.target.files[0]; if (!file) return;
+    file.text().then(text => {
+      this._editor?.setValue(text);
+      this._validate();
     });
-  </script>
+  },
+
+  downloadJSON() {
+    const master = Store.getMaster(); if (!master) return;
+    const name = (master.basics?.name || 'resume').replace(/\s+/g,'_');
+    downloadBlob(new Blob([JSON.stringify(master, null, 2)], { type: 'application/json' }), `${name}_master.json`);
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ESCAPE HTML
+// ═══════════════════════════════════════════════════════════════════════════
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BOOTSTRAP — load Monaco then start router
+// ═══════════════════════════════════════════════════════════════════════════
+require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs' } });
+require(['vs/editor/editor.main'], () => {
+  Router.init();
+});
+</script>
 </body>
 </html>

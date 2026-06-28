@@ -118,7 +118,7 @@ const server = Bun.serve({
     // API: Tailor resume with AI agent (Nodes A + B only, no PDF)
     if (url.pathname === "/api/tailor" && req.method === "POST") {
       try {
-        const body = (await req.json()) as { resume: ResumeSchema; jd: string; model?: string };
+        const body = (await req.json()) as { resume: ResumeSchema; jd: string; model?: string; promptAddition?: string };
         const { resume, jd } = body;
 
         const modelKey: ModelKey = (MODEL_KEYS as readonly string[]).includes(body.model ?? "")
@@ -143,7 +143,7 @@ const server = Bun.serve({
           );
         }
 
-        const nodeConfig = { configurable: { model_key: modelKey } };
+        const nodeConfig = { configurable: { model_key: modelKey, prompt_addition: body.promptAddition ?? "" } };
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const state: any = {
@@ -175,6 +175,36 @@ const server = Bun.serve({
         return new Response(
           JSON.stringify({ error: (error as Error).message }),
           { status: 500, headers: { "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // API: Generate downloadable HTML
+    if (url.pathname === "/api/generate-html" && req.method === "POST") {
+      try {
+        const body = (await req.json()) as { resume: ResumeSchema; config: GenerateConfig };
+        const { resume, config } = body;
+
+        const validation = validateResume(resume);
+        if (!validation.valid) {
+          return new Response(
+            JSON.stringify({ error: "Invalid resume", validation }),
+            { status: 400, headers: { "Content-Type": "application/json" } }
+          );
+        }
+
+        const html = generateHTML(resume, config);
+
+        return new Response(html, {
+          headers: {
+            "Content-Type": "text/html; charset=utf-8",
+            "Content-Disposition": 'attachment; filename="resume.html"',
+          },
+        });
+      } catch (error) {
+        return new Response(
+          JSON.stringify({ error: (error as Error).message }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
         );
       }
     }
