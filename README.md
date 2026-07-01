@@ -21,7 +21,7 @@ This means you can hand a recruiter a normal-looking PDF while keeping the machi
 
 ## Flouka Studio — the easiest way to use this project
 
-Flouka Studio is a web app that runs on your computer. You open it in your browser, paste or upload your JSON Resume, see a live preview of your PDF, tweak the layout, and download the final PDF — no command line needed beyond starting it.
+Flouka Studio is a web app that runs on your computer. It is a full resume management tool: store your master resume, paste job descriptions, let AI tailor your resume for each application, and download the result as PDF, HTML, or JSON.
 
 **Step 1 — Install dependencies** (one time only):
 ```bash
@@ -38,12 +38,15 @@ bun run web
 http://localhost:3001
 ```
 
-That's it. From there the UI guides you:
+On first visit you'll be guided through a short onboarding to set up your master resume (paste JSON, upload a file, or fill in a step-by-step form). After that:
 
-1. Paste your `resume.json` into the left panel (or load one of the examples)
-2. The right panel shows a live preview of your formatted resume
-3. Use the sidebar controls to reorder sections, change font size, or add page breaks
-4. Click **Download PDF** to get your file — with the JSON source embedded inside it
+1. **Dashboard** — see all your job applications at a glance with match scores
+2. **New Job Application** — paste a job description; AI tailors your resume and creates a named application automatically
+3. **Application detail** — four tabs: live PDF preview, JSON editor, layout configurator (sections, font, line height, locale), and JD analysis (match score, skill gaps, key responsibilities)
+4. **Settings** — choose the AI model, add custom instructions to the tailoring prompt, and set rendering defaults
+5. **Master Resume** — edit your base resume at any time; existing applications are unaffected
+
+All data is stored locally in your browser (`localStorage`) — nothing leaves your machine except the API calls to Claude/DeepSeek for tailoring.
 
 To stop the app, press `Ctrl+C` in the terminal.
 
@@ -59,12 +62,16 @@ Turns your JSON Resume into a styled HTML document. No browser required. Use thi
 - Configurable section order, font size, line height, and page breaks
 - Validates the resume before rendering and gives you clear error messages
 
-### `flouka-studio` — HTML → PDF + web UI
-Takes the HTML from `xebec-render`, prints it to a pixel-perfect PDF, and embeds the original JSON as an attachment inside the PDF. Also ships a web interface so non-developers can upload a JSON Resume and download a PDF without touching the command line.
+### `flouka-studio` — PDF generator + full web application
+Takes the HTML from `xebec-render`, prints it to a pixel-perfect PDF, and embeds the original JSON as an attachment inside the PDF. Also ships a multi-page web application for managing resumes and job applications.
 
 - What you see in the browser preview is exactly what you get in the PDF
 - The embedded JSON can be extracted back out at any time (see `extractor`)
-- The web UI lets you reorder sections, adjust font size, and toggle page breaks live
+- Manage multiple job applications: AI tailoring, per-application layout config, PDF/HTML/JSON download
+- Stores everything locally in `localStorage`; no account or backend database required
+
+### `agent` — AI resume tailoring
+A LangGraph pipeline with two nodes: Node A analyses the job description and scores the match; Node B rewrites `basics.label`, `basics.summary`, and `work[].highlights` using structured output. Supports Claude (Opus, Sonnet, Haiku) and DeepSeek models. Exposed via `/api/tailor` in the web server and usable standalone via CLI.
 
 ### `validator` — catch errors before they reach the PDF
 Validates your JSON Resume against the official schema and runs a second layer of practical checks: is there a name? contact info? are the dates valid ISO8601? This runs automatically before any render, so you get a clear error message instead of a broken PDF.
@@ -191,31 +198,39 @@ hammidu-resume/
 - [x] Footer with page numbers on every page
 - [x] Round-trip test: JSON → HTML → PDF → JSON ✓
 
-### 🚧 v2 — Flouka Studio desktop app (in progress, `feat/flouka-tauri-desktop`)
-Replaces the browser + Bun server with a native macOS (and later Windows/Linux) desktop app built with [Tauri](https://tauri.app). The WebView that renders the live preview is the same engine that generates the PDF — true WYSIWYG, no Chromium bundled, ~15–25 MB installer vs ~300 MB with Puppeteer.
+### ✅ v2 — AI tailoring + Flouka Studio multi-page app (released, `main`)
+- [x] LangGraph agent: Node A analyses JD + scores match, Node B tailors `basics.label`, `basics.summary`, `work[].highlights`
+- [x] Multi-model support: Claude Opus / Sonnet / Haiku + DeepSeek
+- [x] Per-call `promptAddition` to inject custom tailoring instructions
+- [x] Flouka Studio rewritten as a multi-page SPA (hash routing, no framework)
+- [x] Onboarding wizard: paste JSON, upload file, or guided step-by-step builder
+- [x] Dashboard: application cards with match scores, quick PDF download/delete
+- [x] New Job Application flow: paste JD → AI tailors → named application created automatically
+- [x] Application detail: Preview / Edit JSON (Monaco) / Configure layout / JD Analysis tabs
+- [x] Per-application layout config (section order, page breaks, font, line height, locale)
+- [x] Download as PDF, HTML, or JSON per application
+- [x] Settings page: model selector, tailoring prompt addition, render defaults
+- [x] Master Resume page: view, edit, upload, download
+- [x] Locale/language selector for resume output (en, de, fr, ar)
+- [x] All data stored in `localStorage`; no account required
 
-- [x] Tauri v2 app shell wrapping the existing web UI
-- [x] Dual-mode frontend: `window.FloukaBridge` in the desktop app, `fetch('/api/...')` in the browser — same `index.html` serves both
-- [x] Print-to-PDF via `WKWebView.createPDF()` on macOS (no Puppeteer, no Chromium)
-- [x] `pdf-lib` post-processing in JS: JSON attachment + metadata (unchanged from v1)
-- [x] Native Save dialog via Tauri (`dialog.save` + `fs.writeFile`)
-- [x] CSS `@page @bottom-center counter(page)` footer (replaces Puppeteer `footerTemplate`)
-- [x] Real `.icns` / `.ico` app icons; `.app` (9.8 MB) and `.dmg` (3.3 MB) produced by `tauri build`
-- [x] Fix broken drag and drop
+### 🚧 v3 — Flouka Studio desktop app (in progress, `feat/flouka-tauri-desktop`)
+Replaces the browser + Bun server with a native macOS (and later Windows/Linux) desktop app built with [Tauri](https://tauri.app).
+
+- [x] Tauri v2 app shell
+- [x] Dual-mode frontend: `window.FloukaBridge` in desktop, `fetch('/api/...')` in browser
+- [x] Print-to-PDF via `WKWebView.createPDF()` on macOS (no Puppeteer)
+- [x] Native Save dialog via Tauri
 - [ ] Show download dialog / open downloaded file
 - [ ] Windows: `CoreWebView2.PrintToPdfAsync()` Rust plugin
-- [ ] Linux: WebKitGTK print operation Rust plugin
-- [ ] Code signing & notarization (Apple Developer ID, Windows Authenticode)
+- [ ] Code signing & notarization
 - [ ] Distributable installers: `.dmg`, `.msi`, `.AppImage` / `.deb`
-- [ ] Remove Puppeteer from the repo once the desktop build is validated end-to-end
 
-### 🗓 v3 — Planned
+### 🗓 v4 — Planned
 - [ ] Multiple CV templates (beyond Harvard)
 - [ ] Custom font embedding for cross-platform consistency
 - [ ] Color scheme options
-- [ ] Internationalization (dates, section labels)
-- [ ] Better UI (it's ugly now I know)
-- [ ] Fully Keyboard accessible 
+- [ ] Fully keyboard accessible
 - [ ] Published releases
 
 ---
