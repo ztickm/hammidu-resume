@@ -273,7 +273,7 @@
     .empty-state p { font-size: 0.9em; margin-bottom: 20px; }
 
     /* ══════════════════════════════════════════════
-       NEW APPLICATION PAGE
+       NEW JOB APPLICATION PAGE
     ══════════════════════════════════════════════ */
     .new-content {
       flex: 1; overflow-y: auto;
@@ -618,7 +618,7 @@
   <nav class="nav">
     <div class="nav-brand">Flouka</div>
     <div class="nav-actions">
-      <button class="btn btn-ghost btn-sm" onclick="Router.go('#resume')">Edit Resume</button>
+      <button class="btn btn-ghost btn-sm" onclick="Router.go('#resume')">Edit Main Resume</button>
       <button class="btn btn-ghost btn-sm" onclick="Router.go('#settings')">⚙️ Settings</button>
     </div>
   </nav>
@@ -628,19 +628,19 @@
         <h2 id="dash-welcome">Welcome back!</h2>
         <p>Manage your job applications and tailored resumes</p>
       </div>
-      <button class="btn btn-primary btn-lg" onclick="Router.go('#new')">+ New Application</button>
+      <button class="btn btn-primary btn-lg" onclick="Router.go('#new')">+ New Job Application</button>
     </div>
     <div id="apps-grid" class="apps-grid"></div>
   </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════
-     PAGE: NEW APPLICATION
+     PAGE: NEW JOB APPLICATION
 ════════════════════════════════════════════════════════ -->
 <div id="pg-new" class="pg">
   <nav class="nav">
     <button class="nav-back" onclick="Router.go('#dashboard')">← Applications</button>
-    <span class="nav-title">New Application</span>
+    <span class="nav-title">New Job Application</span>
   </nav>
   <div class="new-content pg-scroll">
     <div class="new-inner">
@@ -1401,7 +1401,7 @@ const Dashboard = {
         <div class="empty-state-icon">📝</div>
         <h3>No applications yet</h3>
         <p>Start by tailoring your resume for a specific job.</p>
-        <button class="btn btn-primary" onclick="Router.go('#new')">+ New Application</button>
+        <button class="btn btn-primary" onclick="Router.go('#new')">+ New Job Application</button>
       </div>`;
       return;
     }
@@ -1451,7 +1451,7 @@ const Dashboard = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// NEW APPLICATION
+// NEW JOB APPLICATION
 // ═══════════════════════════════════════════════════════════════════════════
 const NewApp = {
   show() {
