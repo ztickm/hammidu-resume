@@ -63,7 +63,7 @@ Rewrite the summary in 2-3 sentences:
 // Merge helper
 // ---------------------------------------------------------------------------
 
-function mergeResume(
+export function mergeResume(
   master: ResumeSchema,
   tailored: TailoredResume
 ): ResumeSchema {

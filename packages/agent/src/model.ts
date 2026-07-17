@@ -14,6 +14,7 @@ import { ChatOpenAI } from "@langchain/openai";
 // ---------------------------------------------------------------------------
 
 export const MODEL_KEYS = [
+  "claude-sonnet-4-6",
   "claude-opus-4-5",
   "claude-sonnet-4-5",
   "deepseek-chat",
@@ -25,6 +26,7 @@ export type ModelKey = (typeof MODEL_KEYS)[number];
 export const DEFAULT_MODEL: ModelKey = "claude-opus-4-5";
 
 const MODEL_LABELS: Record<ModelKey, string> = {
+  "claude-sonnet-4-6": "Claude Sonnet 4.6 (Anthropic)",
   "claude-opus-4-5": "Claude Opus 4.5 (Anthropic)",
   "claude-sonnet-4-5": "Claude Sonnet 4.5 (Anthropic)",
   "deepseek-chat": "DeepSeek Chat (DeepSeek-V3)",
@@ -70,6 +72,15 @@ export function createChatModel(key: ModelKey, opts: ModelOptions = {}): ChatAnt
   const { maxTokens } = opts;
 
   switch (key) {
+    case "claude-sonnet-4-6":
+      return new ChatAnthropic({
+        model: "claude-sonnet-4-6-20250620",
+        temperature: 1,
+        maxTokens: maxTokens ?? 8192,
+        anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+        invocationKwargs: { top_p: undefined },
+      });
+
     case "claude-opus-4-5":
       return new ChatAnthropic({
         model: "claude-opus-4-5-20251101",
