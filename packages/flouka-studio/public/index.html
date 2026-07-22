@@ -1520,13 +1520,15 @@ const Dashboard = {
     }).join('');
   },
 
-  async quickPDF(id) {
+   async quickPDF(id) {
     const app = Store.getApp(id);
     if (!app?.tailoredResume) return;
     try {
       const blob = await API.generatePDFBlob(app.tailoredResume, appRenderConfig(app.config));
-      const name = (app.tailoredResume.basics?.name || 'resume').replace(/\s+/g,'_');
-      downloadBlob(blob, `${name}_resume.pdf`);
+      const fullName = (app.tailoredResume.basics?.name || 'resume').replace(/\s+/g,'_');
+      const company = (app.jdAnalysis?.company || '').replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g,'_').replace(/^_|_$/g,'');
+      const filename = company ? `${fullName}_resume_${company}.pdf` : `${fullName}_resume.pdf`;
+      downloadBlob(blob, filename);
     } catch(e) { alert('PDF error: ' + e.message); }
   },
 
@@ -1923,14 +1925,16 @@ const AppDetail = {
     if (menu.classList.contains('open')) setTimeout(() => document.addEventListener('click', close), 0);
   },
 
-  async downloadPDF() {
+   async downloadPDF() {
     document.getElementById('dl-menu').classList.remove('open');
     const app = Store.getApp(this._id);
     if (!app?.tailoredResume) return;
     try {
       const blob = await API.generatePDFBlob(app.tailoredResume, appRenderConfig(app.config));
-      const name = (app.tailoredResume.basics?.name || 'resume').replace(/\s+/g,'_');
-      downloadBlob(blob, `${name}_resume.pdf`);
+      const fullName = (app.tailoredResume.basics?.name || 'resume').replace(/\s+/g,'_');
+      const company = (app.jdAnalysis?.company || '').replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g,'_').replace(/^_|_$/g, '');
+      const filename = company ? `${fullName}_resume_${company}.pdf` : `${fullName}_resume.pdf`;
+      downloadBlob(blob, filename);
     } catch(e) { alert('PDF error: ' + e.message); }
   },
 
