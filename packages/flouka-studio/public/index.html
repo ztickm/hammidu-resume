@@ -1727,7 +1727,6 @@ const AppDetail = {
         return;
       }
       Store.updateApp(this._id, { tailoredResume: resume });
-      this.setTab('preview');
     } catch(e) {
       alert('JSON parse error: ' + e.message);
     }
