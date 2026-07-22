@@ -64,12 +64,14 @@ export function fieldNamesInstruction(key: ModelKey, fieldNames: string[]): stri
 interface ModelOptions {
   /** Max tokens for the completion (applies to both providers). */
   maxTokens?: number;
+  /** Enable JSON mode on DeepSeek (response_format: json_object). */
+  jsonMode?: boolean;
 }
 
 // ChatAnthropic is used as the unified return type because both ChatAnthropic
 // and ChatOpenAI expose the same withStructuredOutput / invoke API we rely on.
 export function createChatModel(key: ModelKey, opts: ModelOptions = {}): ChatAnthropic {
-  const { maxTokens } = opts;
+  const { maxTokens, jsonMode } = opts;
 
   switch (key) {
     case "claude-sonnet-4-6":
@@ -106,6 +108,7 @@ export function createChatModel(key: ModelKey, opts: ModelOptions = {}): ChatAnt
         maxTokens: maxTokens ?? 8192,
         apiKey: process.env.DEEPSEEK_API_KEY,
         configuration: { baseURL: "https://api.deepseek.com/v1" },
+        ...(jsonMode ? { modelKwargs: { response_format: { type: "json_object" } } } : {}),
       }) as unknown as ChatAnthropic;
 
     case "deepseek-reasoner":
@@ -114,6 +117,7 @@ export function createChatModel(key: ModelKey, opts: ModelOptions = {}): ChatAnt
         maxTokens: maxTokens ?? 8192,
         apiKey: process.env.DEEPSEEK_API_KEY,
         configuration: { baseURL: "https://api.deepseek.com/v1" },
+        ...(jsonMode ? { modelKwargs: { response_format: { type: "json_object" } } } : {}),
       }) as unknown as ChatAnthropic;
   }
 }

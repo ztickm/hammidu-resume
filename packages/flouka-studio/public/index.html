@@ -441,11 +441,6 @@
       outline: none; min-height: 38px; max-height: 120px; overflow-y: auto;
     }
     #chat-input:focus { border-color: var(--teal); }
-    .chat-deepseek-notice {
-      margin: 0 12px 8px; padding: 8px 12px; background: #fef3c7;
-      border: 1px solid #fcd34d; border-radius: 8px;
-      font-size: 0.78em; color: #78350f; line-height: 1.4;
-    }
 
     /* ══════════════════════════════════════════════
        SETTINGS PAGE
@@ -846,9 +841,6 @@
         <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:1em" onclick="AppDetail.toggleChat()">✕</button>
       </div>
       <div id="chat-messages" class="chat-messages"></div>
-      <div id="chat-deepseek-notice" class="chat-deepseek-notice" style="display:none">
-        Auto-editing requires a Claude model. Describe your changes and apply them via the Edit JSON tab.
-      </div>
       <div class="chat-input-bar">
         <textarea id="chat-input" placeholder="Ask me to refine your resume…" rows="2" onkeydown="AppDetail.chatKeyDown(event)"></textarea>
         <button class="btn btn-ai btn-sm" id="chat-send-btn" onclick="AppDetail.sendChat()">Send</button>
@@ -1827,18 +1819,11 @@ const AppDetail = {
     if (!app) return;
     this._chatHistory = app.chatHistory || [];
     populateModelSelect(document.getElementById('chat-model-select'), this._chatModel);
-    this._updateDeepSeekNotice();
     this._renderChat();
   },
 
   chatModelChanged() {
     this._chatModel = document.getElementById('chat-model-select').value;
-    this._updateDeepSeekNotice();
-  },
-
-  _updateDeepSeekNotice() {
-    const isDeepSeek = this._chatModel.startsWith('deepseek');
-    document.getElementById('chat-deepseek-notice').style.display = isDeepSeek ? 'block' : 'none';
   },
 
   _renderChat() {

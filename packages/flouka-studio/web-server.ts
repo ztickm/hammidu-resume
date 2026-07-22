@@ -293,7 +293,21 @@ Help the user refine their resume. You can edit:
 Do NOT change: name, email, phone, education dates/institutions, job titles, company names, or any other factual identity fields.
 
 ${isDeepSeek
-  ? "Describe suggested changes clearly in your response so the user can apply them manually."
+  ? `You MUST respond in JSON format with this exact structure:
+\`\`\`json
+{
+  "reply": "Your conversational message to the user.",
+  "update_resume": {
+    "basics": { "label": "...", "summary": "..." },
+    "work": [{ "name": "...", "position": "...", "highlights": ["..."], "summary": "..." }],
+    "skills": [{ "name": "...", "level": "...", "keywords": ["..."] }],
+    "languages": [{ "language": "...", "fluency": "..." }],
+    "projects": [{ "name": "...", "description": "...", "highlights": ["..."], "keywords": ["..."], "url": "..." }],
+    "volunteer": [{ "organization": "...", "position": "...", "highlights": ["..."], "summary": "..." }]
+  }
+}
+\`\`\`
+Include "update_resume" ONLY when the user asks you to change the resume. Otherwise, return only "reply". For array sections (work, skills, languages, projects, volunteer) always include ALL entries. Match work and volunteer entries by name/position or organization/position exactly. Preserve all facts, metrics, and dates — never fabricate.`
   : "When the user asks you to implement or apply changes, call the update_resume tool with only the sections you are changing. Include ALL entries for any array section you touch (e.g. all work entries if you edit any work highlights). Preserve all facts, metrics, and dates — never fabricate anything."}`;
 
         const conversationMessages = [
@@ -310,9 +324,30 @@ ${isDeepSeek
                 .join("");
 
         if (isDeepSeek) {
-          const model = createChatModel(modelKey);
+          const model = createChatModel(modelKey, { jsonMode: true });
           const response = await model.invoke(conversationMessages);
-          return new Response(JSON.stringify({ reply: extractText(response.content) }), {
+          const rawText = extractText(response.content);
+
+          let parsed: { reply?: string; update_resume?: Record<string, unknown> };
+          try {
+            parsed = JSON.parse(rawText);
+          } catch {
+            return new Response(JSON.stringify({ reply: rawText }), {
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
+          const reply = parsed.reply || rawText;
+
+          if (parsed.update_resume) {
+            const updatedResume = applyChatEdit(body.resume, parsed.update_resume);
+            return new Response(
+              JSON.stringify({ reply, updated_resume: updatedResume }),
+              { headers: { "Content-Type": "application/json" } }
+            );
+          }
+
+          return new Response(JSON.stringify({ reply }), {
             headers: { "Content-Type": "application/json" },
           });
         }
