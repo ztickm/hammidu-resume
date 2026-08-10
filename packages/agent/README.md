@@ -18,11 +18,11 @@ The Flouka Studio web app runs Nodes A and B directly (no Node C — PDF generat
 
 ### Nodes
 
-| Node | Purpose | Model |
-|---|---|---|
-| **A — Analyse JD** | Extract requirements from JD, map against master resume, score match 0–100 | Claude Opus 4.8 + structured output |
-| **B — Tailor Resume** | Rewrite `basics.label`, `basics.summary`, and `work[].highlights` | Claude Opus 4.8 + structured output |
-| **C — Generate PDF** | Render tailored JSON → HTML (xebec-render) → PDF (flouka-studio/Puppeteer) | Local (no LLM) |
+| Node                  | Purpose                                                                    | Model                               |
+| --------------------- | -------------------------------------------------------------------------- | ----------------------------------- |
+| **A — Analyse JD**    | Extract requirements from JD, map against master resume, score match 0–100 | Claude Opus 4.8 + structured output |
+| **B — Tailor Resume** | Rewrite `basics.label`, `basics.summary`, and `work[].highlights`          | Claude Opus 4.8 + structured output |
+| **C — Generate PDF**  | Render tailored JSON → HTML (xebec-render) → PDF (flouka-studio/Puppeteer) | Local (no LLM)                      |
 
 ### State
 
@@ -56,12 +56,12 @@ The Flouka Studio web app runs Nodes A and B directly (no Node C — PDF generat
 
 Pass `model_key` via the LangGraph `configurable` to switch models:
 
-| Key | Provider |
-|---|---|
-| `claude-opus-4-8` | Anthropic (default) |
-| `claude-sonnet-4-6` | Anthropic |
-| `claude-haiku-4-5` | Anthropic |
-| `deepseek-chat` | DeepSeek |
+| Key                 | Provider            |
+| ------------------- | ------------------- |
+| `claude-opus-4-8`   | Anthropic (default) |
+| `claude-sonnet-4-6` | Anthropic           |
+| `claude-haiku-4-5`  | Anthropic           |
+| `deepseek-chat`     | DeepSeek            |
 
 ## Node B — `prompt_addition`
 
@@ -109,7 +109,7 @@ console.log(result.pdf_output_url);
 ### Via Flouka Studio web server
 
 ```bash
-curl -X POST http://localhost:3001/api/tailor \
+curl -X POST http://localhost:3020/api/tailor \
   -H "Content-Type: application/json" \
   -d '{
     "resume": { "...": "..." },
@@ -130,9 +130,9 @@ Response:
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|---|---|---|
-| `ANTHROPIC_API_KEY` | ✅ | Claude API key (required for Claude models) |
-| `DEEPSEEK_API_KEY` | ✅ (if using DeepSeek) | DeepSeek API key |
-| `AGENT_DB_PATH` | ❌ | SQLite path for checkpointing (default: `agent.sqlite`) |
-| `AGENT_PDF_DIR` | ❌ | Directory for generated PDFs (default: `./output`) |
+| Variable            | Required              | Description                                             |
+| ------------------- | --------------------- | ------------------------------------------------------- |
+| `ANTHROPIC_API_KEY` | ✅                     | Claude API key (required for Claude models)             |
+| `DEEPSEEK_API_KEY`  | ✅ (if using DeepSeek) | DeepSeek API key                                        |
+| `AGENT_DB_PATH`     | ❌                     | SQLite path for checkpointing (default: `agent.sqlite`) |
+| `AGENT_PDF_DIR`     | ❌                     | Directory for generated PDFs (default: `./output`)      |

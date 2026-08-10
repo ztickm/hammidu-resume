@@ -14,7 +14,7 @@ import { tailorResume } from "../agent/src/nodes/tailor-resume.js";
 import { MODEL_KEYS, DEFAULT_MODEL, type ModelKey, createChatModel } from "../agent/src/model.js";
 
 const server = Bun.serve({
-  port: 3001,
+  port: 3020,
   async fetch(req: Request) {
     const url = new URL(req.url);
 

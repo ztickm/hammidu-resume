@@ -6,7 +6,7 @@ Puppeteer-based PDF generator for JSON Resume, plus a full-featured web applicat
 
 ```bash
 bun run web
-# Open http://localhost:3001
+# Open http://localhost:3020
 ```
 
 ## Web application overview
@@ -15,14 +15,14 @@ Flouka Studio is a multi-page SPA (hash routing, no framework, vanilla JS + CSS)
 
 ### Pages
 
-| Route | Description |
-|---|---|
-| `#onboarding` | First-visit wizard: paste, upload, or build your master JSON Resume step-by-step |
-| `#dashboard` | Card grid of all job applications with match scores and quick actions |
-| `#new` | Paste a job description → AI tailors your resume → creates a named application |
-| `#app/{id}` | Application detail: Preview / Edit JSON / Configure layout / JD Analysis tabs |
-| `#resume` | View and edit your master JSON Resume |
-| `#settings` | Global defaults: AI model, tailoring prompt addition, font/locale/section defaults |
+| Route         | Description                                                                        |
+| ------------- | ---------------------------------------------------------------------------------- |
+| `#onboarding` | First-visit wizard: paste, upload, or build your master JSON Resume step-by-step   |
+| `#dashboard`  | Card grid of all job applications with match scores and quick actions              |
+| `#new`        | Paste a job description → AI tailors your resume → creates a named application     |
+| `#app/{id}`   | Application detail: Preview / Edit JSON / Configure layout / JD Analysis tabs      |
+| `#resume`     | View and edit your master JSON Resume                                              |
+| `#settings`   | Global defaults: AI model, tailoring prompt addition, font/locale/section defaults |
 
 ### Application object
 
@@ -49,21 +49,21 @@ Each job application stored in `flouka_apps` has this shape:
 
 ### localStorage keys
 
-| Key | Contents |
-|---|---|
-| `flouka_master` | Master JSON Resume object |
+| Key               | Contents                                                 |
+| ----------------- | -------------------------------------------------------- |
+| `flouka_master`   | Master JSON Resume object                                |
 | `flouka_settings` | Global settings (model, promptAddition, render defaults) |
-| `flouka_apps` | Array of job application objects |
+| `flouka_apps`     | Array of job application objects                         |
 
 ## API endpoints
 
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/api/validate` | Validate a JSON Resume; returns `{ valid, errors }` |
-| `POST` | `/api/preview` | Render JSON Resume to HTML string for in-browser preview |
-| `POST` | `/api/generate-pdf` | Render to PDF (binary); responds with `Content-Disposition: attachment` |
-| `POST` | `/api/generate-html` | Render to HTML file download |
-| `POST` | `/api/tailor` | Run AI tailoring (Nodes A + B); returns `{ tailored_resume, jd_analysis, status }` |
+| Method | Path                 | Description                                                                        |
+| ------ | -------------------- | ---------------------------------------------------------------------------------- |
+| `POST` | `/api/validate`      | Validate a JSON Resume; returns `{ valid, errors }`                                |
+| `POST` | `/api/preview`       | Render JSON Resume to HTML string for in-browser preview                           |
+| `POST` | `/api/generate-pdf`  | Render to PDF (binary); responds with `Content-Disposition: attachment`            |
+| `POST` | `/api/generate-html` | Render to HTML file download                                                       |
+| `POST` | `/api/tailor`        | Run AI tailoring (Nodes A + B); returns `{ tailored_resume, jd_analysis, status }` |
 
 ### `/api/tailor` request body
 

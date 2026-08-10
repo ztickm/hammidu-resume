@@ -35,7 +35,7 @@ bun run web
 
 **Step 3 — Open your browser and go to:**
 ```
-http://localhost:3001
+http://localhost:3020
 ```
 
 On first visit you'll be guided through a short onboarding to set up your master resume (paste JSON, upload a file, or fill in a step-by-step form). After that:
@@ -107,7 +107,7 @@ bun install
 - `bun run xebec:test` - Test validator integration
 
 **Flouka Studio (PDF Generator & Web UI):**
-- `bun run web` - Start web interface at http://localhost:3001
+- `bun run web` - Start web interface at http://localhost:3020
 - `bun run flouka:web` - Same as above
 - `bun run flouka:example` - Generate PDF from example resume
 
@@ -138,7 +138,7 @@ bun example.ts
 # Start the web interface
 cd packages/flouka-studio
 bun --watch web-server.ts
-# Open http://localhost:3001 in your browser
+# Open http://localhost:3020 in your browser
 ```
 
 ## Project Structure
