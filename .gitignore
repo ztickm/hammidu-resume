@@ -32,4 +32,7 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 packages/agent/output/
 packages/agent/agent.sqlite
 
+# Flouka Studio persistent storage
+packages/flouka-studio/data/
+
 _*.md

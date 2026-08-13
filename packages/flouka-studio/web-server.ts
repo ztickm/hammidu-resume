@@ -12,6 +12,7 @@ import { validateResume } from "validator";
 import { analyseJD } from "../agent/src/nodes/analyse-jd.js";
 import { tailorResume } from "../agent/src/nodes/tailor-resume.js";
 import { MODEL_KEYS, DEFAULT_MODEL, type ModelKey, createChatModel } from "../agent/src/model.js";
+import { getAll, setValue, isStoreKey } from "./storage.ts";
 
 const server = Bun.serve({
   port: 3020,
@@ -461,6 +462,33 @@ Include "update_resume" ONLY when the user asks you to change the resume. Otherw
         return new Response(
           JSON.stringify({ error: (error as Error).message }),
           { status: 500, headers: { "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // API: Fetch all persisted store data (master resume, settings, apps)
+    if (url.pathname === "/api/store" && req.method === "GET") {
+      return Response.json(getAll());
+    }
+
+    // API: Persist a single store key
+    const storeMatch = url.pathname.match(/^\/api\/store\/([a-zA-Z_]+)$/);
+    if (storeMatch && req.method === "PUT") {
+      const key = storeMatch[1]!;
+      if (!isStoreKey(key)) {
+        return new Response(JSON.stringify({ error: "Unknown store key" }), {
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      try {
+        const body = (await req.json()) as { value: unknown };
+        setValue(key, body.value);
+        return Response.json({ ok: true });
+      } catch (error) {
+        return new Response(
+          JSON.stringify({ error: (error as Error).message }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
         );
       }
     }

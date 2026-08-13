@@ -13,21 +13,11 @@ function displayResult(title: string, result: any) {
   if (result.valid) {
     console.log("✅ Valid JSON Resume!");
   } else {
-    console.log("❌ Invalid JSON Resume\n");
-    
-    if (result.errors && result.errors.length > 0) {
-      console.log("Schema Errors:");
-      result.errors.forEach((err: any) => {
-        console.log(`  • ${err.path || "/"}: ${err.message}`);
-      });
-    }
-    
-    if (result.warnings && result.warnings.length > 0) {
-      console.log("\nWarnings:");
-      result.warnings.forEach((warning: string) => {
-        console.log(`  ⚠️  ${warning}`);
-      });
-    }
+    console.log(`❌ Invalid JSON Resume — ${result.issues?.length ?? 0} problem(s)\n`);
+    (result.issues || []).forEach((issue: any) => {
+      const icon = issue.severity === "error" ? "•" : "⚠️ ";
+      console.log(`  ${icon} ${issue.path || "(whole document)"} ${issue.message}`);
+    });
   }
 }
 
@@ -182,10 +172,9 @@ try {
 }
 
 console.log("\n" + "=".repeat(60));
-displayResult(
-  "Test 6: Strict Validation - Invalid Resume",
-  { valid: false }
-);
+console.log(`\n${"=".repeat(60)}`);
+console.log("  Test 6: Strict Validation - Invalid Resume");
+console.log("=".repeat(60));
 
 const invalidResume = {
   basics: {
@@ -198,8 +187,8 @@ try {
   validateResumeStrict(invalidResume);
   console.error("❌ Should have thrown an error");
 } catch (error) {
-  console.log("✅ Correctly threw validation error");
-  console.log(`   ${(error as Error).message.split("\n")[0]}`);
+  console.log("✅ Correctly threw validation error, with reasons:");
+  console.log((error as Error).message);
 }
 
 // =============================================================================

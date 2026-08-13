@@ -956,13 +956,42 @@ const EXAMPLE_RESUME = {
 // ═══════════════════════════════════════════════════════════════════════════
 // STORAGE
 // ═══════════════════════════════════════════════════════════════════════════
+// Persisted on the server (packages/flouka-studio/storage.ts) so data survives
+// browser storage being cleared. `_cache` is hydrated once at boot (see
+// bootstrap below) and kept in sync synchronously; writes are debounced and
+// sent to the server in the background so no call site below needs to be async.
 const Store = {
-  getMaster()   { try { return JSON.parse(localStorage.getItem('flouka_master') || 'null'); } catch { return null; } },
-  setMaster(r)  { localStorage.setItem('flouka_master', JSON.stringify(r)); },
-  getSettings() { try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem('flouka_settings') || '{}') }; } catch { return { ...DEFAULT_SETTINGS }; } },
-  setSettings(s){ localStorage.setItem('flouka_settings', JSON.stringify(s)); },
-  getApps()     { try { return JSON.parse(localStorage.getItem('flouka_apps') || '[]'); } catch { return []; } },
-  setApps(a)    { localStorage.setItem('flouka_apps', JSON.stringify(a)); },
+  _cache: { flouka_master: null, flouka_settings: null, flouka_apps: null },
+  _timers: {},
+
+  async hydrate() {
+    try {
+      const data = await (await fetch('/api/store')).json();
+      Object.assign(this._cache, data);
+      this._cache.flouka_apps ??= [];
+      this._migrateFromLocalStorage();
+    } catch (e) {
+      console.error('[Store] hydrate failed, starting with empty state', e);
+    }
+  },
+
+  // One-time migration for users who already had data in localStorage before
+  // this change shipped. Only fills gaps — never overwrites server data.
+  _migrateFromLocalStorage() {
+    if (localStorage.getItem('flouka_migrated_v1')) return;
+    const lsGet = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+    if (this._cache.flouka_master == null) { const m = lsGet('flouka_master'); if (m) this.setMaster(m); }
+    if (this._cache.flouka_settings == null) { const s = lsGet('flouka_settings'); if (s) this.setSettings(s); }
+    if (!this._cache.flouka_apps?.length) { const a = lsGet('flouka_apps'); if (Array.isArray(a) && a.length) this.setApps(a); }
+    localStorage.setItem('flouka_migrated_v1', '1');
+  },
+
+  getMaster()   { return this._cache.flouka_master; },
+  setMaster(r)  { this._set('flouka_master', r); },
+  getSettings() { return { ...DEFAULT_SETTINGS, ...(this._cache.flouka_settings || {}) }; },
+  setSettings(s){ this._set('flouka_settings', s); },
+  getApps()     { return this._cache.flouka_apps || []; },
+  setApps(a)    { this._set('flouka_apps', a); },
   getApp(id)    { return this.getApps().find(a => a.id === id) || null; },
   addApp(app)   { const apps = this.getApps(); apps.unshift(app); this.setApps(apps); return app; },
   updateApp(id, patch) {
@@ -971,6 +1000,17 @@ const Store = {
     if (i >= 0) { apps[i] = { ...apps[i], ...patch }; this.setApps(apps); }
   },
   deleteApp(id) { this.setApps(this.getApps().filter(a => a.id !== id)); },
+
+  _set(key, value) {
+    this._cache[key] = value;
+    clearTimeout(this._timers[key]);
+    this._timers[key] = setTimeout(() => {
+      fetch(`/api/store/${key}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value }),
+      }).catch((e) => console.error(`[Store] failed to persist ${key}`, e));
+    }, 500);
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -981,6 +1021,70 @@ function uid() { return Date.now().toString(36) + Math.random().toString(36).sli
 function debounce(fn, ms) {
   let t;
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+// ── Validation rendering ───────────────────────────────────────────────────
+// The API returns { valid, issues:[{path,message,severity}], errors, warnings }.
+// Older shapes are normalised here so we never fall back to a bare "Invalid".
+function validationIssues(result) {
+  if (Array.isArray(result?.issues) && result.issues.length) return result.issues;
+  const issues = [];
+  (result?.errors || []).forEach(e => issues.push({
+    path: e.path || '', message: e.message || 'is invalid', severity: 'error',
+  }));
+  (result?.warnings || []).forEach(w => issues.push({
+    path: '', message: typeof w === 'string' ? w : (w.message || 'is invalid'), severity: 'warning',
+  }));
+  return issues;
+}
+
+/** Plain-text reasons, for alert() dialogs. */
+function validationAlertText(result) {
+  const issues = validationIssues(result);
+  if (!issues.length) return 'The resume is invalid, but the validator returned no details.';
+  return issues
+    .map(i => `• ${i.path ? i.path + ' ' : ''}${i.message}`)
+    .join('\n');
+}
+
+function issueLine(issue) {
+  const path = issue.path ? `<code>${escHtml(issue.path)}</code> ` : '';
+  return `${path}${escHtml(issue.message)}`;
+}
+
+/** Inline (toolbar) rendering: one-line summary that expands to every reason. */
+function renderValidationInline(result) {
+  if (result?.valid) return '<span style="color:var(--teal-dark)">✓ Valid JSON Resume</span>';
+  const issues = validationIssues(result);
+  if (!issues.length) {
+    return '<span style="color:var(--red)">✗ Invalid JSON Resume (no details returned)</span>';
+  }
+  const items = issues.map(i => `<li style="margin:2px 0">${issueLine(i)}</li>`).join('');
+  const label = issues.length === 1
+    ? issueLine(issues[0])
+    : `${issues.length} problems — ${issueLine(issues[0])}`;
+  return `<details style="color:var(--red)">
+    <summary style="cursor:pointer;list-style:revert">✗ ${label}</summary>
+    <ul style="margin:6px 0 2px;padding-left:20px;color:var(--red)">${items}</ul>
+  </details>`;
+}
+
+/** Block rendering: full message box listing every reason. */
+function renderValidationBlock(result, successText) {
+  if (result?.valid) {
+    return `<div class="msg msg-success">✓ ${escHtml(successText || 'Valid JSON Resume')}</div>`;
+  }
+  const issues = validationIssues(result);
+  if (!issues.length) {
+    return '<div class="msg msg-error"><strong>Invalid JSON Resume</strong><br><small>No details returned by the validator.</small></div>';
+  }
+  const items = issues
+    .map(i => `<li style="margin:3px 0">${issueLine(i)}</li>`)
+    .join('');
+  return `<div class="msg msg-error">
+    <strong>Invalid JSON Resume — ${issues.length} problem${issues.length === 1 ? '' : 's'}</strong>
+    <ul style="margin:6px 0 0;padding-left:20px">${items}</ul>
+  </div>`;
 }
 
 function scoreClass(n) {
@@ -1273,16 +1377,9 @@ const Onboarding = {
     try {
       const resume = JSON.parse(text);
       const result = await API.validate(resume);
-      if (result.valid) {
-        val.innerHTML = '<div class="msg msg-success">✓ Valid JSON Resume — ready to save</div>';
-      } else {
-        let html = '<div class="msg msg-error"><strong>Invalid JSON Resume</strong>';
-        (result.errors || []).forEach(e => { html += `<br><small><code>${e.path}</code>: ${e.message}</small>`; });
-        html += '</div>';
-        val.innerHTML = html;
-      }
+      val.innerHTML = renderValidationBlock(result, 'Valid JSON Resume — ready to save');
     } catch (e) {
-      val.innerHTML = `<div class="msg msg-error">✗ ${e.message}</div>`;
+      val.innerHTML = `<div class="msg msg-error"><strong>Not valid JSON</strong><br><small>${escHtml(e.message)}</small></div>`;
     }
   },
 
@@ -1292,7 +1389,7 @@ const Onboarding = {
     try {
       const resume = JSON.parse(text);
       const result = await API.validate(resume);
-      if (!result.valid) { alert('Please fix validation errors before saving.'); return; }
+      if (!result.valid) { alert('Please fix these problems before saving:\n\n' + validationAlertText(result)); return; }
       Store.setMaster(resume);
       Router.go('#dashboard');
     } catch(e) {
@@ -1698,11 +1795,9 @@ const AppDetail = {
     try {
       const resume = JSON.parse(this._editor.getValue());
       const result = await API.validate(resume);
-      val.innerHTML = result.valid
-        ? '<span style="color:var(--teal-dark)">✓ Valid</span>'
-        : `<span style="color:var(--red)">✗ ${result.errors?.[0]?.message || 'Invalid'}</span>`;
+      val.innerHTML = renderValidationInline(result);
     } catch(e) {
-      val.innerHTML = `<span style="color:var(--red)">✗ ${e.message}</span>`;
+      val.innerHTML = `<span style="color:var(--red)">✗ Not valid JSON: ${escHtml(e.message)}</span>`;
     }
   },
 
@@ -1713,7 +1808,7 @@ const AppDetail = {
       const resume = JSON.parse(text);
       const result = await API.validate(resume);
       if (!result.valid) {
-        alert('Resume has validation errors. Please fix them before saving.');
+        alert('Please fix these problems before saving:\n\n' + validationAlertText(result));
         return;
       }
       Store.updateApp(this._id, { tailoredResume: resume });
@@ -2003,11 +2098,9 @@ const MasterResumePage = {
     try {
       const resume = JSON.parse(this._editor.getValue());
       const result = await API.validate(resume);
-      val.innerHTML = result.valid
-        ? '<span style="color:var(--teal-dark)">✓ Valid JSON Resume</span>'
-        : `<span style="color:var(--red)">✗ ${result.errors?.[0]?.message || 'Invalid'}</span>`;
+      val.innerHTML = renderValidationInline(result);
     } catch(e) {
-      val.innerHTML = `<span style="color:var(--red)">✗ ${e.message}</span>`;
+      val.innerHTML = `<span style="color:var(--red)">✗ Not valid JSON: ${escHtml(e.message)}</span>`;
     }
   },
 
@@ -2017,7 +2110,7 @@ const MasterResumePage = {
     try {
       const resume = JSON.parse(text);
       const result = await API.validate(resume);
-      if (!result.valid) { alert('Please fix validation errors before saving.'); return; }
+      if (!result.valid) { alert('Please fix these problems before saving:\n\n' + validationAlertText(result)); return; }
       Store.setMaster(resume);
       Router.go('#dashboard');
     } catch(e) { alert(e.message); }
@@ -2060,7 +2153,8 @@ function renderMd(text) {
 // BOOTSTRAP — load Monaco then start router
 // ═══════════════════════════════════════════════════════════════════════════
 require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs' } });
-require(['vs/editor/editor.main'], () => {
+const monacoReady = new Promise((resolve) => { require(['vs/editor/editor.main'], resolve); });
+Promise.all([monacoReady, Store.hydrate()]).then(() => {
   Router.init();
 });
 </script>

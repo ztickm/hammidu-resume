@@ -23,27 +23,29 @@ const result = await validateResumeFile(filePath);
 if (result.valid) {
   console.log("✅ Valid JSON Resume!\n");
   process.exit(0);
-} else {
-  console.log("❌ Invalid JSON Resume\n");
-  
-  if (result.errors && result.errors.length > 0) {
-    console.log("Schema Errors:");
-    result.errors?.forEach((err, index) => {
-      console.log(`\n${index + 1}. Path: ${err.path}`);
-      console.log(`   Message: ${err.message}`);
-      if (err.keyword) {
-        console.log(`   Type: ${err.keyword}`);
-      }
-    });
-  }
-  
-  if (result.warnings && result.warnings.length > 0) {
-    console.log("\n⚠️  Warnings:");
-    result.warnings.forEach((warning, index) => {
-      console.log(`${index + 1}. ${warning}`);
-    });
-  }
-  
-  console.log();
-  process.exit(1);
 }
+
+const issues = result.issues ?? [];
+const errors = issues.filter((i) => i.severity === "error");
+const warnings = issues.filter((i) => i.severity === "warning");
+
+console.log(`❌ Invalid JSON Resume — ${issues.length} problem(s) found\n`);
+
+if (errors.length > 0) {
+  console.log(`Schema errors (${errors.length}):`);
+  errors.forEach((issue, index) => {
+    console.log(`  ${index + 1}. ${issue.path || "(whole document)"} ${issue.message}`);
+    if (issue.keyword) console.log(`     rule: ${issue.keyword}`);
+  });
+  console.log();
+}
+
+if (warnings.length > 0) {
+  console.log(`⚠️  Content problems (${warnings.length}):`);
+  warnings.forEach((issue, index) => {
+    console.log(`  ${index + 1}. ${issue.path || "(whole document)"} ${issue.message}`);
+  });
+  console.log();
+}
+
+process.exit(1);
