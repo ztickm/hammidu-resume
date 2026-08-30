@@ -4,11 +4,14 @@ TypeScript type definitions for the [JSON Resume](https://jsonresume.org/) schem
 
 ## Installation
 
-In a Bun workspace:
+Workspace package — it is not published to npm. Depend on it by name inside this monorepo:
 
-```bash
-bun add json-resume-types
+```jsonc
+// package.json
+"dependencies": { "json-resume-types": "workspace:*" }
 ```
+
+It is types only: `index.ts` contains no runtime code, so importing it costs nothing at run time.
 
 ## Usage
 
@@ -62,6 +65,13 @@ This package is part of the [hammidu-resume](https://github.com/ztickm/hammidu-r
 - **flouka-studio** - PDF generation with web interface
 - **validator** - JSON Resume schema validator
 - **extractor** - Extract JSON Resume from PDFs
+- **agent** - LangGraph resume tailoring
+
+## Note on extra fields
+
+Every field is optional, mirroring the permissive official schema. The Harvard template in
+`xebec-render` additionally renders `basics.residencyStatus`, which is not part of the spec and so
+is not declared here — set it on a plain object if you need it.
 
 ## License
 

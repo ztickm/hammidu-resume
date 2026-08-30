@@ -1,19 +1,17 @@
 # Validator
 
-JSON Resume schema validator with **practical validation rules** using AJV.
+JSON Resume schema validator with **practical validation rules**, built on AJV.
 
 ## Features
 
-- ✅ Validates JSON Resume files against the official schema
+- ✅ Validates JSON Resume files against the official schema (`@jsonresume/schema`)
 - ✅ **Enhanced practical validation** beyond the permissive official schema
-- ✅ Checks for essential fields (name, contact info, content sections)
-- ✅ Validates email and URL formats
-- ✅ Validates ISO8601 date formats (YYYY-MM-DD, YYYY-MM, YYYY)
-- ✅ Type checking for arrays and objects
-- ✅ Detailed error messages with paths
-- ✅ Multiple validation functions (object, string, file)
-- ✅ CLI tool for easy validation
-- ✅ Type-safe with TypeScript
+- ✅ Rewrites terse AJV messages into readable explanations that quote the offending value
+- ✅ Readable dotted paths (`work[0].startDate`) instead of JSON pointers
+- ✅ Validates email and URL formats, and ISO8601 dates (YYYY-MM-DD, YYYY-MM, YYYY)
+- ✅ A ready-to-print `summary` string listing every problem
+- ✅ Multiple entry points (object, string, file) plus a strict variant that throws
+- ✅ CLI tool for validating a file
 
 ## Why This Validator is Useful
 
@@ -26,17 +24,25 @@ JSON Resume schema validator with **practical validation rules** using AJV.
 - ✅ Missing name
 - ✅ Missing contact information (email or phone)
 - ✅ Invalid email formats
-- ✅ Invalid URL formats  
-- ✅ Invalid date formats (checks ISO8601: YYYY-MM-DD, YYYY-MM, YYYY)
+- ✅ Invalid URL formats (including `basics.profiles[].url`)
+- ✅ Invalid date formats in `work`, `education` and `projects`
 - ✅ Empty resume (no work, education, or projects)
 - ✅ Type mismatches (string instead of array, etc.)
-- ✅ Missing required fields in sections (company name, institution, etc.)
+- ✅ Work entries missing both company and position, education missing both institution and area, projects missing a name
+
+## Important: warnings also fail validation
+
+`valid` is `true` only when there are **zero** issues — schema errors *and* practical warnings. A resume missing a phone number is reported as `valid: false` with a warning, which is why `generateHTML` and the `/api/generate-pdf` endpoint reject it. The severity is preserved on each issue so callers can present errors and warnings differently.
+
+Practical warnings whose path duplicates a schema error are dropped, so each problem is reported once.
 
 ## Installation
 
-```bash
-cd packages/validator
-bun install
+Workspace package — depend on it by name inside this monorepo:
+
+```jsonc
+// package.json
+"dependencies": { "validator": "workspace:*" }
 ```
 
 ## Usage
@@ -46,23 +52,14 @@ bun install
 ```typescript
 import { validateResume } from "validator";
 
-const resume = {
-  basics: {
-    name: "John Doe",
-    email: "john@example.com",
-    // ...
-  },
-  // ...
-};
-
 const result = validateResume(resume);
 
 if (result.valid) {
   console.log("✅ Valid resume!");
 } else {
-  console.log("❌ Invalid resume:");
-  result.errors?.forEach(err => {
-    console.log(`  ${err.path}: ${err.message}`);
+  console.log(result.summary);          // ready-to-print multi-line explanation
+  result.issues?.forEach(issue => {
+    console.log(`${issue.severity}: ${issue.path} ${issue.message}`);
   });
 }
 ```
@@ -73,14 +70,18 @@ if (result.valid) {
 import { validateResumeFile } from "validator";
 
 const result = await validateResumeFile("resume.json");
-
-if (!result.valid) {
-  console.log("Validation errors:");
-  result.errors?.forEach(err => {
-    console.log(`  ${err.path}: ${err.message}`);
-  });
-}
+if (!result.valid) console.log(result.summary);
 ```
+
+### Validate JSON String
+
+```typescript
+import { validateResumeString } from "validator";
+
+const result = validateResumeString('{"basics": {"name": "John Doe"}}');
+```
+
+Malformed JSON is reported as a single error that names the line and column of the syntax problem.
 
 ### Strict Validation (Throws on Error)
 
@@ -89,45 +90,57 @@ import { validateResumeStrict } from "validator";
 
 try {
   const validatedResume = validateResumeStrict(resume);
-  // Resume is guaranteed to be valid here
-  console.log(validatedResume.basics.name);
+  console.log(validatedResume.basics?.name);
 } catch (error) {
-  console.error("Validation failed:", error.message);
+  console.error(error.message);   // "Invalid JSON Resume:\n<summary>"
 }
 ```
 
-### Validate JSON String
+### CLI
 
-```typescript
-import { validateResumeString } from "validator";
-
-const jsonString = '{"basics": {"name": "John Doe"}}';
-const result = validateResumeString(jsonString);
+```bash
+bun cli.ts ../../resumes/example_input.json
+# or, from the repo root:
+bun run validator:validate ../../resumes/example_input.json
 ```
 
-## Validation Errors
+Exits `0` when valid, `1` otherwise, printing schema errors and practical warnings in separate blocks.
 
-Errors include:
-- `path`: JSON path to the invalid field (e.g., "/basics/email")
-- `message`: Human-readable error message
-- `keyword`: AJV error keyword (e.g., "required", "format")
-- `params`: Additional error parameters
+## Result shape
+
+```typescript
+interface ValidationIssue {
+  path: string;                     // "work[0].startDate", "" = whole document
+  message: string;                  // human-readable explanation
+  severity: "error" | "warning";
+  keyword?: string;                 // AJV keyword, e.g. "required", "format"
+  params?: Record<string, unknown>;
+}
+
+interface ValidationResult {
+  valid: boolean;
+  errors?: ValidationIssue[];       // schema violations
+  warnings?: string[];              // practical problems, pre-formatted strings
+  issues?: ValidationIssue[];       // everything, errors first
+  summary?: string;                 // formatIssues(issues)
+}
+```
+
+`formatIssue(issue)` and `formatIssues(issues)` are exported if you want to render them yourself.
 
 ## Testing
-
-### Run Comprehensive Test Suite
 
 ```bash
 bun run example.ts
 ```
 
-The test suite includes:
+The example suite covers:
 - ✅ Valid resume validation with all best practices
 - ✅ Email format validation (dots, plus signs, TLD optional)
 - ✅ ISO8601 date format validation (YYYY, YYYY-MM, YYYY-MM-DD)
-- ✅ File validation with test JSON files
+- ✅ File validation with the test JSON files
 - ✅ Strict validation (throws on error)
-- ✅ Real-world example (Raïs Hamidou resume)
+- ✅ A real-world example resume
 
 ### Test Files
 
@@ -148,8 +161,4 @@ Regex: `/^[a-zA-Z0-9]+([.+][a-zA-Z0-9]+)*@[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*$/`
 
 ## Schema
 
-Uses the official JSON Resume schema from `@jsonresume/schema` package, which validates:
-- Required fields (basics.name)
-- Field formats (email, URL, dates)
-- Data types and structures
-- ISO8601 date patterns
+Uses the official JSON Resume schema from the `@jsonresume/schema` package. That package exports `{ validate, schema, jobSchema }`, so `src/index.ts` reaches for `.schema` explicitly — compiling the module object instead silently produces a validator that accepts everything.
