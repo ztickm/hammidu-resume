@@ -39,7 +39,7 @@ const JDAnalysisSchema = z.object({
 });
 
 function getAnalysisModel(modelKey: ModelKey) {
-  return createChatModel(modelKey, { maxTokens: 4096 }).withStructuredOutput(
+  return createChatModel(modelKey).withStructuredOutput(
     JDAnalysisSchema,
     { name: "jd_analysis", ...structuredOutputMethod(modelKey) }
   );

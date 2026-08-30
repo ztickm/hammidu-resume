@@ -37,6 +37,32 @@ export function modelLabel(key: ModelKey): string {
   return MODEL_LABELS[key];
 }
 
+// ---------------------------------------------------------------------------
+// Output budget
+// ---------------------------------------------------------------------------
+
+/**
+ * Max completion tokens per model.
+ *
+ * DeepSeek bills chain-of-thought against this budget — a reasoner response
+ * reports `completion_tokens: 190` with `reasoning_tokens: 183`, i.e. the
+ * visible answer is what little is left over. Too small a budget therefore
+ * truncates the JSON mid-string and surfaces as an OUTPUT_PARSING_FAILURE
+ * ("Unterminated string"), so the reasoner gets far more headroom than the
+ * tailored JSON itself needs. Both DeepSeek endpoints accept up to 65536.
+ */
+const MAX_OUTPUT_TOKENS: Record<ModelKey, number> = {
+  "claude-sonnet-4-6": 16384,
+  "claude-opus-4-5": 16384,
+  "claude-sonnet-4-5": 16384,
+  "deepseek-chat": 16384,
+  "deepseek-reasoner": 32768,
+};
+
+export function maxOutputTokens(key: ModelKey): number {
+  return MAX_OUTPUT_TOKENS[key];
+}
+
 /**
  * Returns the withStructuredOutput options appropriate for the given model.
  * DeepSeek rejects both response_format:json_schema and forced tool_choice,
@@ -62,7 +88,11 @@ export function fieldNamesInstruction(key: ModelKey, fieldNames: string[]): stri
 // ---------------------------------------------------------------------------
 
 interface ModelOptions {
-  /** Max tokens for the completion (applies to both providers). */
+  /**
+   * Max tokens for the completion (applies to both providers).
+   * Defaults to the model's full budget — see MAX_OUTPUT_TOKENS. Callers
+   * should normally leave this unset rather than guess a smaller number.
+   */
   maxTokens?: number;
   /** Enable JSON mode on DeepSeek (response_format: json_object). */
   jsonMode?: boolean;
@@ -71,14 +101,15 @@ interface ModelOptions {
 // ChatAnthropic is used as the unified return type because both ChatAnthropic
 // and ChatOpenAI expose the same withStructuredOutput / invoke API we rely on.
 export function createChatModel(key: ModelKey, opts: ModelOptions = {}): ChatAnthropic {
-  const { maxTokens, jsonMode } = opts;
+  const { jsonMode } = opts;
+  const maxTokens = opts.maxTokens ?? MAX_OUTPUT_TOKENS[key];
 
   switch (key) {
     case "claude-sonnet-4-6":
       return new ChatAnthropic({
         model: "claude-sonnet-4-6-20250620",
         temperature: 1,
-        maxTokens: maxTokens ?? 8192,
+        maxTokens,
         anthropicApiKey: process.env.ANTHROPIC_API_KEY,
         invocationKwargs: { top_p: undefined },
       });
@@ -87,7 +118,7 @@ export function createChatModel(key: ModelKey, opts: ModelOptions = {}): ChatAnt
       return new ChatAnthropic({
         model: "claude-opus-4-5-20251101",
         temperature: 1,
-        maxTokens: maxTokens ?? 8192,
+        maxTokens,
         anthropicApiKey: process.env.ANTHROPIC_API_KEY,
         invocationKwargs: { top_p: undefined },
       });
@@ -96,7 +127,7 @@ export function createChatModel(key: ModelKey, opts: ModelOptions = {}): ChatAnt
       return new ChatAnthropic({
         model: "claude-sonnet-4-5-20251001",
         temperature: 1,
-        maxTokens: maxTokens ?? 8192,
+        maxTokens,
         anthropicApiKey: process.env.ANTHROPIC_API_KEY,
         invocationKwargs: { top_p: undefined },
       });
@@ -105,7 +136,7 @@ export function createChatModel(key: ModelKey, opts: ModelOptions = {}): ChatAnt
       return new ChatOpenAI({
         model: "deepseek-chat",
         temperature: 1,
-        maxTokens: maxTokens ?? 8192,
+        maxTokens,
         apiKey: process.env.DEEPSEEK_API_KEY,
         configuration: { baseURL: "https://api.deepseek.com/v1" },
         ...(jsonMode ? { modelKwargs: { response_format: { type: "json_object" } } } : {}),
@@ -114,7 +145,7 @@ export function createChatModel(key: ModelKey, opts: ModelOptions = {}): ChatAnt
     case "deepseek-reasoner":
       return new ChatOpenAI({
         model: "deepseek-reasoner",
-        maxTokens: maxTokens ?? 8192,
+        maxTokens,
         apiKey: process.env.DEEPSEEK_API_KEY,
         configuration: { baseURL: "https://api.deepseek.com/v1" },
         ...(jsonMode ? { modelKwargs: { response_format: { type: "json_object" } } } : {}),

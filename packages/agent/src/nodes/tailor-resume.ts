@@ -19,7 +19,7 @@ import { TailoredResumeSchema, type TailoredResume } from "../schemas.js";
 import { createChatModel, structuredOutputMethod, fieldNamesInstruction, DEFAULT_MODEL, type ModelKey } from "../model.js";
 
 function getTailoringModel(modelKey: ModelKey) {
-  return createChatModel(modelKey, { maxTokens: 8192 }).withStructuredOutput(
+  return createChatModel(modelKey).withStructuredOutput(
     TailoredResumeSchema,
     { name: "tailored_resume", ...structuredOutputMethod(modelKey) }
   );
@@ -194,6 +194,53 @@ export function mergeResume(
 }
 
 // ---------------------------------------------------------------------------
+// Invocation with repair
+// ---------------------------------------------------------------------------
+
+/**
+ * DeepSeek models go through jsonMode, where the JSON is parsed out of plain
+ * text rather than enforced by a tool call — so a response that runs out of
+ * output budget mid-string, or arrives wrapped in prose, fails with
+ * OUTPUT_PARSING_FAILURE instead of being retried. One retry with an explicit
+ * "JSON only, be terse" nudge recovers those without failing the whole run.
+ */
+function isParseFailure(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return msg.includes("Failed to parse") || msg.includes("OUTPUT_PARSING_FAILURE");
+}
+
+const TERSE_RETRY_NOTE = `
+
+## RETRY — the previous response could not be parsed
+It was cut off or wrapped in extra text. Respond again with ONLY the raw JSON
+object — no markdown fences, no commentary before or after it. Do NOT echo the
+master resume: return just the four fields (basics, work, skills, education),
+and keep every edited bullet to a single concise sentence.`;
+
+async function invokeWithRepair(
+  model: ReturnType<typeof getTailoringModel>,
+  systemContent: string,
+  userContent: string
+): Promise<TailoredResume> {
+  try {
+    return (await model.invoke([
+      { role: "system", content: systemContent },
+      { role: "user", content: userContent },
+    ])) as TailoredResume;
+  } catch (err) {
+    if (!isParseFailure(err)) throw err;
+
+    console.warn(
+      "[tailorResume] Unparseable model response — retrying with a JSON-only instruction."
+    );
+    return (await model.invoke([
+      { role: "system", content: systemContent + TERSE_RETRY_NOTE },
+      { role: "user", content: userContent },
+    ])) as TailoredResume;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Node function
 // ---------------------------------------------------------------------------
 
@@ -257,22 +304,18 @@ export async function tailorResume(
       ]
     );
 
-  const result = (await model.invoke([
-    { role: "system", content: systemContent },
-    {
-      role: "user",
-      content: [
-        `## JD Analysis\n\`\`\`json\n${analysisContext}\n\`\`\``,
-        `## Key responsibilities to foreground (from JD Analysis)\n- ${keyResponsibilities}`,
-        `## Job Description\n${state.current_jd}`,
-        `## Original work highlights (edit these — do not rewrite from scratch)\n${originalBullets}`,
-        `## Original skills (select relevant groups/keywords by index — anything omitted is dropped)\n${originalSkills || "(none)"}`,
-        `## Original education (select relevant entries by index — anything omitted is dropped)\n${originalEducation || "(none)"}`,
-        `## Full Master Resume (JSON)\n\`\`\`json\n${masterJson}\n\`\`\``,
-        `Now produce the tailored output. Remember: edit the original bullets above, preserve all facts and metrics, and copy kept skills/courses verbatim.`,
-      ].join("\n\n"),
-    },
-  ])) as TailoredResume;
+  const userContent = [
+    `## JD Analysis\n\`\`\`json\n${analysisContext}\n\`\`\``,
+    `## Key responsibilities to foreground (from JD Analysis)\n- ${keyResponsibilities}`,
+    `## Job Description\n${state.current_jd}`,
+    `## Original work highlights (edit these — do not rewrite from scratch)\n${originalBullets}`,
+    `## Original skills (select relevant groups/keywords by index — anything omitted is dropped)\n${originalSkills || "(none)"}`,
+    `## Original education (select relevant entries by index — anything omitted is dropped)\n${originalEducation || "(none)"}`,
+    `## Full Master Resume (JSON)\n\`\`\`json\n${masterJson}\n\`\`\``,
+    `Now produce the tailored output. Remember: edit the original bullets above, preserve all facts and metrics, and copy kept skills/courses verbatim.`,
+  ].join("\n\n");
+
+  const result = await invokeWithRepair(model, systemContent, userContent);
 
   const merged = mergeResume(state.master_resume_json, result);
 
