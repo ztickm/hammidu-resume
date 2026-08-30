@@ -207,6 +207,45 @@ export const TailoredResumeSchema = z
       .describe(
         "One entry per work experience in the master resume, same order. Return ALL entries even if unchanged."
       ),
+    skills: z
+      .array(
+        z.object({
+          index: z
+            .number()
+            .int()
+            .describe(
+              "0-based index of this skill group in the master resume's skills array"
+            ),
+          keywords: z
+            .array(z.string())
+            .describe(
+              "The subset of that group's original keywords that are relevant to the JD, copied verbatim, most relevant first"
+            ),
+        })
+      )
+      .describe(
+        "Skill groups to keep, most relevant group first. Omit a group entirely when none of its keywords are relevant."
+      ),
+    education: z
+      .array(
+        z.object({
+          index: z
+            .number()
+            .int()
+            .describe(
+              "0-based index of this entry in the master resume's education array"
+            ),
+          courses: z
+            .array(z.string())
+            .optional()
+            .describe(
+              "Subset of the entry's original courses to keep, copied verbatim. Omit the field to keep them all."
+            ),
+        })
+      )
+      .describe(
+        "Education entries to keep, in the master resume's original order. Omit entries that are irrelevant to the target role."
+      ),
   })
   .describe(
     "Tailored portions of the resume — will be merged back into the master resume"

@@ -5,11 +5,15 @@
  *   - basics.summary
  *   - work[].highlights
  *
+ * and to select only the JD-relevant subset of:
+ *   - skills[] (groups and their keywords)
+ *   - education[] (entries and their courses)
+ *
  * The output is validated against TailoredResumeSchema (Zod) and then
  * merged back into the full master resume to produce tailored_resume_json.
  */
 
-import type { ResumeSchema, Work } from "json-resume-types";
+import type { Education, ResumeSchema, Skill, Work } from "json-resume-types";
 import type { GraphStateType } from "../state.js";
 import { TailoredResumeSchema, type TailoredResume } from "../schemas.js";
 import { createChatModel, structuredOutputMethod, fieldNamesInstruction, DEFAULT_MODEL, type ModelKey } from "../model.js";
@@ -54,14 +58,102 @@ Rewrite the summary in 2-3 sentences:
 - Reorder bullets so the most JD-relevant one comes first.
 - If a bullet has zero relevance to the JD, and shows no value of the applicant, remove it if there are already enough bullets for that role. (Aim for 3-4 strong bullets per role, but fewer if the original had fewer.)
 
+### skills
+Keep ONLY the skill groups and keywords that are relevant to this role.
+- Reference each group by its 0-based \`index\` from the "Original skills" list below.
+- A keyword is relevant if the JD names it, it is an obvious equivalent or prerequisite of something the JD names (e.g. keep "PostgreSQL" for a JD asking for SQL), or it directly supports a key responsibility.
+- Copy kept keywords **verbatim** from the original — never invent, rename, or reword one. Anything you do not list is dropped from the resume.
+- Order kept keywords most-relevant-first, and list groups most-relevant-group-first.
+- Omit a group entirely when none of its keywords are relevant.
+- Do not strip the section down to one or two keywords: keep the strongest relevant ones (roughly 8-15 across all groups when the master resume has that many), just not the irrelevant tail.
+
+### education
+Keep ONLY the education entries that are relevant to this role.
+- Reference each entry by its 0-based \`index\` from the "Original education" list below, and list them in the master resume's original order.
+- Always keep the highest and most recent degree — education is rarely irrelevant. Drop an entry only when it is clearly unrelated to the role AND the candidate has stronger, more relevant education elsewhere in the list.
+- If an entry lists \`courses\`, you may return a relevant subset in \`courses\` (verbatim). Omit that field to keep them all.
+
 ## Hard rules
-- Do NOT fabricate accomplishments, numbers, or technologies.
+- Do NOT fabricate accomplishments, numbers, technologies, skills, courses, or degrees.
 - Company names, job titles, and dates must be copied verbatim from the master resume.
-- Return ALL work entries in the original order, even if you make no changes to them.`;
+- Return ALL work entries in the original order, even if you make no changes to them.
+- Only use \`index\` values that exist in the lists given below.`;
 
 // ---------------------------------------------------------------------------
 // Merge helper
 // ---------------------------------------------------------------------------
+
+/**
+ * Keeps only the requested entries of `original`, matched case-insensitively
+ * and returned in the model's order but with the master resume's exact
+ * spelling. Anything the model invented is silently dropped.
+ */
+function keepOriginals(original: string[], requested: string[]): string[] {
+  const byLower = new Map(original.map((o) => [o.trim().toLowerCase(), o]));
+  const kept: string[] = [];
+
+  for (const req of requested) {
+    const match = byLower.get(req.trim().toLowerCase());
+    if (match && !kept.includes(match)) kept.push(match);
+  }
+
+  return kept;
+}
+
+/** Filters skill groups + their keywords down to the model's selection. */
+function filterSkills(master: Skill[], selection: TailoredResume["skills"]): Skill[] {
+  const kept: Skill[] = [];
+  const seen = new Set<number>();
+
+  for (const sel of selection) {
+    const src = master[sel.index];
+    if (!src || seen.has(sel.index)) continue;
+    seen.add(sel.index);
+
+    if (!src.keywords?.length) {
+      kept.push(src);
+      continue;
+    }
+
+    const keywords = keepOriginals(src.keywords, sel.keywords ?? []);
+    // A group whose keywords were all judged irrelevant is dropped entirely.
+    if (keywords.length) kept.push({ ...src, keywords });
+  }
+
+  // Never let a bad selection wipe the section out.
+  return kept.length ? kept : master;
+}
+
+/** Filters education entries + their courses down to the model's selection. */
+function filterEducation(
+  master: Education[],
+  selection: TailoredResume["education"]
+): Education[] {
+  const selected = new Map<number, string[] | undefined>();
+
+  for (const sel of selection) {
+    if (master[sel.index] && !selected.has(sel.index)) {
+      selected.set(sel.index, sel.courses);
+    }
+  }
+
+  if (selected.size === 0) return master;
+
+  // Master order is preserved — education reads chronologically, not by relevance.
+  return master.flatMap((entry, i) => {
+    if (!selected.has(i)) return [];
+
+    const requestedCourses = selected.get(i);
+    if (!requestedCourses || !entry.courses?.length) return [entry];
+
+    const courses = keepOriginals(entry.courses, requestedCourses);
+    if (courses.length === 0) {
+      const { courses: _dropped, ...rest } = entry;
+      return [rest];
+    }
+    return [{ ...entry, courses }];
+  });
+}
 
 export function mergeResume(
   master: ResumeSchema,
@@ -87,6 +179,15 @@ export function mergeResume(
         match.highlights = tw.highlights;
       }
     }
+  }
+
+  // Filter skills / education down to what the model judged relevant
+  if (merged.skills?.length && tailored.skills) {
+    merged.skills = filterSkills(merged.skills, tailored.skills);
+  }
+
+  if (merged.education?.length && tailored.education) {
+    merged.education = filterEducation(merged.education, tailored.education);
   }
 
   return merged;
@@ -122,13 +223,38 @@ export async function tailorResume(
     )
     .join("\n\n");
 
+  // Render skills / education with their indices — the model selects by index
+  const masterSkills = state.master_resume_json.skills ?? [];
+  const originalSkills = masterSkills
+    .map(
+      (s, i) =>
+        `[${i}] ${s.name ?? "(unnamed group)"}${s.level ? ` — ${s.level}` : ""}\n` +
+        `  ${(s.keywords ?? []).join(", ")}`
+    )
+    .join("\n\n");
+
+  const masterEducation = state.master_resume_json.education ?? [];
+  const originalEducation = masterEducation
+    .map(
+      (e, i) =>
+        `[${i}] ${e.studyType ?? ""} ${e.area ?? ""} @ ${e.institution ?? ""}` +
+        ` (${e.startDate ?? "?"} – ${e.endDate ?? "present"})` +
+        (e.courses?.length ? `\n  courses: ${e.courses.join(", ")}` : "")
+    )
+    .join("\n\n");
+
   const keyResponsibilities = state.jd_analysis.key_responsibilities.join("\n- ");
 
   const systemContent = SYSTEM_PROMPT +
     (promptAddition ? `\n\n## Additional Instructions from User\n${promptAddition}` : "") +
     fieldNamesInstruction(
       modelKey,
-      ["basics (with fields: label, summary)", "work (array of objects with fields: name, position, highlights)"]
+      [
+        "basics (with fields: label, summary)",
+        "work (array of objects with fields: name, position, highlights)",
+        "skills (array of objects with fields: index, keywords)",
+        "education (array of objects with fields: index, courses)",
+      ]
     );
 
   const result = (await model.invoke([
@@ -140,16 +266,30 @@ export async function tailorResume(
         `## Key responsibilities to foreground (from JD Analysis)\n- ${keyResponsibilities}`,
         `## Job Description\n${state.current_jd}`,
         `## Original work highlights (edit these — do not rewrite from scratch)\n${originalBullets}`,
+        `## Original skills (select relevant groups/keywords by index — anything omitted is dropped)\n${originalSkills || "(none)"}`,
+        `## Original education (select relevant entries by index — anything omitted is dropped)\n${originalEducation || "(none)"}`,
         `## Full Master Resume (JSON)\n\`\`\`json\n${masterJson}\n\`\`\``,
-        `Now produce the tailored output. Remember: edit the original bullets above, preserve all facts and metrics.`,
+        `Now produce the tailored output. Remember: edit the original bullets above, preserve all facts and metrics, and copy kept skills/courses verbatim.`,
       ].join("\n\n"),
     },
   ])) as TailoredResume;
 
   const merged = mergeResume(state.master_resume_json, result);
 
+  const keptKeywords = (merged.skills ?? []).reduce(
+    (n, s) => n + (s.keywords?.length ?? 0),
+    0
+  );
+  const masterKeywords = masterSkills.reduce(
+    (n, s) => n + (s.keywords?.length ?? 0),
+    0
+  );
+
   return {
     tailored_resume_json: merged,
-    status: `Tailoring complete — summary and ${result.work.length} work entries rewritten`,
+    status:
+      `Tailoring complete — summary and ${result.work.length} work entries rewritten, ` +
+      `${keptKeywords}/${masterKeywords} skills and ` +
+      `${merged.education?.length ?? 0}/${masterEducation.length} education entries kept`,
   };
 }
