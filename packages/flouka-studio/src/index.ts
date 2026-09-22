@@ -43,11 +43,15 @@ export async function generatePDF(
       <div style="width:100%; text-align:center; font-size:9pt; color:#333;
                   font-family:'Times New Roman',Times,serif; padding-bottom:0.3cm;">
         <span class="pageNumber"></span>/<span class="totalPages"></span>
-        &nbsp;&nbsp;·&nbsp;&nbsp;
-        Generated with <a href="https://github.com/ztickm/hammidu-resume"
-          style="color:#0066cc;">Hammidu Resume</a>
+
       </div>`,
+
   });
+  // footer template mention of this app: have to check if this impacts the ATSs and accessibility of the PDF before reimplementing it.
+  // Generated with <a href="https://github.com/ztickm/hammidu-resume"
+  // style = "color:#0066cc;" > Hammidu Resume </a>
+
+
 
   await browser.close();
 
