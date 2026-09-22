@@ -289,6 +289,16 @@
       font-family: inherit; font-size: 0.9em; resize: vertical;
     }
     #jd-textarea:focus { outline: none; border-color: var(--teal); }
+    .new-actions { display: flex; gap: 10px; align-items: stretch; }
+    .new-actions .btn { flex: 1; justify-content: center; }
+    .new-or {
+      display: flex; align-items: center; gap: 12px;
+      margin: 18px 0; color: var(--text-muted); font-size: 0.8em;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .new-or::before, .new-or::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
     .tailor-status {
       padding: 12px 14px; border-radius: 8px; font-size: 0.875em;
       display: none; margin-top: 12px;
@@ -333,7 +343,7 @@
       border-bottom: 1px solid var(--border); flex-shrink: 0;
       background: white;
     }
-    #app-preview-frame {
+    .preview-frame {
       flex: 1; margin: 16px; border: 1px solid var(--border);
       border-radius: 8px; background: white;
     }
@@ -456,8 +466,11 @@
     /* ══════════════════════════════════════════════
        MASTER RESUME PAGE
     ══════════════════════════════════════════════ */
-    .resume-main {
-      flex: 1; overflow: hidden; display: flex; flex-direction: column;
+    /* Same split as the application detail page: editor on the left, a live
+       PDF preview of the master resume on the right. */
+    .resume-main { flex: 1; overflow: hidden; display: flex; min-height: 0; }
+    .resume-editor-pane {
+      flex: 1; overflow: hidden; display: flex; flex-direction: column; min-width: 0; min-height: 0;
     }
     .resume-toolbar {
       background: var(--bg); border-bottom: 1px solid var(--border);
@@ -518,7 +531,6 @@
     #app-view-info, .config-sidebar { min-height: 0; }
 
     /* ── RESUME PAGE: Monaco fills remaining height ── */
-    .resume-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
     #master-editor-container { flex: 1; min-height: 0; }
 
     /* ── APP CONFIGURE: children scroll within ── */
@@ -694,10 +706,20 @@
   </nav>
   <div class="new-content pg-scroll">
     <div class="new-inner">
-      <h2>Tailor your resume</h2>
-      <p class="sub">Paste the full job description and the AI will tailor your resume for this specific role.</p>
+      <h2>New application</h2>
+      <p class="sub">Paste the job description and let the AI tailor your resume — or start from your master resume untouched and edit it yourself.</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Company <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+          <input class="form-input" id="new-company" placeholder="Acme Inc.">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Role <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+          <input class="form-input" id="new-role" placeholder="Senior Backend Engineer">
+        </div>
+      </div>
       <div class="form-group">
-        <label class="form-label">Job Description *</label>
+        <label class="form-label">Job Description <span style="color:var(--text-muted);font-weight:400">(required for AI tailoring)</span></label>
         <textarea id="jd-textarea" placeholder="Paste the full job description here…"></textarea>
       </div>
       <div class="form-group">
@@ -709,6 +731,10 @@
         <textarea class="form-textarea" id="new-prompt-addition" rows="2" placeholder="e.g. Emphasize leadership experience. Focus on backend skills."></textarea>
       </div>
       <button class="btn btn-ai btn-wide btn-lg" id="tailor-btn" onclick="NewApp.submit()">🤖 Tailor Resume</button>
+      <div class="new-or">or</div>
+      <div class="new-actions">
+        <button class="btn btn-secondary btn-lg" id="blank-btn" onclick="NewApp.createUntailored()">📄 Start from master resume</button>
+      </div>
       <div id="tailor-status" class="tailor-status"></div>
     </div>
   </div>
@@ -822,7 +848,7 @@
     <div class="app-preview-panel">
       <div class="app-preview-header">Preview</div>
       <div id="preview-loading" class="preview-placeholder">Generating preview…</div>
-      <iframe id="app-preview-frame" class="hidden"></iframe>
+      <iframe id="app-preview-frame" class="preview-frame hidden"></iframe>
     </div>
 
     <!-- Chat sidebar (persistent across all tabs) -->
@@ -905,18 +931,34 @@
     <button class="nav-back" onclick="Router.go('#dashboard')">← Dashboard</button>
     <span class="nav-title">Master Resume</span>
     <div class="nav-actions">
-      <button class="btn btn-secondary btn-sm" onclick="MasterResumePage.downloadJSON()">↓ JSON</button>
+      <div class="dropdown" id="master-dl-dropdown">
+        <button class="btn btn-secondary btn-sm" onclick="MasterResumePage.toggleDownload()">↓ Download</button>
+        <div class="dropdown-menu" id="master-dl-menu">
+          <div class="dropdown-item" onclick="MasterResumePage.downloadPDF()">📄 Download PDF</div>
+          <div class="dropdown-item" onclick="MasterResumePage.downloadJSON()">📋 Download JSON</div>
+          <div class="dropdown-item" onclick="MasterResumePage.downloadHTML()">🌐 Download HTML</div>
+        </div>
+      </div>
       <button class="btn btn-primary btn-sm" onclick="MasterResumePage.save()">Save</button>
     </div>
   </nav>
   <div class="resume-main">
-    <div class="resume-toolbar">
-      <div id="master-validation" class="text-muted">Your base resume — used as the foundation for all AI tailoring.</div>
-      <label class="btn btn-secondary btn-sm" style="cursor:pointer">
-        Upload JSON <input type="file" id="master-file-input" accept=".json" style="display:none" onchange="MasterResumePage.uploadFile(event)">
-      </label>
+    <div class="resume-editor-pane">
+      <div class="resume-toolbar">
+        <div id="master-validation" class="text-muted">Your base resume — used as the foundation for all AI tailoring.</div>
+        <label class="btn btn-secondary btn-sm" style="cursor:pointer">
+          Upload JSON <input type="file" id="master-file-input" accept=".json" style="display:none" onchange="MasterResumePage.uploadFile(event)">
+        </label>
+      </div>
+      <div id="master-editor-container"></div>
     </div>
-    <div id="master-editor-container"></div>
+
+    <!-- Live preview, rendered from the editor contents with the global settings -->
+    <div class="app-preview-panel">
+      <div class="app-preview-header">Preview</div>
+      <div id="master-preview-loading" class="preview-placeholder">Generating preview…</div>
+      <iframe id="master-preview-frame" class="preview-frame hidden"></iframe>
+    </div>
   </div>
 </div>
 
@@ -1111,6 +1153,26 @@ function populateModelSelect(selectEl, currentVal) {
   selectEl.innerHTML = MODEL_OPTIONS.map(m =>
     `<option value="${m.value}"${m.value === currentVal ? ' selected' : ''}>${m.label}</option>`
   ).join('');
+}
+
+/** Open/close a `.dropdown` menu, closing it again on the next outside click. */
+function toggleDropdown(dropdownId) {
+  const root = document.getElementById(dropdownId);
+  const menu = root?.querySelector('.dropdown-menu');
+  if (!menu) return;
+  menu.classList.toggle('open');
+  const close = (e) => {
+    if (!root.contains(e.target)) {
+      menu.classList.remove('open');
+      document.removeEventListener('click', close);
+    }
+  };
+  if (menu.classList.contains('open')) setTimeout(() => document.addEventListener('click', close), 0);
+}
+
+/** `Jane Doe` → `Jane_Doe`, for use in download filenames. */
+function resumeFileBase(resume) {
+  return (resume?.basics?.name || 'resume').replace(/\s+/g, '_');
 }
 
 function downloadBlob(blob, filename) {
@@ -1606,7 +1668,7 @@ const Dashboard = {
     if (!app?.tailoredResume) return;
     try {
       const blob = await API.generatePDFBlob(app.tailoredResume, appRenderConfig(app.config));
-      const fullName = (app.tailoredResume.basics?.name || 'resume').replace(/\s+/g,'_');
+      const fullName = resumeFileBase(app.tailoredResume);
       const company = (app.jdAnalysis?.company || '').replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g,'_').replace(/^_|_$/g,'');
       const filename = company ? `${fullName}_resume_${company}.pdf` : `${fullName}_resume.pdf`;
       downloadBlob(blob, filename);
@@ -1629,8 +1691,55 @@ const NewApp = {
     populateModelSelect(document.getElementById('new-model-select'), settings.modelKey);
     document.getElementById('new-prompt-addition').value = settings.promptAddition || '';
     document.getElementById('jd-textarea').value = '';
+    document.getElementById('new-company').value = '';
+    document.getElementById('new-role').value = '';
     document.getElementById('tailor-status').className = 'tailor-status';
     document.getElementById('tailor-btn').disabled = false;
+    document.getElementById('blank-btn').disabled = false;
+  },
+
+  /** Layout config for a new application — a snapshot of the global settings. */
+  _configFromSettings() {
+    const settings = Store.getSettings();
+    return {
+      sectionOrder:    [...settings.sectionOrder],
+      pageBreakBefore: [...settings.pageBreakBefore],
+      pageBreakAfter:  [...settings.pageBreakAfter],
+      removedSections: [...settings.removedSections],
+      baseFontSize:    settings.baseFontSize,
+      lineHeight:      settings.lineHeight,
+      locale:          settings.locale,
+    };
+  },
+
+  /** Company/role typed by the user — they override whatever the AI inferred. */
+  _manualAnalysis() {
+    return {
+      company:    document.getElementById('new-company').value.trim(),
+      role_title: document.getElementById('new-role').value.trim(),
+    };
+  },
+
+  // Start an application from the master resume verbatim — no AI, no JD needed.
+  // The resume is still fully editable (and chattable) on the detail page.
+  createUntailored() {
+    const master = Store.getMaster();
+    if (!master) { Router.go('#onboarding'); return; }
+
+    const manual = this._manualAnalysis();
+    const jdAnalysis = (manual.company || manual.role_title) ? manual : null;
+
+    const app = Store.addApp({
+      id: uid(),
+      name: deriveAppName(master, jdAnalysis),
+      createdAt: new Date().toISOString(),
+      jd: document.getElementById('jd-textarea').value.trim(),
+      jdAnalysis,
+      tailoredResume: JSON.parse(JSON.stringify(master)),
+      chatHistory: [],
+      config: this._configFromSettings(),
+    });
+    Router.go(`#app/${app.id}`);
   },
 
   async submit() {
@@ -1643,38 +1752,38 @@ const NewApp = {
     const model = document.getElementById('new-model-select').value;
     const promptAddition = document.getElementById('new-prompt-addition').value.trim();
 
-    const btn    = document.getElementById('tailor-btn');
-    const status = document.getElementById('tailor-status');
+    const btn      = document.getElementById('tailor-btn');
+    const blankBtn = document.getElementById('blank-btn');
+    const status   = document.getElementById('tailor-status');
     btn.disabled = true;
+    blankBtn.disabled = true;
     status.className = 'tailor-status running';
     status.textContent = `🤖 Analysing JD and tailoring resume with ${model}… (~30s)`;
 
     try {
       const data = await API.tailor(master, jd, model, promptAddition);
-      const settings = Store.getSettings();
+      const manual = this._manualAnalysis();
+      const jdAnalysis = {
+        ...data.jd_analysis,
+        company:    manual.company    || data.jd_analysis?.company    || '',
+        role_title: manual.role_title || data.jd_analysis?.role_title || '',
+      };
       const app = Store.addApp({
         id: uid(),
-        name: deriveAppName(master, data.jd_analysis),
+        name: deriveAppName(master, jdAnalysis),
         createdAt: new Date().toISOString(),
         jd,
-        jdAnalysis: data.jd_analysis,
+        jdAnalysis,
         tailoredResume: data.tailored_resume,
         chatHistory: [],
-        config: {
-          sectionOrder:    [...settings.sectionOrder],
-          pageBreakBefore: [...settings.pageBreakBefore],
-          pageBreakAfter:  [...settings.pageBreakAfter],
-          removedSections: [...settings.removedSections],
-          baseFontSize:    settings.baseFontSize,
-          lineHeight:      settings.lineHeight,
-          locale:          settings.locale,
-        },
+        config: this._configFromSettings(),
       });
       Router.go(`#app/${app.id}`);
     } catch(e) {
       status.className = 'tailor-status error';
       status.textContent = `❌ ${e.message}`;
       btn.disabled = false;
+      blankBtn.disabled = false;
     }
   },
 };
@@ -1968,18 +2077,7 @@ const AppDetail = {
     }
   },
 
-  toggleDownload() {
-    const menu = document.getElementById('dl-menu');
-    menu.classList.toggle('open');
-    // close on outside click
-    const close = (e) => {
-      if (!document.getElementById('dl-dropdown').contains(e.target)) {
-        menu.classList.remove('open');
-        document.removeEventListener('click', close);
-      }
-    };
-    if (menu.classList.contains('open')) setTimeout(() => document.addEventListener('click', close), 0);
-  },
+  toggleDownload() { toggleDropdown('dl-dropdown'); },
 
    async downloadPDF() {
     document.getElementById('dl-menu').classList.remove('open');
@@ -1987,7 +2085,7 @@ const AppDetail = {
     if (!app?.tailoredResume) return;
     try {
       const blob = await API.generatePDFBlob(app.tailoredResume, appRenderConfig(app.config));
-      const fullName = (app.tailoredResume.basics?.name || 'resume').replace(/\s+/g,'_');
+      const fullName = resumeFileBase(app.tailoredResume);
       const company = (app.jdAnalysis?.company || '').replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g,'_').replace(/^_|_$/g, '');
       const filename = company ? `${fullName}_resume_${company}.pdf` : `${fullName}_resume.pdf`;
       downloadBlob(blob, filename);
@@ -1998,7 +2096,7 @@ const AppDetail = {
     document.getElementById('dl-menu').classList.remove('open');
     const app = Store.getApp(this._id);
     if (!app?.tailoredResume) return;
-    const name = (app.tailoredResume.basics?.name || 'resume').replace(/\s+/g,'_');
+    const name = resumeFileBase(app.tailoredResume);
     downloadBlob(new Blob([JSON.stringify(app.tailoredResume, null, 2)], { type: 'application/json' }), `${name}_resume.json`);
   },
 
@@ -2008,7 +2106,7 @@ const AppDetail = {
     if (!app?.tailoredResume) return;
     try {
       const blob = await API.generateHTMLBlob(app.tailoredResume, appRenderConfig(app.config));
-      const name = (app.tailoredResume.basics?.name || 'resume').replace(/\s+/g,'_');
+      const name = resumeFileBase(app.tailoredResume);
       downloadBlob(blob, `${name}_resume.html`);
     } catch(e) { alert('HTML error: ' + e.message); }
   },
@@ -2086,11 +2184,24 @@ const MasterResumePage = {
         minimap: { enabled: false }, scrollBeyondLastLine: false,
         fontSize: 13, tabSize: 2,
       });
-      this._editor.onDidChangeModelContent(debounce(() => this._validate(), 600));
+      this._editor.onDidChangeModelContent(debounce(() => {
+        this._validate();
+        _masterPreviewDebounced();
+      }, 600));
     }
     this._editor.setValue(master ? JSON.stringify(master, null, 2) : '');
     this._editor.layout();
     document.getElementById('master-validation').textContent = 'Your base resume — used as the foundation for all AI tailoring.';
+    this._loadPreview();
+  },
+
+  /** What the editor currently holds, falling back to the saved master. */
+  _currentResume() {
+    try {
+      const text = this._editor?.getValue().trim();
+      if (text) return JSON.parse(text);
+    } catch { /* unparseable — fall through to the saved copy */ }
+    return Store.getMaster();
   },
 
   async _validate() {
@@ -2101,6 +2212,26 @@ const MasterResumePage = {
       val.innerHTML = renderValidationInline(result);
     } catch(e) {
       val.innerHTML = `<span style="color:var(--red)">✗ Not valid JSON: ${escHtml(e.message)}</span>`;
+    }
+  },
+
+  // Renders the editor contents — not the saved copy — so unsaved edits show up.
+  async _loadPreview() {
+    const loading = document.getElementById('master-preview-loading');
+    const frame   = document.getElementById('master-preview-frame');
+    const resume  = this._currentResume();
+    if (!resume) return;
+    loading.textContent = 'Generating preview…';
+    loading.classList.remove('hidden'); frame.classList.add('hidden');
+    try {
+      const blob = await API.generatePDFBlob(resume, appRenderConfig(Store.getSettings()));
+      frame.src = URL.createObjectURL(blob);
+      frame.onload = () => {
+        loading.classList.add('hidden');
+        frame.classList.remove('hidden');
+      };
+    } catch(e) {
+      loading.textContent = 'Preview error: ' + e.message;
     }
   },
 
@@ -2124,12 +2255,34 @@ const MasterResumePage = {
     });
   },
 
+  toggleDownload() { toggleDropdown('master-dl-dropdown'); },
+
   downloadJSON() {
-    const master = Store.getMaster(); if (!master) return;
-    const name = (master.basics?.name || 'resume').replace(/\s+/g,'_');
-    downloadBlob(new Blob([JSON.stringify(master, null, 2)], { type: 'application/json' }), `${name}_master.json`);
+    document.getElementById('master-dl-menu').classList.remove('open');
+    const master = this._currentResume(); if (!master) return;
+    downloadBlob(new Blob([JSON.stringify(master, null, 2)], { type: 'application/json' }), `${resumeFileBase(master)}_master.json`);
+  },
+
+  async downloadPDF() {
+    document.getElementById('master-dl-menu').classList.remove('open');
+    const master = this._currentResume(); if (!master) return;
+    try {
+      const blob = await API.generatePDFBlob(master, appRenderConfig(Store.getSettings()));
+      downloadBlob(blob, `${resumeFileBase(master)}_resume.pdf`);
+    } catch(e) { alert('PDF error: ' + e.message); }
+  },
+
+  async downloadHTML() {
+    document.getElementById('master-dl-menu').classList.remove('open');
+    const master = this._currentResume(); if (!master) return;
+    try {
+      const blob = await API.generateHTMLBlob(master, appRenderConfig(Store.getSettings()));
+      downloadBlob(blob, `${resumeFileBase(master)}_resume.html`);
+    } catch(e) { alert('HTML error: ' + e.message); }
   },
 };
+
+const _masterPreviewDebounced = debounce(() => MasterResumePage._loadPreview(), 900);
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ESCAPE HTML
