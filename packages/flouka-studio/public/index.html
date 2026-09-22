@@ -352,12 +352,13 @@
       color: var(--text-muted); font-size: 0.95em; margin: 16px;
     }
 
-    /* Edit mode */
-    #app-view-edit {
+    /* Edit / configure modes — shared by the application detail and master
+       resume pages, which both pair a tabbed editor pane with a live preview. */
+    .view-edit {
       flex: 1; overflow: hidden; display: none;
       flex-direction: column;
     }
-    #app-view-edit.active { display: flex; }
+    .view-edit.active { display: flex; }
     #app-editor-container {
       flex: 1; border-top: 1px solid var(--border);
     }
@@ -369,10 +370,10 @@
     #app-edit-validation { flex: 1; }
 
     /* Configure mode */
-    #app-view-configure {
+    .view-configure {
       flex: 1; overflow: hidden; display: none;
     }
-    #app-view-configure.active {
+    .view-configure.active {
       display: block; overflow-y: auto;
     }
     .config-sidebar {
@@ -771,7 +772,7 @@
       </div>
 
       <!-- Edit tab -->
-      <div id="app-view-edit">
+      <div id="app-view-edit" class="view-edit">
         <div class="edit-bar">
           <div id="app-edit-validation">Edit the tailored resume JSON below.</div>
           <button class="btn btn-primary btn-sm" onclick="AppDetail.saveEdit()">Save Changes</button>
@@ -780,7 +781,7 @@
       </div>
 
       <!-- Configure tab -->
-      <div id="app-view-configure">
+      <div id="app-view-configure" class="view-configure">
         <div class="config-sidebar pg-scroll">
           <div class="config-section">
             <div class="config-section-title">Typography</div>
@@ -944,13 +945,58 @@
   </nav>
   <div class="resume-main">
     <div class="resume-editor-pane">
-      <div class="resume-toolbar">
-        <div id="master-validation" class="text-muted">Your base resume — used as the foundation for all AI tailoring.</div>
-        <label class="btn btn-secondary btn-sm" style="cursor:pointer">
-          Upload JSON <input type="file" id="master-file-input" accept=".json" style="display:none" onchange="MasterResumePage.uploadFile(event)">
-        </label>
+      <div class="app-mode-tabs">
+        <button class="app-mode-tab active" data-tab="edit" onclick="MasterResumePage.setTab('edit')">Edit JSON</button>
+        <button class="app-mode-tab" data-tab="configure" onclick="MasterResumePage.setTab('configure')">Configure Layout</button>
       </div>
-      <div id="master-editor-container"></div>
+
+      <!-- Edit tab -->
+      <div id="master-view-edit" class="view-edit">
+        <div class="resume-toolbar">
+          <div id="master-validation" class="text-muted">Your base resume — used as the foundation for all AI tailoring.</div>
+          <label class="btn btn-secondary btn-sm" style="cursor:pointer">
+            Upload JSON <input type="file" id="master-file-input" accept=".json" style="display:none" onchange="MasterResumePage.uploadFile(event)">
+          </label>
+        </div>
+        <div id="master-editor-container"></div>
+      </div>
+
+      <!-- Configure tab — edits the global layout settings, which are also the
+           starting point for every new application. -->
+      <div id="master-view-configure" class="view-configure">
+        <div class="config-sidebar pg-scroll">
+          <div class="config-section">
+            <div class="config-section-title">Typography</div>
+            <div class="form-group">
+              <label class="form-label">Font Size <span class="range-val" id="m-cfg-fs-val">12pt</span></label>
+              <input type="range" id="m-cfg-font-size" min="8" max="18" step="0.5" value="12" style="width:100%" oninput="MasterResumePage.configChanged()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Line Height <span class="range-val" id="m-cfg-lh-val">1.5</span></label>
+              <input type="range" id="m-cfg-line-height" min="1" max="2.5" step="0.1" value="1.5" style="width:100%" oninput="MasterResumePage.configChanged()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Output Language</label>
+              <select class="form-select" id="m-cfg-locale" onchange="MasterResumePage.configChanged()">
+                <option value="en">English</option>
+                <option value="de">Deutsch</option>
+                <option value="fr">Français</option>
+                <option value="ar">العربية</option>
+              </select>
+            </div>
+          </div>
+          <div class="config-section">
+            <div class="config-section-title">Section Order &amp; Page Breaks</div>
+            <p style="font-size:0.8em;color:var(--text-muted);margin-bottom:10px">Drag to reorder. Click ✕ to hide.</p>
+            <ul id="m-cfg-section-list" class="section-list"></ul>
+            <button class="btn btn-ghost btn-sm mt-8" onclick="MasterResumePage.restoreSections()">↺ Restore hidden sections</button>
+          </div>
+          <div class="config-section">
+            <p id="m-cfg-origin" class="text-muted"></p>
+            <button class="btn btn-ghost btn-sm mt-8 hidden" id="m-cfg-reset" onclick="MasterResumePage.resetConfig()">↺ Reset to global defaults</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Live preview, rendered from the editor contents with the global settings -->
@@ -1003,7 +1049,7 @@ const EXAMPLE_RESUME = {
 // bootstrap below) and kept in sync synchronously; writes are debounced and
 // sent to the server in the background so no call site below needs to be async.
 const Store = {
-  _cache: { flouka_master: null, flouka_settings: null, flouka_apps: null },
+  _cache: { flouka_master: null, flouka_master_config: null, flouka_settings: null, flouka_apps: null },
   _timers: {},
 
   async hydrate() {
@@ -1030,6 +1076,27 @@ const Store = {
 
   getMaster()   { return this._cache.flouka_master; },
   setMaster(r)  { this._set('flouka_master', r); },
+
+  // The master resume has its own layout config, independent of the global
+  // settings. While none has been saved it simply follows the global defaults;
+  // the first edit on the Configure tab snapshots them and takes over from there.
+  hasMasterConfig()   { return this._cache.flouka_master_config != null; },
+  resetMasterConfig() { this._set('flouka_master_config', null); },
+  getMasterConfig() {
+    const s = this.getSettings();
+    const defaults = {
+      sectionOrder:    [...s.sectionOrder],
+      pageBreakBefore: [...s.pageBreakBefore],
+      pageBreakAfter:  [...s.pageBreakAfter],
+      removedSections: [...s.removedSections],
+      baseFontSize:    s.baseFontSize,
+      lineHeight:      s.lineHeight,
+      locale:          s.locale,
+    };
+    return { ...defaults, ...(this._cache.flouka_master_config || {}) };
+  },
+  setMasterConfig(c) { this._set('flouka_master_config', c); },
+
   getSettings() { return { ...DEFAULT_SETTINGS, ...(this._cache.flouka_settings || {}) }; },
   setSettings(s){ this._set('flouka_settings', s); },
   getApps()     { return this._cache.flouka_apps || []; },
@@ -1841,8 +1908,8 @@ const AppDetail = {
 
   setTab(tab) {
     this._tab = tab;
-    // update tab buttons
-    document.querySelectorAll('.app-mode-tab').forEach(t => {
+    // update tab buttons (scoped — the master resume page has its own tab bar)
+    document.querySelectorAll('#pg-app .app-mode-tab').forEach(t => {
       t.classList.toggle('active', t.dataset.tab === tab);
     });
     // hide all views
@@ -2175,6 +2242,7 @@ const SettingsPage = {
 // ═══════════════════════════════════════════════════════════════════════════
 const MasterResumePage = {
   _editor: null,
+  _sectionList: null,
 
   show() {
     const master = Store.getMaster();
@@ -2192,7 +2260,74 @@ const MasterResumePage = {
     this._editor.setValue(master ? JSON.stringify(master, null, 2) : '');
     this._editor.layout();
     document.getElementById('master-validation').textContent = 'Your base resume — used as the foundation for all AI tailoring.';
+    this.setTab('edit');
     this._loadPreview();
+  },
+
+  setTab(tab) {
+    document.querySelectorAll('#pg-resume .app-mode-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === tab);
+    });
+    ['edit','configure'].forEach(v => {
+      document.getElementById(`master-view-${v}`)?.classList.toggle('active', v === tab);
+    });
+    if (tab === 'edit')      this._editor?.layout();
+    if (tab === 'configure') this._initConfigure();
+  },
+
+  _initConfigure() {
+    const s = Store.getMasterConfig();
+    const fs = document.getElementById('m-cfg-font-size');
+    const lh = document.getElementById('m-cfg-line-height');
+    document.getElementById('m-cfg-locale').value = s.locale;
+    fs.value = s.baseFontSize;
+    lh.value = s.lineHeight;
+    document.getElementById('m-cfg-fs-val').textContent = fs.value + 'pt';
+    document.getElementById('m-cfg-lh-val').textContent = lh.value;
+
+    const cfgCopy = {
+      sectionOrder:    [...s.sectionOrder],
+      pageBreakBefore: [...s.pageBreakBefore],
+      pageBreakAfter:  [...s.pageBreakAfter],
+      removedSections: [...s.removedSections],
+    };
+    this._sectionList = createSectionList(document.getElementById('m-cfg-section-list'), cfgCopy, (updated) => {
+      Store.setMasterConfig({ ...Store.getMasterConfig(), ...updated });
+      this._renderConfigOrigin();
+      _masterPreviewDebounced();
+    });
+    this._renderConfigOrigin();
+  },
+
+  /** Says whether the master resume is following the global defaults or its own config. */
+  _renderConfigOrigin() {
+    const custom = Store.hasMasterConfig();
+    document.getElementById('m-cfg-origin').innerHTML = custom
+      ? 'This resume uses its own layout. Changes here do <strong>not</strong> affect the defaults for new applications.'
+      : 'Following the global defaults from Settings. Editing anything here gives the master resume its own layout instead.';
+    document.getElementById('m-cfg-reset').classList.toggle('hidden', !custom);
+  },
+
+  resetConfig() {
+    if (!confirm('Discard the master resume\'s own layout and follow the global defaults again?')) return;
+    Store.resetMasterConfig();
+    this._initConfigure();
+    this._loadPreview();
+  },
+
+  configChanged() {
+    const fs = parseFloat(document.getElementById('m-cfg-font-size').value);
+    const lh = parseFloat(document.getElementById('m-cfg-line-height').value);
+    const lc = document.getElementById('m-cfg-locale').value;
+    document.getElementById('m-cfg-fs-val').textContent = fs + 'pt';
+    document.getElementById('m-cfg-lh-val').textContent = lh;
+    Store.setMasterConfig({ ...Store.getMasterConfig(), baseFontSize: fs, lineHeight: lh, locale: lc });
+    this._renderConfigOrigin();
+    _masterPreviewDebounced();
+  },
+
+  restoreSections() {
+    this._sectionList?.restore();
   },
 
   /** What the editor currently holds, falling back to the saved master. */
@@ -2224,7 +2359,7 @@ const MasterResumePage = {
     loading.textContent = 'Generating preview…';
     loading.classList.remove('hidden'); frame.classList.add('hidden');
     try {
-      const blob = await API.generatePDFBlob(resume, appRenderConfig(Store.getSettings()));
+      const blob = await API.generatePDFBlob(resume, appRenderConfig(Store.getMasterConfig()));
       frame.src = URL.createObjectURL(blob);
       frame.onload = () => {
         loading.classList.add('hidden');
@@ -2267,7 +2402,7 @@ const MasterResumePage = {
     document.getElementById('master-dl-menu').classList.remove('open');
     const master = this._currentResume(); if (!master) return;
     try {
-      const blob = await API.generatePDFBlob(master, appRenderConfig(Store.getSettings()));
+      const blob = await API.generatePDFBlob(master, appRenderConfig(Store.getMasterConfig()));
       downloadBlob(blob, `${resumeFileBase(master)}_resume.pdf`);
     } catch(e) { alert('PDF error: ' + e.message); }
   },
@@ -2276,7 +2411,7 @@ const MasterResumePage = {
     document.getElementById('master-dl-menu').classList.remove('open');
     const master = this._currentResume(); if (!master) return;
     try {
-      const blob = await API.generateHTMLBlob(master, appRenderConfig(Store.getSettings()));
+      const blob = await API.generateHTMLBlob(master, appRenderConfig(Store.getMasterConfig()));
       downloadBlob(blob, `${resumeFileBase(master)}_resume.html`);
     } catch(e) { alert('HTML error: ' + e.message); }
   },

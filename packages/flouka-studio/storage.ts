@@ -17,9 +17,12 @@ const db = new Database(DB_PATH);
 db.run("PRAGMA journal_mode=WAL");
 db.run(`CREATE TABLE IF NOT EXISTS kv_store (key TEXT PRIMARY KEY, value TEXT NOT NULL)`);
 
-export type StoreKey = "flouka_master" | "flouka_settings" | "flouka_apps";
+// `flouka_master_config` is the master resume's own layout config — kept apart
+// from `flouka_settings` (the defaults new applications inherit) so tweaking the
+// master resume's rendering never changes what tailored resumes start from.
+export type StoreKey = "flouka_master" | "flouka_master_config" | "flouka_settings" | "flouka_apps";
 
-const KEYS: StoreKey[] = ["flouka_master", "flouka_settings", "flouka_apps"];
+const KEYS: StoreKey[] = ["flouka_master", "flouka_master_config", "flouka_settings", "flouka_apps"];
 
 export function isStoreKey(key: string): key is StoreKey {
   return (KEYS as string[]).includes(key);
@@ -29,6 +32,7 @@ export function getAll(): Record<StoreKey, unknown | null> {
   const rows = db.query<{ key: string; value: string }, []>("SELECT key, value FROM kv_store").all();
   const result = {
     flouka_master: null,
+    flouka_master_config: null,
     flouka_settings: null,
     flouka_apps: null,
   } as Record<StoreKey, unknown | null>;
