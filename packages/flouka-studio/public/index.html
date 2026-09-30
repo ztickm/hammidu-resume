@@ -630,6 +630,16 @@
           <label class="form-label">Country Code</label>
           <input class="form-input" id="b-country" placeholder="US" style="max-width:100px">
         </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">GitHub <small style="color:var(--text-muted)">(username or URL)</small></label>
+            <input class="form-input" id="b-github" placeholder="janedoe">
+          </div>
+          <div class="form-group">
+            <label class="form-label">LinkedIn <small style="color:var(--text-muted)">(username or URL)</small></label>
+            <input class="form-input" id="b-linkedin" placeholder="janedoe">
+          </div>
+        </div>
         <div class="form-group">
           <label class="form-label">Professional Summary</label>
           <textarea class="form-textarea" id="b-summary" rows="4" placeholder="Briefly describe your background and expertise…"></textarea>
@@ -1635,10 +1645,25 @@ const Onboarding = {
     container.appendChild(div);
   },
 
+  // A wizard profile field takes either a bare username or a pasted URL; the
+  // renderer only needs the URL, but JSON Resume wants the username too.
+  _profile(network, fieldId, baseUrl) {
+    const raw = document.getElementById(fieldId).value.trim();
+    if (!raw) return null;
+    const url = /^https?:\/\//i.test(raw) ? raw : baseUrl + raw.replace(/^\/+/, '');
+    const username = url.replace(/\/+$/, '').split('/').pop();
+    return { network, username, url };
+  },
+
   wizardBuild() {
     document.getElementById('wizard-error').classList.add('hidden');
     const name = document.getElementById('b-name').value.trim();
     if (!name) { this._showErr('Name is required.'); this.wizardBack(4); return; }
+
+    const profiles = [
+      this._profile('GitHub', 'b-github', 'https://github.com/'),
+      this._profile('LinkedIn', 'b-linkedin', 'https://www.linkedin.com/in/'),
+    ].filter(Boolean);
 
     const resume = {
       basics: {
@@ -1652,6 +1677,7 @@ const Onboarding = {
           city: document.getElementById('b-city').value.trim() || undefined,
           countryCode: document.getElementById('b-country').value.trim() || undefined,
         },
+        profiles: profiles.length ? profiles : undefined,
       },
       work: [...document.getElementById('work-entries').querySelectorAll('.entry-card')].map(card => ({
         name:      card.querySelector('[name=company]').value.trim(),

@@ -207,6 +207,10 @@
       {{#if basics.email}}<span>{{basics.email}}</span> | {{/if}}
       {{#if basics.phone}}<span>{{basics.phone}}</span> | {{/if}}
       {{#if basics.url}}<a href="{{basics.url}}">{{basics.url}}</a> | {{/if}}
+      {{#with (findProfile basics.profiles "GitHub")}}{{#if url}}<a href="{{url}}">{{displayUrl url}}</a> |
+      {{/if}}{{/with}}
+      {{#with (findProfile basics.profiles "LinkedIn")}}{{#if url}}<a href="{{url}}">{{displayUrl url}}</a> |
+      {{/if}}{{/with}}
       {{#if basics.location}}
       <span>
         {{#if basics.location.city}}{{basics.location.city}}{{/if}}{{#if basics.location.region}},

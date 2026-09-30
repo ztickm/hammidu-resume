@@ -1,6 +1,6 @@
 import Handlebars from "handlebars";
 import * as jsonT from "json-resume-types";
-import { formatDate, formatDateOrPresent, joinArray } from "./helpers";
+import { displayUrl, findProfile, formatDate, formatDateOrPresent, joinArray } from "./helpers";
 import { readFileSync } from "fs";
 import { join } from "path";
 import type { GenerateConfig, SectionName } from "./config";
@@ -16,6 +16,8 @@ const template = Handlebars.compile(templateSource);
 Handlebars.registerHelper("formatDate", formatDate);
 Handlebars.registerHelper("formatDateOrPresent", formatDateOrPresent);
 Handlebars.registerHelper("join", joinArray);
+Handlebars.registerHelper("findProfile", findProfile);
+Handlebars.registerHelper("displayUrl", displayUrl);
 Handlebars.registerHelper("eq", (a: string, b: string) => a === b);
 Handlebars.registerHelper("hasPageBreak", (set: Set<SectionName>, section: SectionName) => {
   return set.has(section);
