@@ -13,6 +13,13 @@ import { resolve, dirname } from "node:path";
 const DB_PATH = process.env.FLOUKA_DB_PATH ?? resolve(import.meta.dir, "data/flouka.sqlite");
 mkdirSync(dirname(DB_PATH), { recursive: true });
 
+/**
+ * Where the store actually lives, resolved. Exported so out-of-process writers
+ * (the MCP server) can park backups next to it instead of re-deriving the path
+ * and silently disagreeing when FLOUKA_DB_PATH is set.
+ */
+export const STORE_PATH = DB_PATH;
+
 const db = new Database(DB_PATH);
 db.run("PRAGMA journal_mode=WAL");
 db.run(`CREATE TABLE IF NOT EXISTS kv_store (key TEXT PRIMARY KEY, value TEXT NOT NULL)`);

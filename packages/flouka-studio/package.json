@@ -4,6 +4,10 @@
   "type": "module",
   "description": "PDF renderer and web interface for JSON Resume using Puppeteer",
   "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./storage": "./storage.ts"
+  },
   "scripts": {
     "dev": "bun run src/index.ts",
     "build": "bun build src/index.ts --outdir dist",

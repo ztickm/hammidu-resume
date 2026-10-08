@@ -23,6 +23,8 @@ json-resume-types  (shared types, no runtime code)
    extractor       (PDF → JSON, reads the embedded attachment back out)
 
    agent           (LangGraph: analyse JD → tailor resume → render PDF)
+
+   flouka-mcp      (MCP server over stdio: the pipeline above as tools, no LLM of its own)
 ```
 
 ## Commands
@@ -38,12 +40,16 @@ Run everything with `bun` — never `npm`/`node`. Scripts live in the root `pack
 | `bun run validate`                              | Validator example suite                                                              |
 | `bun run validator:validate <file>`             | Validate one JSON Resume file                                                        |
 | `bun run extract`                               | Extract JSON from `resumes/example_output.pdf`                                       |
+| `bun run mcp`                                   | Start the MCP server on stdio (normally launched by a client, not by hand)            |
+| `bun run mcp:smoke`                             | End-to-end test of the MCP server against a throwaway store — 33 checks               |
 | `bun run agent:cli -- --resume <path> --jd "…"` | Run the full agent graph (A → B → C)                                                 |
 | `bun run agent:run`                             | Quick-run script; edit the JD/resume constants at the top of `packages/agent/run.ts` |
 
 Two root scripts are currently dead: `bun run build` calls a `build` script that
 `packages/xebec-render` does not define, and `bun test` finds no `bun:test` files — the repo has no
-unit tests. `test-roundtrip.ts` is the de facto integration test.
+unit tests. `test-roundtrip.ts` and `packages/flouka-mcp/smoke.ts` are the de facto integration
+tests; the latter is the broader of the two, since it drives the real pipeline through the MCP
+protocol.
 
 ## Repo conventions
 
@@ -86,6 +92,20 @@ unit tests. `test-roundtrip.ts` is the de facto integration test.
   LangGraph state via `BunSqliteSaver`.
 - **Generated artefacts land in `resumes/`** — the agent's PDF output directory defaults there
   (`AGENT_PDF_DIR`). The directory already contains committed sample resumes; don't tidy it.
+- **`AGENT_PDF_DIR` is relative in `.env`** (`../../resumes`), which only works because every
+  consumer runs under `bun run --cwd packages/<name>`. Anything launched with a different cwd — an
+  MCP client, for instance — must resolve it itself; `packages/flouka-mcp/src/render.ts` resolves
+  it against its own package directory for exactly this reason.
+- **The MCP server must never write to stdout.** stdout is its JSON-RPC channel, so a stray
+  `console.log` anywhere in `packages/flouka-mcp` (or in anything it imports on the render path)
+  breaks the connection with no useful error. That is why it calls `generatePDF` + `Bun.write`
+  rather than `generatePDFToFile`, which logs. `smoke.ts` catches regressions here.
+- **MCP validation is deliberately laxer than the web UI's.** `render_resume_pdf` blocks only on
+  schema *errors*; warnings come back in the result, with `strict: true` to restore the
+  `/api/generate-pdf` behaviour. Without that, the warnings-make-it-invalid rule above would make
+  a resume unrenderable over MCP with no way through.
+- **`flouka-studio` now has an `exports` map** (`.` and `./storage`) so `flouka-mcp` can import the
+  store by workspace name. Adding a new subpath import from that package means adding it there too.
 
 ## Environment
 

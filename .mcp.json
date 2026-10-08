@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "flouka": {
+      "command": "bun",
+      "args": ["run", "packages/flouka-mcp/src/server.ts"]
+    }
+  }
+}
