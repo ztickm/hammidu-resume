@@ -193,35 +193,6 @@
     .onb-file-drop:hover { background: #ccfbf1; }
     .onb-actions { display: flex; gap: 10px; margin-top: 16px; }
 
-    /* Builder Wizard */
-    .wizard-step { display: none; }
-    .wizard-step.active { display: block; }
-    .wizard-progress {
-      display: flex; gap: 8px; align-items: center; margin-bottom: 24px;
-    }
-    .wizard-step-dot {
-      width: 28px; height: 28px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.8em; font-weight: 600;
-      background: var(--border); color: var(--text-muted);
-      transition: all 0.2s;
-    }
-    .wizard-step-dot.done { background: var(--teal); color: white; }
-    .wizard-step-dot.active { background: var(--teal-dark); color: white; }
-    .wizard-step-line { flex: 1; height: 2px; background: var(--border); }
-    .wizard-step-line.done { background: var(--teal); }
-    .entry-card {
-      border: 1px solid var(--border); border-radius: 10px;
-      padding: 16px; margin-bottom: 12px; background: var(--bg);
-      position: relative;
-    }
-    .entry-remove {
-      position: absolute; top: 12px; right: 12px;
-      background: none; border: none; cursor: pointer;
-      color: var(--text-muted); font-size: 1.1em;
-    }
-    .entry-remove:hover { color: var(--red); }
-
     /* ══════════════════════════════════════════════
        DASHBOARD PAGE
     ══════════════════════════════════════════════ */
@@ -517,6 +488,75 @@
     }
     .dropdown-item:hover { background: var(--bg); }
 
+    /* ══════════════════════════════════════════════
+       RESUME FORM EDITOR
+    ══════════════════════════════════════════════ */
+    /* Styles for createResumeForm(). The component is mounted by onboarding,
+       the master resume page and the application page, so nothing here may
+       depend on which page hosts it — the host only sizes the container. */
+    .rf { display: flex; flex-direction: column; gap: 10px; padding: 16px 20px 40px; }
+    .rf-section {
+      background: white; border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden; flex-shrink: 0;
+    }
+    .rf-section-head {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px; cursor: pointer; user-select: none;
+      transition: background 0.12s;
+    }
+    .rf-section-head:hover { background: var(--bg); }
+    .rf-chevron { color: var(--text-muted); font-size: 0.65em; width: 10px; transition: transform 0.15s; }
+    .rf-section.open .rf-chevron { transform: rotate(90deg); }
+    .rf-section-title { flex: 1; font-weight: 600; font-size: 0.92em; }
+    .rf-count {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 999px;
+      padding: 1px 9px; font-size: 0.75em; font-weight: 600; color: var(--text-muted);
+    }
+    .rf-section-body { display: none; padding: 0 14px 14px; border-top: 1px solid var(--border); }
+    .rf-section.open .rf-section-body { display: block; }
+    .rf-fields { padding-top: 14px; }
+    .rf-fields .form-group { margin-bottom: 12px; }
+    .rf-fields .form-textarea { min-height: 0; }
+    .rf-hint { font-weight: 400; color: var(--text-muted); }
+
+    /* One array item — collapsed to a single summary line until it is opened. */
+    .rf-entry { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; margin-top: 10px; }
+    .rf-entry.dragging { opacity: 0.4; }
+    .rf-entry-head { display: flex; align-items: center; gap: 8px; padding: 9px 10px; cursor: pointer; }
+    .rf-entry-grip { color: var(--text-muted); cursor: grab; font-size: 0.95em; }
+    .rf-entry-label {
+      flex: 1; min-width: 0; font-size: 0.88em; font-weight: 500;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .rf-entry-label.empty { font-weight: 400; font-style: italic; color: var(--text-muted); }
+    .rf-entry-sub { font-size: 0.78em; color: var(--text-muted); white-space: nowrap; }
+    .rf-entry-del {
+      background: none; border: none; cursor: pointer; color: var(--text-muted);
+      font-size: 0.9em; padding: 2px 5px; border-radius: 4px;
+    }
+    .rf-entry-del:hover { color: var(--red); background: var(--red-light); }
+    .rf-entry-body {
+      display: none; padding: 0 12px 12px; background: white;
+      border-top: 1px solid var(--border); border-radius: 0 0 7px 7px;
+    }
+    .rf-entry.open .rf-entry-body { display: block; }
+    .rf-empty { font-size: 0.85em; color: var(--text-muted); padding: 14px 0 2px; }
+
+    /* Form mode — a tab pane beside the JSON editor, so the form scrolls itself. */
+    .rf-toolbar {
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      padding: 8px 20px; display: flex; align-items: center; gap: 8px;
+      font-size: 0.85em; color: var(--text-muted); flex-shrink: 0;
+    }
+    .rf-toolbar-msg { flex: 1; }
+    .view-form { flex: 1; overflow: hidden; display: none; flex-direction: column; }
+    .view-form.active { display: flex; }
+    .view-form .rf-host { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .view-form .rf { flex: 1; min-height: 0; overflow-y: auto; }
+
+    /* Onboarding hosts the form inside the page's own scroll area. */
+    .onb-method .rf { padding: 0 0 4px; }
+
     /* ── UTILITIES ── */
     .hidden { display: none !important; }
     .mt-8 { margin-top: 8px; }
@@ -591,95 +631,15 @@
       </div>
     </div>
 
-    <!-- BUILD METHOD -->
+    <!-- BUILD METHOD — the same form component the resume pages use, so a
+         resume built here and one edited later go through identical inputs. -->
     <div id="onb-method-build" class="onb-method hidden">
-      <div class="wizard-progress" id="wizard-progress"></div>
-      <div id="wizard-step-1" class="wizard-step active">
-        <h3 style="margin-bottom:16px;font-size:1em;font-weight:600">Step 1 — Basic Information</h3>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Full Name *</label>
-            <input class="form-input" id="b-name" placeholder="Jane Doe">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Professional Title</label>
-            <input class="form-input" id="b-label" placeholder="Software Engineer">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Email *</label>
-            <input class="form-input" id="b-email" type="email" placeholder="jane@example.com">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Phone</label>
-            <input class="form-input" id="b-phone" placeholder="+1 (555) 123-4567">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Website</label>
-            <input class="form-input" id="b-url" placeholder="https://yourwebsite.com">
-          </div>
-          <div class="form-group">
-            <label class="form-label">City</label>
-            <input class="form-input" id="b-city" placeholder="San Francisco">
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Country Code</label>
-          <input class="form-input" id="b-country" placeholder="US" style="max-width:100px">
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">GitHub <small style="color:var(--text-muted)">(username or URL)</small></label>
-            <input class="form-input" id="b-github" placeholder="janedoe">
-          </div>
-          <div class="form-group">
-            <label class="form-label">LinkedIn <small style="color:var(--text-muted)">(username or URL)</small></label>
-            <input class="form-input" id="b-linkedin" placeholder="janedoe">
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Professional Summary</label>
-          <textarea class="form-textarea" id="b-summary" rows="4" placeholder="Briefly describe your background and expertise…"></textarea>
-        </div>
-        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
-          <button class="btn btn-primary" onclick="Onboarding.wizardNext(1)">Next: Work Experience →</button>
-        </div>
+      <div id="onb-form-container"></div>
+      <div id="onb-form-validation" class="mt-8"></div>
+      <div class="onb-actions">
+        <button class="btn btn-secondary" onclick="Onboarding.loadExampleForm()">Load Example</button>
+        <button class="btn btn-primary" onclick="Onboarding.saveForm()" style="flex:1">Save Resume &amp; Continue →</button>
       </div>
-
-      <div id="wizard-step-2" class="wizard-step">
-        <h3 style="margin-bottom:16px;font-size:1em;font-weight:600">Step 2 — Work Experience</h3>
-        <div id="work-entries"></div>
-        <button class="btn btn-secondary btn-sm mt-8" onclick="Onboarding.addWork()">+ Add Position</button>
-        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
-          <button class="btn btn-ghost btn-sm" onclick="Onboarding.wizardBack(2)">← Back</button>
-          <button class="btn btn-primary" onclick="Onboarding.wizardNext(2)">Next: Education →</button>
-        </div>
-      </div>
-
-      <div id="wizard-step-3" class="wizard-step">
-        <h3 style="margin-bottom:16px;font-size:1em;font-weight:600">Step 3 — Education</h3>
-        <div id="edu-entries"></div>
-        <button class="btn btn-secondary btn-sm mt-8" onclick="Onboarding.addEdu()">+ Add Education</button>
-        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
-          <button class="btn btn-ghost btn-sm" onclick="Onboarding.wizardBack(3)">← Back</button>
-          <button class="btn btn-primary" onclick="Onboarding.wizardNext(3)">Next: Skills →</button>
-        </div>
-      </div>
-
-      <div id="wizard-step-4" class="wizard-step">
-        <h3 style="margin-bottom:16px;font-size:1em;font-weight:600">Step 4 — Skills</h3>
-        <div id="skill-entries"></div>
-        <button class="btn btn-secondary btn-sm mt-8" onclick="Onboarding.addSkill()">+ Add Skill Group</button>
-        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
-          <button class="btn btn-ghost btn-sm" onclick="Onboarding.wizardBack(4)">← Back</button>
-          <button class="btn btn-primary" onclick="Onboarding.wizardBuild()">Build & Save Resume →</button>
-        </div>
-      </div>
-
-      <div id="wizard-error" class="msg msg-error hidden mt-8"></div>
     </div>
   </div>
 </div>
@@ -776,9 +736,21 @@
   <div class="app-body">
     <div class="app-main">
       <div class="app-mode-tabs">
-        <button class="app-mode-tab active" data-tab="edit" onclick="AppDetail.setTab('edit')">Edit JSON</button>
+        <button class="app-mode-tab active" data-tab="form" onclick="AppDetail.setTab('form')">Form</button>
+        <button class="app-mode-tab" data-tab="edit" onclick="AppDetail.setTab('edit')">Edit JSON</button>
         <button class="app-mode-tab" data-tab="configure" onclick="AppDetail.setTab('configure')">Configure Layout</button>
         <button class="app-mode-tab" data-tab="info" onclick="AppDetail.setTab('info')">JD Analysis</button>
+      </div>
+
+      <!-- Form tab — field-by-field editing of the tailored resume; changes are
+           saved as you type, exactly like the JSON tab. -->
+      <div id="app-view-form" class="view-form">
+        <div class="rf-toolbar">
+          <span class="rf-toolbar-msg" id="app-form-msg">Edit the tailored resume field by field — changes save as you type.</span>
+          <button class="btn btn-ghost btn-sm" onclick="AppDetail.formExpand(true)">Expand all</button>
+          <button class="btn btn-ghost btn-sm" onclick="AppDetail.formExpand(false)">Collapse all</button>
+        </div>
+        <div id="app-form-container" class="rf-host"></div>
       </div>
 
       <!-- Edit tab -->
@@ -956,8 +928,21 @@
   <div class="resume-main">
     <div class="resume-editor-pane">
       <div class="app-mode-tabs">
-        <button class="app-mode-tab active" data-tab="edit" onclick="MasterResumePage.setTab('edit')">Edit JSON</button>
+        <button class="app-mode-tab active" data-tab="form" onclick="MasterResumePage.setTab('form')">Form</button>
+        <button class="app-mode-tab" data-tab="edit" onclick="MasterResumePage.setTab('edit')">Edit JSON</button>
         <button class="app-mode-tab" data-tab="configure" onclick="MasterResumePage.setTab('configure')">Configure Layout</button>
+      </div>
+
+      <!-- Form tab — the same resume as the Edit JSON tab, one field at a time.
+           Its edits are written back into the editor, which stays the single
+           source of truth for validation, the preview and Save. -->
+      <div id="master-view-form" class="view-form">
+        <div class="rf-toolbar">
+          <span class="rf-toolbar-msg" id="master-form-msg">Your base resume — used as the foundation for all AI tailoring.</span>
+          <button class="btn btn-ghost btn-sm" onclick="MasterResumePage.formExpand(true)">Expand all</button>
+          <button class="btn btn-ghost btn-sm" onclick="MasterResumePage.formExpand(false)">Collapse all</button>
+        </div>
+        <div id="master-form-container" class="rf-host"></div>
       </div>
 
       <!-- Edit tab -->
@@ -1364,8 +1349,8 @@ function createSectionList(ulEl, initConfig, onChange) {
   return { getConfig, restore };
 }
 
-function getDragAfter(container, y) {
-  return [...container.querySelectorAll('.section-item:not(.dragging)')].reduce((closest, child) => {
+function getDragAfter(container, y, selector = '.section-item') {
+  return [...container.querySelectorAll(`${selector}:not(.dragging)`)].reduce((closest, child) => {
     const box = child.getBoundingClientRect();
     const off = y - box.top - box.height / 2;
     return off < 0 && off > closest.off ? { off, el: child } : closest;
@@ -1377,6 +1362,506 @@ function sectionListRemove(sec, btn) {
   const ul = btn.closest('.section-list');
   if (!ul?.dataset.listId) return;
   window._sectionLists[ul.dataset.listId]?.remove(sec);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RESUME FORM EDITOR (reusable)
+// ═══════════════════════════════════════════════════════════════════════════
+// A form view over the resume JSON, so a resume can be edited without touching
+// braces. Every section is described once in RF_SECTIONS below and onboarding,
+// the master resume page and each application mount the same component, rather
+// than hand-writing three sets of inputs that drift apart.
+//
+// The form never owns the data: it hands a cleaned resume to `onChange` and the
+// host decides where that goes (the Monaco editor, the Store, the preview).
+// Fields the schema does not cover — `meta`, `$schema`, `basics.image` — survive
+// editing because the form mutates the resume it was given instead of rebuilding
+// it from the inputs.
+//
+// A field's `type` says how its control maps onto the JSON:
+//   text / textarea → string            lines → string[], one per line
+//   date            → ISO8601 string    tags  → string[], comma separated
+
+const RF_DEGREES = ['Bachelor', 'Master', 'PhD', 'Associate', 'Diploma', 'Certificate'];
+const RF_FLUENCY = ['Native speaker', 'Fluent', 'Professional working', 'Intermediate', 'Elementary'];
+const RF_LEVELS  = ['Expert', 'Advanced', 'Intermediate', 'Beginner'];
+
+// `path` is where the section lives in the resume; `itemTitle`/`itemSub` build the
+// one-line summary a collapsed entry shows, and `blank` stands in while it's empty.
+const RF_SECTIONS = [
+  {
+    path: 'basics', icon: '👤', title: 'Basics', kind: 'object',
+    fields: [
+      { key: 'name',                 label: 'Full name', ph: 'Jane Doe', half: true },
+      { key: 'label',                label: 'Professional title', ph: 'Software Engineer', half: true },
+      { key: 'email',                label: 'Email', ph: 'jane@example.com', half: true },
+      { key: 'phone',                label: 'Phone', ph: '+1 (555) 123-4567', half: true },
+      { key: 'url',                  label: 'Website', hint: 'include https://', ph: 'https://janedoe.dev', half: true },
+      { key: 'location.city',        label: 'City', ph: 'Berlin', half: true },
+      { key: 'location.region',      label: 'Region / state', ph: 'Berlin', half: true },
+      { key: 'location.countryCode', label: 'Country code', hint: 'two letters', ph: 'DE', half: true },
+      { key: 'summary',              label: 'Professional summary', type: 'textarea', rows: 4,
+        ph: 'Briefly describe your background and expertise…' },
+    ],
+  },
+  {
+    path: 'basics.profiles', icon: '🔗', title: 'Profiles & Links', kind: 'array',
+    add: 'Add profile', blank: 'New profile',
+    itemTitle: (p) => p.network || p.username || '',
+    itemSub:   (p) => (p.network && p.username ? p.username : ''),
+    fields: [
+      { key: 'network',  label: 'Network', ph: 'GitHub', half: true },
+      { key: 'username', label: 'Username', hint: 'or paste the full URL', ph: 'janedoe', half: true },
+      { key: 'url',      label: 'URL', hint: 'filled in from the username for known networks', ph: 'https://github.com/janedoe' },
+    ],
+  },
+  {
+    path: 'work', icon: '💼', title: 'Work Experience', kind: 'array',
+    add: 'Add position', blank: 'New position',
+    itemTitle: (w) => [w.position, w.name].filter(Boolean).join(' — '),
+    itemSub:   (w) => rfDates(w.startDate, w.endDate),
+    fields: [
+      { key: 'position',   label: 'Position', ph: 'Senior Software Engineer', half: true },
+      { key: 'name',       label: 'Company', ph: 'Acme Corp', half: true },
+      { key: 'startDate',  label: 'Start date', type: 'date', half: true },
+      { key: 'endDate',    label: 'End date', type: 'date', hint: 'blank = present', half: true },
+      { key: 'location',   label: 'Location', ph: 'Berlin, DE', half: true },
+      { key: 'url',        label: 'Company URL', ph: 'https://acme.com', half: true },
+      { key: 'summary',    label: 'Role summary', type: 'textarea', rows: 2, ph: 'What the role was about' },
+      { key: 'highlights', label: 'Highlights', type: 'lines', rows: 4, hint: 'one per line',
+        ph: 'Cut page load time by 40%\nLed a team of five engineers' },
+    ],
+  },
+  {
+    path: 'education', icon: '🎓', title: 'Education', kind: 'array',
+    add: 'Add education', blank: 'New entry',
+    itemTitle: (e) => [e.studyType, e.area].filter(Boolean).join(' in ') || e.institution || '',
+    itemSub:   (e) => rfDates(e.startDate, e.endDate),
+    fields: [
+      { key: 'institution', label: 'Institution', ph: 'TU Berlin', half: true },
+      { key: 'area',        label: 'Field of study', ph: 'Computer Science', half: true },
+      { key: 'studyType',   label: 'Degree', suggest: RF_DEGREES, ph: 'Bachelor', half: true },
+      { key: 'score',       label: 'Grade / score', ph: '1.3', half: true },
+      { key: 'startDate',   label: 'Start date', type: 'date', half: true },
+      { key: 'endDate',     label: 'End date', type: 'date', half: true },
+      { key: 'url',         label: 'Institution URL', ph: 'https://www.tu.berlin' },
+      { key: 'courses',     label: 'Courses', type: 'lines', rows: 3, hint: 'one per line' },
+    ],
+  },
+  {
+    path: 'skills', icon: '🛠', title: 'Skills', kind: 'array',
+    add: 'Add skill group', blank: 'New skill group',
+    itemTitle: (s) => s.name || '',
+    itemSub:   (s) => (s.keywords?.length ? `${s.keywords.length} keywords` : ''),
+    fields: [
+      { key: 'name',     label: 'Group name', ph: 'Languages', half: true },
+      { key: 'level',    label: 'Level', suggest: RF_LEVELS, ph: 'Advanced', half: true },
+      { key: 'keywords', label: 'Keywords', type: 'tags', hint: 'comma separated', ph: 'TypeScript, Python, Go' },
+    ],
+  },
+  {
+    path: 'projects', icon: '🚀', title: 'Projects', kind: 'array',
+    add: 'Add project', blank: 'New project',
+    itemTitle: (p) => p.name || '',
+    itemSub:   (p) => rfDates(p.startDate, p.endDate),
+    fields: [
+      { key: 'name',        label: 'Name', ph: 'Flouka Studio', half: true },
+      { key: 'entity',      label: 'Entity', hint: 'who it was for', ph: 'Side project', half: true },
+      { key: 'startDate',   label: 'Start date', type: 'date', half: true },
+      { key: 'endDate',     label: 'End date', type: 'date', half: true },
+      { key: 'url',         label: 'URL', ph: 'https://github.com/you/project', half: true },
+      { key: 'type',        label: 'Type', ph: 'application', half: true },
+      { key: 'description', label: 'Description', type: 'textarea', rows: 2 },
+      { key: 'roles',       label: 'Roles', type: 'tags', hint: 'comma separated', ph: 'Author, Maintainer' },
+      { key: 'keywords',    label: 'Keywords', type: 'tags', hint: 'comma separated', ph: 'Bun, TypeScript' },
+      { key: 'highlights',  label: 'Highlights', type: 'lines', rows: 3, hint: 'one per line' },
+    ],
+  },
+  {
+    path: 'volunteer', icon: '🤝', title: 'Volunteer', kind: 'array',
+    add: 'Add volunteer role', blank: 'New role',
+    itemTitle: (v) => [v.position, v.organization].filter(Boolean).join(' — '),
+    itemSub:   (v) => rfDates(v.startDate, v.endDate),
+    fields: [
+      { key: 'organization', label: 'Organization', ph: 'Red Cross', half: true },
+      { key: 'position',     label: 'Position', ph: 'Volunteer Coordinator', half: true },
+      { key: 'startDate',    label: 'Start date', type: 'date', half: true },
+      { key: 'endDate',      label: 'End date', type: 'date', half: true },
+      { key: 'url',          label: 'URL', ph: 'https://www.redcross.org' },
+      { key: 'summary',      label: 'Summary', type: 'textarea', rows: 2 },
+      { key: 'highlights',   label: 'Highlights', type: 'lines', rows: 3, hint: 'one per line' },
+    ],
+  },
+  {
+    path: 'languages', icon: '🌍', title: 'Languages', kind: 'array',
+    add: 'Add language', blank: 'New language',
+    itemTitle: (l) => l.language || '',
+    itemSub:   (l) => l.fluency || '',
+    fields: [
+      { key: 'language', label: 'Language', ph: 'German', half: true },
+      { key: 'fluency',  label: 'Fluency', suggest: RF_FLUENCY, ph: 'Fluent', half: true },
+    ],
+  },
+  {
+    path: 'awards', icon: '🏆', title: 'Awards', kind: 'array',
+    add: 'Add award', blank: 'New award',
+    itemTitle: (a) => a.title || '',
+    itemSub:   (a) => a.date || '',
+    fields: [
+      { key: 'title',   label: 'Title', ph: 'Employee of the Year', half: true },
+      { key: 'awarder', label: 'Awarder', ph: 'Acme Corp', half: true },
+      { key: 'date',    label: 'Date', type: 'date', half: true },
+      { key: 'summary', label: 'Summary', type: 'textarea', rows: 2 },
+    ],
+  },
+  {
+    path: 'certificates', icon: '📜', title: 'Certificates', kind: 'array',
+    add: 'Add certificate', blank: 'New certificate',
+    itemTitle: (c) => c.name || '',
+    itemSub:   (c) => c.date || '',
+    fields: [
+      { key: 'name',   label: 'Name', ph: 'AWS Solutions Architect', half: true },
+      { key: 'issuer', label: 'Issuer', ph: 'Amazon Web Services', half: true },
+      { key: 'date',   label: 'Date', type: 'date', half: true },
+      { key: 'url',    label: 'URL', ph: 'https://www.credly.com/badges/…', half: true },
+    ],
+  },
+  {
+    path: 'publications', icon: '📚', title: 'Publications', kind: 'array',
+    add: 'Add publication', blank: 'New publication',
+    itemTitle: (p) => p.name || '',
+    itemSub:   (p) => p.releaseDate || '',
+    fields: [
+      { key: 'name',        label: 'Title', ph: 'On Resume Parsing', half: true },
+      { key: 'publisher',   label: 'Publisher', ph: 'ACM', half: true },
+      { key: 'releaseDate', label: 'Release date', type: 'date', half: true },
+      { key: 'url',         label: 'URL', ph: 'https://doi.org/…', half: true },
+      { key: 'summary',     label: 'Summary', type: 'textarea', rows: 2 },
+    ],
+  },
+  {
+    path: 'interests', icon: '🎯', title: 'Interests', kind: 'array',
+    add: 'Add interest', blank: 'New interest',
+    itemTitle: (i) => i.name || '',
+    itemSub:   (i) => (i.keywords?.length ? `${i.keywords.length} keywords` : ''),
+    fields: [
+      { key: 'name',     label: 'Name', ph: 'Open source', half: true },
+      { key: 'keywords', label: 'Keywords', type: 'tags', hint: 'comma separated', half: true },
+    ],
+  },
+  {
+    path: 'references', icon: '💬', title: 'References', kind: 'array',
+    add: 'Add reference', blank: 'New reference',
+    itemTitle: (r) => r.name || '',
+    fields: [
+      { key: 'name',      label: 'Name', ph: 'Jane Smith — CTO, Acme Corp' },
+      { key: 'reference', label: 'Reference', type: 'textarea', rows: 3 },
+    ],
+  },
+];
+
+// Bare usernames are what people type, but the template only renders a link when
+// the profile carries a URL — so derive one for the networks we recognise.
+const RF_PROFILE_URLS = {
+  github:        'https://github.com/',
+  gitlab:        'https://gitlab.com/',
+  linkedin:      'https://www.linkedin.com/in/',
+  x:             'https://x.com/',
+  twitter:       'https://x.com/',
+  stackoverflow: 'https://stackoverflow.com/users/',
+  dribbble:      'https://dribbble.com/',
+  behance:       'https://www.behance.net/',
+  medium:        'https://medium.com/@',
+  youtube:       'https://www.youtube.com/@',
+  instagram:     'https://www.instagram.com/',
+};
+
+// ── Path / value helpers ───────────────────────────────────────────────────
+const rfBlank = (v) => v == null || v === '' || (Array.isArray(v) && v.length === 0);
+
+function rfGet(obj, path) {
+  return path.split('.').reduce((node, key) => (node == null ? undefined : node[key]), obj);
+}
+
+/** Writes `value` at a dotted path, creating missing parents. Blank values
+ *  delete the key instead of leaving `""` behind — the validator warns about
+ *  empty emails and URLs, so the form must not invent them. */
+function rfSet(obj, path, value) {
+  const keys = path.split('.');
+  const last = keys.pop();
+  let node = obj;
+  for (const key of keys) {
+    if (node[key] == null || typeof node[key] !== 'object') node[key] = {};
+    node = node[key];
+  }
+  if (rfBlank(value)) delete node[last];
+  else node[last] = value;
+}
+
+/** Turns a control's value into the JSON shape its field expects. */
+function rfParse(type, raw) {
+  if (type === 'lines') return raw.split('\n').map(s => s.trim()).filter(Boolean);
+  if (type === 'tags')  return raw.split(',').map(s => s.trim()).filter(Boolean);
+  return raw.trim() === '' ? '' : raw;
+}
+
+/** Deep copy with blanks, empty lists and emptied objects dropped, so a
+ *  half-filled form never leaks `{}` entries into the saved resume. */
+function rfClean(value) {
+  if (Array.isArray(value)) {
+    return value.map(rfClean).filter(v => !rfBlank(v) && !rfEmptyObject(v));
+  }
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const [key, raw] of Object.entries(value)) {
+      const clean = rfClean(raw);
+      if (rfBlank(clean) || rfEmptyObject(clean)) continue;
+      out[key] = clean;
+    }
+    return out;
+  }
+  return typeof value === 'string' ? value.trim() : value;
+}
+
+function rfEmptyObject(v) {
+  return v != null && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0;
+}
+
+/** A pasted profile URL lands in `username`; split it back apart and fill in
+ *  the URL for a bare username on a network we know. */
+function rfFillProfileUrls(resume) {
+  for (const profile of resume?.basics?.profiles || []) {
+    if (/^https?:\/\//i.test(profile.username || '')) {
+      profile.url ||= profile.username;
+      profile.username = profile.url.replace(/\/+$/, '').split('/').pop();
+    }
+    if (profile.url || !profile.username) continue;
+    const base = RF_PROFILE_URLS[String(profile.network || '').toLowerCase().replace(/\s+/g, '')];
+    if (base) profile.url = base + String(profile.username).replace(/^[@/]+/, '');
+  }
+  return resume;
+}
+
+function rfDates(start, end) {
+  if (!start && !end) return '';
+  return `${start || '?'} → ${end || 'present'}`;
+}
+
+// ── The component ──────────────────────────────────────────────────────────
+// Entry identity lives in a WeakMap keyed by the item object itself, so a
+// collapsed/expanded entry keeps its state across reorders and removals, where
+// an array index would silently point at its neighbour.
+const _rfIds = new WeakMap();
+let _rfIdSeq = 0;
+function rfId(item) {
+  if (!_rfIds.has(item)) _rfIds.set(item, `rf${++_rfIdSeq}`);
+  return _rfIds.get(item);
+}
+
+function createResumeForm(host, onChange) {
+  const root = document.createElement('div');
+  root.className = 'rf';
+  host.replaceChildren(root);
+
+  let data = {};
+  const openSections = new Set(['basics', 'work']);
+  const openEntries  = new Set();
+  const notify = debounce(() => onChange?.(rfFillProfileUrls(rfClean(data))), 250);
+
+  // ── HTML ──
+  function controlHtml(field, path) {
+    const value = rfGet(data, path);
+    const attrs = `data-path="${path}" data-ftype="${field.type || 'text'}"`;
+    const ph = `placeholder="${escHtml(field.ph || (field.type === 'date' ? 'YYYY-MM' : ''))}"`;
+
+    if (field.type === 'textarea' || field.type === 'lines') {
+      const text = field.type === 'lines' ? (Array.isArray(value) ? value.join('\n') : '') : value;
+      return `<textarea class="form-textarea" rows="${field.rows || 3}" ${attrs} ${ph}>${escHtml(text)}</textarea>`;
+    }
+    const text = field.type === 'tags' ? (Array.isArray(value) ? value.join(', ') : '') : value;
+    if (!field.suggest) return `<input class="form-input" ${attrs} ${ph} value="${escHtml(text)}">`;
+    // A datalist suggests the usual answers without rejecting anything else.
+    const listId = `rf-dl-${path.replace(/\W/g, '-')}`;
+    return `<input class="form-input" ${attrs} ${ph} list="${listId}" value="${escHtml(text)}">
+      <datalist id="${listId}">${field.suggest.map(s => `<option value="${escHtml(s)}">`).join('')}</datalist>`;
+  }
+
+  function fieldHtml(field, base) {
+    const hint = field.hint ? ` <small class="rf-hint">(${escHtml(field.hint)})</small>` : '';
+    return `<div class="form-group">
+      <label class="form-label">${escHtml(field.label)}${hint}</label>
+      ${controlHtml(field, base ? `${base}.${field.key}` : field.key)}
+    </div>`;
+  }
+
+  // Two `half` fields share a row; everything else runs full width.
+  function fieldsHtml(fields, base) {
+    let html = '', pair = [];
+    const flush = () => {
+      if (pair.length) html += pair.length === 2 ? `<div class="form-row">${pair.join('')}</div>` : pair[0];
+      pair = [];
+    };
+    for (const field of fields) {
+      if (!field.half) { flush(); html += fieldHtml(field, base); continue; }
+      pair.push(fieldHtml(field, base));
+      if (pair.length === 2) flush();
+    }
+    flush();
+    return `<div class="rf-fields">${html}</div>`;
+  }
+
+  function entryHtml(section, item, index) {
+    const id = rfId(item);
+    const title = section.itemTitle(item);
+    return `<div class="rf-entry${openEntries.has(id) ? ' open' : ''}" data-entry="${id}" draggable="true">
+      <div class="rf-entry-head">
+        <span class="rf-entry-grip" title="Drag to reorder">⠿</span>
+        <span class="rf-entry-label${title ? '' : ' empty'}">${escHtml(title || section.blank)}</span>
+        <span class="rf-entry-sub">${escHtml(section.itemSub?.(item))}</span>
+        <button class="rf-entry-del" title="Remove">✕</button>
+      </div>
+      <div class="rf-entry-body">${fieldsHtml(section.fields, `${section.path}.${index}`)}</div>
+    </div>`;
+  }
+
+  function sectionHtml(section) {
+    let count = '', body;
+    if (section.kind === 'array') {
+      const items = rfList(section);
+      count = `<span class="rf-count">${items.length}</span>`;
+      body = `<div class="rf-entries">${items.map((item, i) => entryHtml(section, item, i)).join('')}</div>
+        ${items.length ? '' : '<div class="rf-empty">Nothing here yet.</div>'}
+        <button class="btn btn-secondary btn-sm mt-12" data-add="1">+ ${escHtml(section.add)}</button>`;
+    } else {
+      body = fieldsHtml(section.fields, section.path);
+    }
+    return `<div class="rf-section${openSections.has(section.path) ? ' open' : ''}" data-section="${section.path}">
+      <div class="rf-section-head">
+        <span class="rf-chevron">▶</span>
+        <span>${section.icon}</span>
+        <span class="rf-section-title">${escHtml(section.title)}</span>
+        ${count}
+      </div>
+      <div class="rf-section-body">${body}</div>
+    </div>`;
+  }
+
+  function render() {
+    root.innerHTML = RF_SECTIONS.map(sectionHtml).join('');
+  }
+
+  // ── Lookups shared by the event handlers ──
+  /** The section's array, tolerating a resume where that key holds junk. */
+  function rfList(section) {
+    const value = rfGet(data, section.path);
+    return Array.isArray(value) ? value : [];
+  }
+  const sectionOf = (el) => RF_SECTIONS.find(s => s.path === el.closest('.rf-section')?.dataset.section);
+  const indexOf   = (entry) => [...entry.parentElement.children].indexOf(entry);
+
+  // ── Events — delegated, so a re-render needs no rebinding ──
+  root.addEventListener('input', (e) => {
+    const { path, ftype } = e.target.dataset;
+    if (!path) return;
+    rfSet(data, path, rfParse(ftype, e.target.value));
+    refreshEntryHead(e.target);
+    notify();
+  });
+
+  // Keeps a collapsed entry's summary line in step with the fields inside it.
+  function refreshEntryHead(el) {
+    const entry = el.closest('.rf-entry');
+    if (!entry) return;
+    const section = sectionOf(entry);
+    const item = rfList(section)[indexOf(entry)] || {};
+    const title = section.itemTitle(item);
+    const label = entry.querySelector('.rf-entry-label');
+    label.textContent = title || section.blank;
+    label.classList.toggle('empty', !title);
+    entry.querySelector('.rf-entry-sub').textContent = section.itemSub?.(item) || '';
+  }
+
+  root.addEventListener('click', (e) => {
+    const section = sectionOf(e.target);
+    if (!section) return;
+
+    if (e.target.closest('.rf-entry-del')) {
+      const items = rfList(section);
+      items.splice(indexOf(e.target.closest('.rf-entry')), 1);
+      rfSet(data, section.path, items);
+      render(); notify();
+      return;
+    }
+    if (e.target.closest('[data-add]')) {
+      const item = {};
+      rfSet(data, section.path, [...rfList(section), item]);
+      openSections.add(section.path);
+      openEntries.add(rfId(item));
+      render(); notify();
+      root.querySelector(`[data-entry="${rfId(item)}"] .form-input`)?.focus();
+      return;
+    }
+    const entryHead = e.target.closest('.rf-entry-head');
+    if (entryHead) {
+      const entry = entryHead.closest('.rf-entry');
+      const id = entry.dataset.entry;
+      openEntries.has(id) ? openEntries.delete(id) : openEntries.add(id);
+      entry.classList.toggle('open');
+      return;
+    }
+    if (e.target.closest('.rf-section-head')) {
+      const open = openSections.has(section.path);
+      open ? openSections.delete(section.path) : openSections.add(section.path);
+      e.target.closest('.rf-section').classList.toggle('open', !open);
+    }
+  });
+
+  // ── Reordering entries ──
+  root.addEventListener('dragstart', (e) => {
+    const entry = e.target.closest?.('.rf-entry');
+    // Dragging from inside an opened entry is a text selection, not a reorder.
+    if (!entry || e.target.closest('.rf-entry-body')) { e.preventDefault(); return; }
+    entry.classList.add('dragging');
+  });
+  root.addEventListener('dragover', (e) => {
+    const list = e.target.closest?.('.rf-entries');
+    const dragging = root.querySelector('.rf-entry.dragging');
+    if (!list || !dragging || !list.contains(dragging)) return;
+    e.preventDefault();
+    const after = getDragAfter(list, e.clientY, '.rf-entry');
+    if (after == null) list.appendChild(dragging);
+    else list.insertBefore(dragging, after);
+  });
+  root.addEventListener('dragend', () => {
+    const dragging = root.querySelector('.rf-entry.dragging');
+    if (!dragging) return;
+    dragging.classList.remove('dragging');
+    const order = [...dragging.parentElement.children].map(el => el.dataset.entry);
+    rfList(sectionOf(dragging)).sort((a, b) => order.indexOf(rfId(a)) - order.indexOf(rfId(b)));
+    render(); notify();
+  });
+
+  render();
+
+  return {
+    /** Replaces everything on show; the form works on a copy, never the caller's object. */
+    setResume(resume) {
+      data = resume && typeof resume === 'object' ? structuredClone(resume) : {};
+      render();
+    },
+    getResume() { return rfFillProfileUrls(rfClean(data)); },
+    setAllOpen(open) {
+      openSections.clear();
+      openEntries.clear();
+      if (open) {
+        for (const section of RF_SECTIONS) {
+          openSections.add(section.path);
+          if (section.kind === 'array') rfList(section).forEach(item => openEntries.add(rfId(item)));
+        }
+      }
+      render();
+    },
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1450,7 +1935,8 @@ const Router = {
 const Onboarding = {
   method: null,
   _onbEditor: null,
-  _wizardStep: 1,
+  _form: null,
+  _built: null,
 
   show() {
     // reset selection
@@ -1471,9 +1957,7 @@ const Onboarding = {
       if (method === 'upload') document.getElementById('onb-file-input').click();
     } else if (method === 'build') {
       document.getElementById('onb-method-build').classList.remove('hidden');
-      this._wizardStep = 1;
-      this._renderWizardProgress();
-      this._showWizardStep(1);
+      this._initForm();
     }
   },
 
@@ -1542,164 +2026,36 @@ const Onboarding = {
     this._validateEditor();
   },
 
-  // ── WIZARD ──
-  _renderWizardProgress() {
-    const labels = ['Basics', 'Experience', 'Education', 'Skills'];
-    const prog = document.getElementById('wizard-progress');
-    prog.innerHTML = labels.map((l, i) => {
-      const n = i + 1;
-      const cls = n < this._wizardStep ? 'done' : n === this._wizardStep ? 'active' : '';
-      return (i > 0 ? `<div class="wizard-step-line${n <= this._wizardStep ? ' done' : ''}"></div>` : '') +
-        `<div class="wizard-step-dot ${cls}" title="${l}">${n < this._wizardStep ? '✓' : n}</div>`;
-    }).join('');
-  },
-
-  _showWizardStep(n) {
-    document.querySelectorAll('.wizard-step').forEach((el, i) => {
-      el.classList.toggle('active', i + 1 === n);
+  // ── BUILD FROM SCRATCH ──
+  _initForm() {
+    if (this._form) return;
+    this._form = createResumeForm(document.getElementById('onb-form-container'), (resume) => {
+      this._built = resume;
+      this._validateForm();
     });
+    this._built = {};
   },
 
-  wizardNext(fromStep) {
-    document.getElementById('wizard-error').classList.add('hidden');
-    if (fromStep === 1) {
-      if (!document.getElementById('b-name').value.trim()) {
-        this._showErr('Name is required.'); return;
-      }
+  async _validateForm() {
+    const result = await API.validate(this._built || {});
+    document.getElementById('onb-form-validation').innerHTML =
+      renderValidationBlock(result, 'Valid JSON Resume — ready to save');
+  },
+
+  loadExampleForm() {
+    this._initForm();
+    this._built = structuredClone(EXAMPLE_RESUME);
+    this._form.setResume(this._built);
+    this._validateForm();
+  },
+
+  async saveForm() {
+    const resume = this._form?.getResume() || {};
+    const result = await API.validate(resume);
+    if (!result.valid) {
+      alert('Please fix these problems before saving:\n\n' + validationAlertText(result));
+      return;
     }
-    if (fromStep === 2) {
-      if (document.getElementById('work-entries').children.length === 0) {
-        this.addWork(); // add at least one empty entry hint
-      }
-    }
-    this._wizardStep = fromStep + 1;
-    this._renderWizardProgress();
-    this._showWizardStep(this._wizardStep);
-  },
-
-  wizardBack(fromStep) {
-    this._wizardStep = fromStep - 1;
-    this._renderWizardProgress();
-    this._showWizardStep(this._wizardStep);
-  },
-
-  _showErr(msg) {
-    const el = document.getElementById('wizard-error');
-    el.textContent = msg;
-    el.classList.remove('hidden');
-  },
-
-  addWork() {
-    const id = uid();
-    const container = document.getElementById('work-entries');
-    const div = document.createElement('div');
-    div.className = 'entry-card'; div.dataset.entryId = id;
-    div.innerHTML = `
-      <button class="entry-remove" onclick="this.closest('.entry-card').remove()" title="Remove">✕</button>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Company *</label><input class="form-input" name="company" placeholder="Acme Corp"></div>
-        <div class="form-group"><label class="form-label">Position *</label><input class="form-input" name="position" placeholder="Software Engineer"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Start Date</label><input class="form-input" name="startDate" placeholder="2020-01"></div>
-        <div class="form-group"><label class="form-label">End Date <small style="color:var(--text-muted)">(blank = present)</small></label><input class="form-input" name="endDate" placeholder="2023-06"></div>
-      </div>
-      <div class="form-group"><label class="form-label">Summary</label><input class="form-input" name="summary" placeholder="Brief description of role"></div>
-      <div class="form-group"><label class="form-label">Key Highlights <small style="color:var(--text-muted)">(one per line)</small></label><textarea class="form-textarea" name="highlights" rows="3" placeholder="Reduced load time by 40%&#10;Led team of 5 engineers"></textarea></div>
-    `;
-    container.appendChild(div);
-  },
-
-  addEdu() {
-    const container = document.getElementById('edu-entries');
-    const div = document.createElement('div');
-    div.className = 'entry-card';
-    div.innerHTML = `
-      <button class="entry-remove" onclick="this.closest('.entry-card').remove()" title="Remove">✕</button>
-      <div class="form-group"><label class="form-label">Institution *</label><input class="form-input" name="institution" placeholder="MIT"></div>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Degree</label>
-          <select class="form-select" name="studyType"><option>Bachelor</option><option>Master</option><option>PhD</option><option>Diploma</option><option>Certificate</option><option>Other</option></select>
-        </div>
-        <div class="form-group"><label class="form-label">Field of Study</label><input class="form-input" name="area" placeholder="Computer Science"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Start Date</label><input class="form-input" name="startDate" placeholder="2018-09"></div>
-        <div class="form-group"><label class="form-label">End Date</label><input class="form-input" name="endDate" placeholder="2022-06"></div>
-      </div>
-    `;
-    container.appendChild(div);
-  },
-
-  addSkill() {
-    const container = document.getElementById('skill-entries');
-    const div = document.createElement('div');
-    div.className = 'entry-card';
-    div.innerHTML = `
-      <button class="entry-remove" onclick="this.closest('.entry-card').remove()" title="Remove">✕</button>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Category Name</label><input class="form-input" name="skillName" placeholder="Programming Languages"></div>
-        <div class="form-group"><label class="form-label">Keywords <small style="color:var(--text-muted)">(comma-separated)</small></label><input class="form-input" name="keywords" placeholder="JavaScript, TypeScript, Python"></div>
-      </div>
-    `;
-    container.appendChild(div);
-  },
-
-  // A wizard profile field takes either a bare username or a pasted URL; the
-  // renderer only needs the URL, but JSON Resume wants the username too.
-  _profile(network, fieldId, baseUrl) {
-    const raw = document.getElementById(fieldId).value.trim();
-    if (!raw) return null;
-    const url = /^https?:\/\//i.test(raw) ? raw : baseUrl + raw.replace(/^\/+/, '');
-    const username = url.replace(/\/+$/, '').split('/').pop();
-    return { network, username, url };
-  },
-
-  wizardBuild() {
-    document.getElementById('wizard-error').classList.add('hidden');
-    const name = document.getElementById('b-name').value.trim();
-    if (!name) { this._showErr('Name is required.'); this.wizardBack(4); return; }
-
-    const profiles = [
-      this._profile('GitHub', 'b-github', 'https://github.com/'),
-      this._profile('LinkedIn', 'b-linkedin', 'https://www.linkedin.com/in/'),
-    ].filter(Boolean);
-
-    const resume = {
-      basics: {
-        name,
-        label: document.getElementById('b-label').value.trim() || undefined,
-        email: document.getElementById('b-email').value.trim() || undefined,
-        phone: document.getElementById('b-phone').value.trim() || undefined,
-        url:   document.getElementById('b-url').value.trim() || undefined,
-        summary: document.getElementById('b-summary').value.trim() || undefined,
-        location: {
-          city: document.getElementById('b-city').value.trim() || undefined,
-          countryCode: document.getElementById('b-country').value.trim() || undefined,
-        },
-        profiles: profiles.length ? profiles : undefined,
-      },
-      work: [...document.getElementById('work-entries').querySelectorAll('.entry-card')].map(card => ({
-        name:      card.querySelector('[name=company]').value.trim(),
-        position:  card.querySelector('[name=position]').value.trim(),
-        startDate: card.querySelector('[name=startDate]').value.trim() || undefined,
-        endDate:   card.querySelector('[name=endDate]').value.trim() || undefined,
-        summary:   card.querySelector('[name=summary]').value.trim() || undefined,
-        highlights: card.querySelector('[name=highlights]').value.split('\n').map(s => s.trim()).filter(Boolean),
-      })).filter(w => w.name),
-      education: [...document.getElementById('edu-entries').querySelectorAll('.entry-card')].map(card => ({
-        institution: card.querySelector('[name=institution]').value.trim(),
-        studyType:   card.querySelector('[name=studyType]').value,
-        area:        card.querySelector('[name=area]').value.trim() || undefined,
-        startDate:   card.querySelector('[name=startDate]').value.trim() || undefined,
-        endDate:     card.querySelector('[name=endDate]').value.trim() || undefined,
-      })).filter(e => e.institution),
-      skills: [...document.getElementById('skill-entries').querySelectorAll('.entry-card')].map(card => ({
-        name:     card.querySelector('[name=skillName]').value.trim(),
-        keywords: card.querySelector('[name=keywords]').value.split(',').map(s => s.trim()).filter(Boolean),
-      })).filter(s => s.name),
-    };
-
     Store.setMaster(resume);
     Router.go('#dashboard');
   },
@@ -1899,8 +2255,10 @@ const _configPreviewDebounced = debounce(() => AppDetail._loadPreview(), 800);
 
 const AppDetail = {
   _id: null,
-  _tab: 'edit',
+  _tab: 'form',
   _editor: null,
+  _form: null,
+  _formJson: null,
   _sectionList: null,
   _previewLoaded: false,
   _chatHistory: [],
@@ -1928,8 +2286,9 @@ const AppDetail = {
     this._chatOpen = false;
     document.getElementById('chat-sidebar').classList.remove('open');
 
+    this._formJson = null;
     this._loadPreview();
-    this.setTab('edit');
+    this.setTab('form');
   },
 
   setTab(tab) {
@@ -1939,11 +2298,12 @@ const AppDetail = {
       t.classList.toggle('active', t.dataset.tab === tab);
     });
     // hide all views
-    ['edit','configure','info'].forEach(v => {
+    ['form','edit','configure','info'].forEach(v => {
       document.getElementById(`app-view-${v}`)?.classList.remove('active');
     });
     document.getElementById(`app-view-${tab}`)?.classList.add('active');
 
+    if (tab === 'form')      this._initForm();
     if (tab === 'edit')      this._initEdit();
     if (tab === 'configure') this._initConfigure();
     if (tab === 'info')      this._renderInfo();
@@ -1968,39 +2328,67 @@ const AppDetail = {
     }
   },
 
+  // Both editing tabs write through this editor, so it has to exist before
+  // either of them is opened — not just the JSON one.
+  _ensureEditor() {
+    if (this._editor) return;
+    this._editor = monaco.editor.create(document.getElementById('app-editor-container'), {
+      language: 'json', theme: 'vs', automaticLayout: true,
+      minimap: { enabled: false }, scrollBeyondLastLine: false,
+      fontSize: 13, tabSize: 2,
+    });
+    this._editor.onDidChangeModelContent(debounce(() => {
+      this._validateEdit();
+      try {
+        const resume = JSON.parse(this._editor.getValue());
+        Store.updateApp(this._id, { tailoredResume: resume });
+        _configPreviewDebounced();
+      } catch {}
+    }, 800));
+  },
+
   _initEdit() {
     const app = Store.getApp(this._id);
     if (!app) return;
-    const json = JSON.stringify(app.tailoredResume, null, 2);
-    if (!this._editor) {
-      this._editor = monaco.editor.create(document.getElementById('app-editor-container'), {
-        language: 'json', theme: 'vs', automaticLayout: true,
-        minimap: { enabled: false }, scrollBeyondLastLine: false,
-        fontSize: 13, tabSize: 2,
-      });
-      this._editor.onDidChangeModelContent(debounce(() => {
-        this._validateEdit();
-        try {
-          const resume = JSON.parse(this._editor.getValue());
-          Store.updateApp(this._id, { tailoredResume: resume });
-          _configPreviewDebounced();
-        } catch {}
-      }, 800));
-    }
-    this._editor.setValue(json);
+    this._ensureEditor();
+    this._editor.setValue(JSON.stringify(app.tailoredResume, null, 2));
     this._editor.layout();
     document.getElementById('app-edit-validation').textContent = 'Edit the resume JSON. Click Save when done.';
   },
 
+  // Feeding the form's result through the editor keeps one persistence path:
+  // the editor's own change handler saves and refreshes the preview.
+  _initForm() {
+    const app = Store.getApp(this._id);
+    if (!app) return;
+    this._ensureEditor();
+    if (!this._form) {
+      this._form = createResumeForm(document.getElementById('app-form-container'), (resume) => {
+        this._formJson = JSON.stringify(resume);
+        this._editor.setValue(JSON.stringify(resume, null, 2));
+      });
+    }
+    const json = JSON.stringify(app.tailoredResume || {});
+    if (json !== this._formJson) {
+      this._form.setResume(app.tailoredResume || {});
+      this._formJson = json;
+    }
+  },
+
+  formExpand(open) { this._form?.setAllOpen(open); },
+
   async _validateEdit() {
-    const val = document.getElementById('app-edit-validation');
+    let html;
     try {
       const resume = JSON.parse(this._editor.getValue());
       const result = await API.validate(resume);
-      val.innerHTML = renderValidationInline(result);
+      html = renderValidationInline(result);
     } catch(e) {
-      val.innerHTML = `<span style="color:var(--red)">✗ Not valid JSON: ${escHtml(e.message)}</span>`;
+      html = `<span style="color:var(--red)">✗ Not valid JSON: ${escHtml(e.message)}</span>`;
     }
+    // Both editing tabs show the same verdict.
+    document.getElementById('app-edit-validation').innerHTML = html;
+    document.getElementById('app-form-msg').innerHTML = html;
   },
 
   async saveEdit() {
@@ -2268,6 +2656,8 @@ const SettingsPage = {
 // ═══════════════════════════════════════════════════════════════════════════
 const MasterResumePage = {
   _editor: null,
+  _form: null,
+  _formJson: null,
   _sectionList: null,
 
   show() {
@@ -2286,7 +2676,8 @@ const MasterResumePage = {
     this._editor.setValue(master ? JSON.stringify(master, null, 2) : '');
     this._editor.layout();
     document.getElementById('master-validation').textContent = 'Your base resume — used as the foundation for all AI tailoring.';
-    this.setTab('edit');
+    this._formJson = null;
+    this.setTab('form');
     this._loadPreview();
   },
 
@@ -2294,12 +2685,31 @@ const MasterResumePage = {
     document.querySelectorAll('#pg-resume .app-mode-tab').forEach(t => {
       t.classList.toggle('active', t.dataset.tab === tab);
     });
-    ['edit','configure'].forEach(v => {
+    ['form','edit','configure'].forEach(v => {
       document.getElementById(`master-view-${v}`)?.classList.toggle('active', v === tab);
     });
+    if (tab === 'form')      this._initForm();
     if (tab === 'edit')      this._editor?.layout();
     if (tab === 'configure') this._initConfigure();
   },
+
+  // The form edits the same resume as the JSON tab. Writing its result into the
+  // editor means validation, the preview and Save all keep working unchanged.
+  _initForm() {
+    if (!this._form) {
+      this._form = createResumeForm(document.getElementById('master-form-container'), (resume) => {
+        this._formJson = JSON.stringify(resume);
+        this._editor.setValue(JSON.stringify(resume, null, 2));
+      });
+    }
+    const json = JSON.stringify(this._currentResume() || {});
+    if (json !== this._formJson) {
+      this._form.setResume(JSON.parse(json));
+      this._formJson = json;
+    }
+  },
+
+  formExpand(open) { this._form?.setAllOpen(open); },
 
   _initConfigure() {
     const s = Store.getMasterConfig();
@@ -2366,14 +2776,17 @@ const MasterResumePage = {
   },
 
   async _validate() {
-    const val = document.getElementById('master-validation');
+    let html;
     try {
       const resume = JSON.parse(this._editor.getValue());
       const result = await API.validate(resume);
-      val.innerHTML = renderValidationInline(result);
+      html = renderValidationInline(result);
     } catch(e) {
-      val.innerHTML = `<span style="color:var(--red)">✗ Not valid JSON: ${escHtml(e.message)}</span>`;
+      html = `<span style="color:var(--red)">✗ Not valid JSON: ${escHtml(e.message)}</span>`;
     }
+    // Both editing tabs show the same verdict.
+    document.getElementById('master-validation').innerHTML = html;
+    document.getElementById('master-form-msg').innerHTML = html;
   },
 
   // Renders the editor contents — not the saved copy — so unsaved edits show up.
