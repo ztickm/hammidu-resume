@@ -2,20 +2,19 @@
  * Store access for the MCP server.
  *
  * Reads and writes the same bun:sqlite key-value store Flouka Studio uses
- * (packages/flouka-studio/storage.ts), so a resume edited here shows up in the
- * web app and vice versa. The master resume is read-write; applications
- * (`flouka_apps`) are deliberately read-only — the SPA owns that list.
+ * (packages/flouka-studio/storage.ts), so a resume written here opens in the
+ * web app and vice versa — both the master resume and the application list.
  *
- * Every master write snapshots the previous value first. The browser keeps a
- * write-through cache of `flouka_master`, so an open tab can overwrite what we
- * just wrote; the snapshot makes that recoverable instead of fatal.
+ * Every write snapshots the previous value first. The browser keeps a
+ * write-through cache of these keys, so an open tab can overwrite what we just
+ * wrote; the snapshot makes that recoverable instead of fatal.
  */
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { getAll, setValue, STORE_PATH } from "flouka-studio/storage";
+import { getAll, setValue, STORE_PATH, type StoreKey } from "flouka-studio/storage";
 import type { ResumeSchema } from "json-resume-types";
-import type { GenerateConfig } from "xebec-render";
+import type { GenerateConfig, SectionName } from "xebec-render";
 
 // ---------------------------------------------------------------------------
 // Shapes the SPA persists (see public/index.html — Store / AppsPage.submit)
@@ -27,6 +26,17 @@ export interface JDAnalysisLike {
   [key: string]: unknown;
 }
 
+/**
+ * An application's config is *settings*-shaped, not `GenerateConfig`-shaped: it
+ * carries an extra `removedSections` that only the SPA uses, to remember which
+ * sections were hidden so its layout editor can offer them back. The web app
+ * strips it via `appRenderConfig()` before rendering. Writing it means the
+ * application we create is fully editable rather than half-initialised.
+ */
+export interface AppConfig extends GenerateConfig {
+  removedSections?: SectionName[];
+}
+
 export interface StoredApplication {
   id: string;
   name?: string;
@@ -34,12 +44,18 @@ export interface StoredApplication {
   jd?: string;
   jdAnalysis?: JDAnalysisLike | null;
   tailoredResume?: ResumeSchema;
-  config?: GenerateConfig;
+  chatHistory?: unknown[];
+  config?: AppConfig;
 }
 
 /** Warning appended to every mutating tool result — the SPA won't notice our write. */
 export const RELOAD_NOTICE =
-  "If Flouka Studio is open in a browser, reload it: the page caches the master resume and would otherwise show stale data (and could overwrite this change on its next edit).";
+  "If Flouka Studio is open in a browser, reload it: the page caches this data and would otherwise show stale state (and could overwrite this change on its next edit).";
+
+/** Where the SPA serves an application from, so the model can hand over a link. */
+export function applicationUrl(id: string): string {
+  return `http://localhost:3020/#app/${id}`;
+}
 
 // ---------------------------------------------------------------------------
 // Reads
@@ -203,23 +219,196 @@ export function mergeResumePatch(
 const BACKUP_DIR = resolve(dirname(STORE_PATH), "backups");
 
 /**
- * Copy the current master resume to a timestamped file.
+ * Copy a store key's current value to a timestamped file.
  * Returns the backup path, or null when there was nothing stored yet.
  */
-export function backupMaster(): string | null {
-  const current = readMaster();
-  if (!current) return null;
+export function backupKey(key: StoreKey): string | null {
+  const current = getAll()[key];
+  if (current == null) return null;
 
   mkdirSync(BACKUP_DIR, { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const path = resolve(BACKUP_DIR, `flouka_master_${stamp}.json`);
+  const path = resolve(BACKUP_DIR, `${key}_${stamp}.json`);
   writeFileSync(path, JSON.stringify(current, null, 2));
   return path;
 }
 
 /** Snapshot, then overwrite `flouka_master`. Callers validate first. */
 export function writeMaster(resume: ResumeSchema): { backupPath: string | null } {
-  const backupPath = backupMaster();
+  const backupPath = backupKey("flouka_master");
   setValue("flouka_master", resume);
   return { backupPath };
+}
+
+// ---------------------------------------------------------------------------
+// Application writes
+// ---------------------------------------------------------------------------
+
+/**
+ * Every section the SPA knows about, in its own default order.
+ *
+ * Mirrors `ALL_SECTIONS` in public/index.html — which is deliberately a
+ * different order from xebec-render's `DEFAULT_SECTION_ORDER`. An application
+ * config belongs to the web UI, so it follows the web UI's list.
+ */
+const ALL_SECTIONS: SectionName[] = [
+  "summary",
+  "work",
+  "education",
+  "volunteer",
+  "skills",
+  "languages",
+  "awards",
+  "publications",
+  "projects",
+  "certificates",
+  "interests",
+  "references",
+];
+
+/** Layout defaults new applications inherit — `flouka_settings`, as the SPA reads it. */
+function readSettings(): AppConfig {
+  const stored = (getAll().flouka_settings ?? {}) as Record<string, unknown>;
+  return {
+    sectionOrder: (stored.sectionOrder as SectionName[] | undefined) ?? [...ALL_SECTIONS],
+    pageBreakBefore: (stored.pageBreakBefore as SectionName[] | undefined) ?? [],
+    pageBreakAfter: (stored.pageBreakAfter as SectionName[] | undefined) ?? [],
+    removedSections: (stored.removedSections as SectionName[] | undefined) ?? [],
+    baseFontSize: (stored.baseFontSize as number | undefined) ?? 12,
+    lineHeight: (stored.lineHeight as number | undefined) ?? 1.5,
+    locale: (stored.locale as AppConfig["locale"]) ?? "en",
+  };
+}
+
+/**
+ * Build an application config: the stored settings, with the caller's overrides
+ * on top. A caller who trims `sectionOrder` gets the sections they dropped
+ * recorded in `removedSections`, so the web UI's layout editor offers them back
+ * instead of losing them.
+ */
+export function buildAppConfig(overrides: AppConfig | undefined): AppConfig {
+  const config: AppConfig = { ...readSettings(), ...(overrides ?? {}) };
+
+  if (overrides?.sectionOrder && !overrides.removedSections) {
+    const kept = new Set(overrides.sectionOrder);
+    config.removedSections = ALL_SECTIONS.filter((section) => !kept.has(section));
+  }
+
+  return config;
+}
+
+/** The SPA's id scheme (public/index.html — `uid()`), so ids look native. */
+function uid(): string {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+/** The SPA's naming scheme (public/index.html — `deriveAppName()`). */
+function deriveAppName(resume: ResumeSchema, analysis: JDAnalysisLike | null): string {
+  const name = resume.basics?.name || "Resume";
+  const role = analysis?.role_title || "";
+  const company = analysis?.company || "";
+  if (role && company) return `${name} — ${role} @ ${company}`;
+  if (company) return `${name} @ ${company}`;
+  if (role) return `${name} — ${role}`;
+  return name;
+}
+
+export interface CreateApplicationInput {
+  tailoredResume: ResumeSchema;
+  jd?: string;
+  company?: string;
+  roleTitle?: string;
+  name?: string;
+  config?: AppConfig;
+}
+
+/**
+ * Add an application to `flouka_apps`, newest first — `Store.addApp` in the SPA
+ * unshifts, and the list page renders in stored order.
+ */
+export function createApplication(input: CreateApplicationInput): {
+  app: StoredApplication;
+  backupPath: string | null;
+} {
+  const analysis: JDAnalysisLike | null =
+    input.company || input.roleTitle
+      ? { company: input.company ?? "", role_title: input.roleTitle ?? "" }
+      : null;
+
+  const app: StoredApplication = {
+    id: uid(),
+    name: input.name || deriveAppName(input.tailoredResume, analysis),
+    createdAt: new Date().toISOString(),
+    jd: input.jd ?? "",
+    jdAnalysis: analysis,
+    tailoredResume: input.tailoredResume,
+    chatHistory: [],
+    config: buildAppConfig(input.config),
+  };
+
+  const backupPath = backupKey("flouka_apps");
+  setValue("flouka_apps", [app, ...readApplications()]);
+  return { app, backupPath };
+}
+
+export interface UpdateApplicationInput {
+  tailoredResume?: ResumeSchema;
+  jd?: string;
+  company?: string;
+  roleTitle?: string;
+  name?: string;
+  config?: AppConfig;
+}
+
+/** Patch one application in place, leaving the rest of the list untouched. */
+export function updateApplication(
+  id: string,
+  patch: UpdateApplicationInput
+): { app: StoredApplication; changed: string[]; backupPath: string | null } {
+  const apps = readApplications();
+  const index = apps.findIndex((app) => app.id === id);
+  if (index === -1) {
+    throw new Error(`No application with id "${id}". Call list_applications to see the stored ids.`);
+  }
+
+  const existing = apps[index]!;
+  const next: StoredApplication = { ...existing };
+  const changed: string[] = [];
+
+  if (patch.tailoredResume) {
+    next.tailoredResume = patch.tailoredResume;
+    changed.push("tailoredResume");
+  }
+  if (patch.jd !== undefined) {
+    next.jd = patch.jd;
+    changed.push("jd");
+  }
+  if (patch.company !== undefined || patch.roleTitle !== undefined) {
+    next.jdAnalysis = {
+      ...(existing.jdAnalysis ?? {}),
+      company: patch.company ?? existing.jdAnalysis?.company ?? "",
+      role_title: patch.roleTitle ?? existing.jdAnalysis?.role_title ?? "",
+    };
+    changed.push("jdAnalysis");
+  }
+  if (patch.config) {
+    next.config = { ...(existing.config ?? buildAppConfig(undefined)), ...patch.config };
+    changed.push("config");
+  }
+  // An explicit name wins; otherwise re-derive it when the company/role moved.
+  if (patch.name) {
+    next.name = patch.name;
+    changed.push("name");
+  } else if (changed.includes("jdAnalysis") && next.tailoredResume) {
+    next.name = deriveAppName(next.tailoredResume, next.jdAnalysis ?? null);
+  }
+
+  if (changed.length === 0) {
+    throw new Error("Patch contained no recognised fields — nothing was written.");
+  }
+
+  const backupPath = backupKey("flouka_apps");
+  apps[index] = next;
+  setValue("flouka_apps", apps);
+  return { app: next, changed, backupPath };
 }

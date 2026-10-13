@@ -15,7 +15,9 @@ import { MODEL_KEYS, DEFAULT_MODEL, type ModelKey, createChatModel } from "../ag
 import { getAll, setValue, isStoreKey } from "./storage.ts";
 
 const server = Bun.serve({
-  port: 3020,
+  // Overridable so a second instance can run against a different FLOUKA_DB_PATH
+  // (testing, or a scratch copy of the store) without fighting for the port.
+  port: Number(process.env.FLOUKA_PORT ?? 3020),
   async fetch(req: Request) {
     const url = new URL(req.url);
 

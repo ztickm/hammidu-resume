@@ -23,7 +23,7 @@ const server = new McpServer(
   { name: "flouka", version: "0.1.0" },
   {
     instructions:
-      "Resume tooling for Salim's JSON Resume pipeline. The master resume in the store is the only source of truth about his background — select and reframe from it, never invent entries, dates, tools or metrics. Tailor in your own context, then call render_resume_pdf to produce the real Harvard-template PDF (it embeds the source JSON so the result can be read back with extract_resume_from_pdf). Only update_master_resume and replace_master_resume write anything back; a resume tailored for one application should not be written to the master.",
+      "Resume tooling for Salim's JSON Resume pipeline. The master resume in the store is the only source of truth about his background — select and reframe from it, never invent entries, dates, tools or metrics. Tailor in your own context, then save the result with create_application so it is editable in the Flouka Studio web app, and render it with render_resume_pdf (which embeds the source JSON, so the PDF can be read back with extract_resume_from_pdf). A resume tailored for one application belongs in an application, never written over the master with update_master_resume or replace_master_resume.",
   }
 );
 

@@ -41,7 +41,7 @@ Run everything with `bun` — never `npm`/`node`. Scripts live in the root `pack
 | `bun run validator:validate <file>`             | Validate one JSON Resume file                                                        |
 | `bun run extract`                               | Extract JSON from `resumes/example_output.pdf`                                       |
 | `bun run mcp`                                   | Start the MCP server on stdio (normally launched by a client, not by hand)            |
-| `bun run mcp:smoke`                             | End-to-end test of the MCP server against a throwaway store — 33 checks               |
+| `bun run mcp:smoke`                             | End-to-end test of the MCP server against a throwaway store — 58 checks               |
 | `bun run agent:cli -- --resume <path> --jd "…"` | Run the full agent graph (A → B → C)                                                 |
 | `bun run agent:run`                             | Quick-run script; edit the JD/resume constants at the top of `packages/agent/run.ts` |
 
@@ -106,6 +106,14 @@ protocol.
   a resume unrenderable over MCP with no way through.
 - **`flouka-studio` now has an `exports` map** (`.` and `./storage`) so `flouka-mcp` can import the
   store by workspace name. Adding a new subpath import from that package means adding it there too.
+- **An application's `config` is settings-shaped, not `GenerateConfig`-shaped.** Records in
+  `flouka_apps` carry an extra `removedSections` that only the SPA's layout editor reads;
+  `appRenderConfig()` in `public/index.html` strips it before rendering. `createApplication` in
+  `packages/flouka-mcp/src/store.ts` inherits from `flouka_settings` and derives `removedSections`
+  from a trimmed `sectionOrder`, so a section the model drops stays restorable in the web UI.
+- **`ALL_SECTIONS` in the SPA and `DEFAULT_SECTION_ORDER` in xebec-render are different orders.**
+  The SPA's list leads with summary/work/education, xebec's with summary/education/work. An
+  application config follows the SPA's, a render default follows xebec's; don't "fix" one to match.
 
 ## Environment
 
@@ -120,6 +128,7 @@ the process cwd.
 | `AGENT_DB_PATH`     | no                  | LangGraph checkpoint SQLite path (default `:memory:`, CLI default `agent.sqlite`) |
 | `AGENT_PDF_DIR`     | no                  | Where the agent writes PDFs (default `resumes/`)                                  |
 | `FLOUKA_DB_PATH`    | no                  | Flouka Studio store path (default `packages/flouka-studio/data/flouka.sqlite`)    |
+| `FLOUKA_PORT`       | no                  | Flouka Studio web server port (default `3020`)                                    |
 
 ## Working style in this repo
 

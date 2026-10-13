@@ -14,14 +14,21 @@ prompt duplicated between here and `packages/agent`.
 | Tool | What it does |
 | --- | --- |
 | `get_master_resume` | The stored master JSON Resume + its layout config |
-| `list_applications` | Applications saved in Flouka Studio, summarised (read-only) |
+| `list_applications` | Applications saved in Flouka Studio, summarised |
 | `get_application` | One application's tailored resume, JD, analysis and config |
+| `create_application` | Save a tailored resume as an application, editable in the web app |
+| `update_application` | Revise a saved application's resume, layout or company/role |
 | `validate_resume` | Schema + practical checks on an inline resume, a `.json` file, or the master |
 | `extract_resume_from_pdf` | Read the embedded `resume.json` back out of a generated PDF |
 | `update_master_resume` | Patch the master resume section-wise |
 | `replace_master_resume` | Overwrite the master resume wholesale |
 | `render_resume_pdf` | → A4 PDF with the JSON embedded; returns the absolute path |
 | `render_resume_html` | → the same HTML the PDF is made from, without spawning Chromium |
+
+The intended flow for a job posting: `get_master_resume` → tailor in the model's own context →
+`create_application` (returns a `http://localhost:3020/#app/<id>` link) → `render_resume_pdf` with
+that `applicationId`. The application is then a first-class Flouka Studio record: editable in the
+form and Monaco tabs, refinable in the chat tab, re-downloadable from the web UI.
 
 Resources `flouka://master`, `flouka://master/config` and `flouka://applications` serve the same
 data for clients that browse resources. One prompt, `tailor-to-jd`, carries the editorial rules
@@ -80,8 +87,20 @@ Add `"env": { "FLOUKA_DB_PATH": "…" }` only if the store isn't at its default 
   but it also means a typo'd employer name creates a duplicate — hence the explicit callout.
   `replace_master_resume` is the only way to *delete* anything.
 
-- **Applications are read-only.** A resume rendered through MCP does not appear in Flouka Studio's
-  application list; the SPA owns `flouka_apps`.
+- **An application's `config` is settings-shaped, not `GenerateConfig`-shaped.** It carries an
+  extra `removedSections` that only the SPA's layout editor reads (`appRenderConfig()` strips it
+  before rendering). `create_application` inherits the rest from `flouka_settings` and derives
+  `removedSections` from a trimmed `sectionOrder`, so sections the model drops show up as
+  restorable in the web UI rather than vanishing. Writing a bare `GenerateConfig` here would
+  half-initialise the record.
+
+- **There is no `delete_application`.** Deleting is done in the web UI. `update_application`
+  revises one in place, so a correction doesn't need a duplicate.
+
+- **The base64 attachment is opt-in.** `render_resume_pdf` returns a file path by default; pass
+  `includePdfData: true` to also get the PDF as an embedded resource, for clients that hand files
+  to the user directly. It is not the default because a resume PDF is 200–300 KB, so roughly
+  270–400 KB of base64 — a large chunk of context for something usually not needed.
 
 - **stdout is the JSON-RPC channel.** Nothing in this package may `console.log` — all logging goes
   to stderr. This is also why the render path calls `generatePDF` + `Bun.write` instead of

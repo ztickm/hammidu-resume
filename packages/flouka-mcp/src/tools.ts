@@ -26,13 +26,17 @@ import {
 } from "./render.ts";
 import {
   RELOAD_NOTICE,
+  applicationUrl,
+  createApplication,
   findApplication,
   mergeResumePatch,
   readApplications,
   readMaster,
   readMasterConfig,
   requireMaster,
+  updateApplication,
   writeMaster,
+  type AppConfig,
 } from "./store.ts";
 
 // ---------------------------------------------------------------------------
@@ -86,6 +90,21 @@ const ConfigSchema = z
       .describe(`Language of the section headings. Default: ${DEFAULT_CONFIG.locale}`),
   })
   .describe("Layout overrides, merged over the resume's stored config.");
+
+/**
+ * An application's config additionally carries `removedSections`, which only
+ * the SPA's layout editor reads. Callers normally leave it out — trimming
+ * `sectionOrder` fills it in automatically so the web UI can offer the dropped
+ * sections back.
+ */
+const AppConfigSchema = ConfigSchema.extend({
+  removedSections: z
+    .array(SectionName)
+    .optional()
+    .describe(
+      "Sections hidden in the web UI's layout editor but restorable there. Derived from `sectionOrder` when omitted."
+    ),
+}).describe("Layout config for the application, inherited from Flouka Studio's settings.");
 
 /**
  * Resumes travel as loose objects: the `validator` package is the authority on
@@ -214,7 +233,7 @@ export function registerAll(server: McpServer): void {
     {
       title: "List applications",
       description:
-        "List the job applications saved in Flouka Studio, newest field order as stored. Returns summaries only — use get_application for a full tailored resume. Read-only: applications are created and edited in the web UI.",
+        "List the job applications saved in Flouka Studio, newest first. Returns summaries only — use get_application for a full tailored resume.",
       inputSchema: {},
       annotations: { readOnlyHint: true },
     },
@@ -252,11 +271,107 @@ export function registerAll(server: McpServer): void {
         id: app.id,
         name: app.name,
         createdAt: app.createdAt,
+        url: applicationUrl(app.id),
         jd: app.jd,
         jdAnalysis: app.jdAnalysis,
         config: app.config,
+        chatHistory: app.chatHistory ?? [],
         tailoredResume: app.tailoredResume,
       });
+    }
+  );
+
+  server.registerTool(
+    "create_application",
+    {
+      title: "Save as an application",
+      description:
+        "Save a tailored resume to Flouka Studio as a new job application, so it can be reviewed, edited and re-downloaded in the web app. This is where a resume you just tailored should go — it does not touch the master resume. Returns the application's id and its URL in Flouka Studio.",
+      inputSchema: {
+        tailoredResume: ResumeObject.describe("The tailored resume to save."),
+        company: z.string().optional().describe("Company name — shown in the list and used in the PDF filename."),
+        roleTitle: z.string().optional().describe("Role title — shown in the list."),
+        jd: z.string().optional().describe("The job description this was tailored for, kept with the application."),
+        name: z
+          .string()
+          .optional()
+          .describe("Display name. Defaults to '<Name> — <Role> @ <Company>', matching the web app."),
+        config: AppConfigSchema.optional(),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    },
+    async (args) => {
+      const resume = args.tailoredResume as ResumeSchema;
+      const { warnings } = gateValidation(resume);
+      const { app, backupPath } = createApplication({
+        tailoredResume: resume,
+        company: args.company,
+        roleTitle: args.roleTitle,
+        jd: args.jd,
+        name: args.name,
+        config: args.config as AppConfig | undefined,
+      });
+
+      return text(
+        [
+          `Saved as application "${app.name}".`,
+          `  id:   ${app.id}`,
+          `  open: ${applicationUrl(app.id)}`,
+          "",
+          "Editable in Flouka Studio: adjust the layout, refine it in the chat tab, or download the PDF from there.",
+          backupPath ? `Previous application list backed up to: ${backupPath}` : "",
+          warningBlock(warnings).trim(),
+          "",
+          RELOAD_NOTICE,
+        ]
+          .filter((line, i, all) => !(line === "" && all[i - 1] === ""))
+          .join("\n")
+      );
+    }
+  );
+
+  server.registerTool(
+    "update_application",
+    {
+      title: "Update an application",
+      description:
+        "Change a saved application: replace its tailored resume, adjust its layout config, or correct the company/role/job description. Pass only what changes. Use this to revise an application you already saved rather than creating a duplicate.",
+      inputSchema: {
+        id: z.string().describe("Application id from list_applications"),
+        tailoredResume: ResumeObject.optional().describe("Replaces the stored tailored resume."),
+        company: z.string().optional(),
+        roleTitle: z.string().optional(),
+        jd: z.string().optional(),
+        name: z.string().optional().describe("Display name. Re-derived from company/role if they change and this is omitted."),
+        config: AppConfigSchema.optional().describe("Merged over the application's existing config."),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+    },
+    async (args) => {
+      const resume = args.tailoredResume as ResumeSchema | undefined;
+      const warnings = resume ? gateValidation(resume).warnings : [];
+
+      const { app, changed, backupPath } = updateApplication(args.id, {
+        tailoredResume: resume,
+        company: args.company,
+        roleTitle: args.roleTitle,
+        jd: args.jd,
+        name: args.name,
+        config: args.config as AppConfig | undefined,
+      });
+
+      return text(
+        [
+          `Updated application "${app.name}" (${changed.join(", ")}).`,
+          `  open: ${applicationUrl(app.id)}`,
+          backupPath ? `Previous application list backed up to: ${backupPath}` : "",
+          warningBlock(warnings).trim(),
+          "",
+          RELOAD_NOTICE,
+        ]
+          .filter((line, i, all) => !(line === "" && all[i - 1] === ""))
+          .join("\n")
+      );
     }
   );
 
@@ -403,6 +518,12 @@ export function registerAll(server: McpServer): void {
           .string()
           .optional()
           .describe("Company name, worked into the default filename. Ignored when outputPath is given."),
+        includePdfData: z
+          .boolean()
+          .optional()
+          .describe(
+            "Also attach the PDF itself as a base64 embedded resource, for clients that can hand the file to the user directly. Expensive — a resume PDF is 200-300 KB, so roughly 270-400 KB of base64. Leave it off when the file path is enough. Default: false."
+          ),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
     },
@@ -416,15 +537,31 @@ export function registerAll(server: McpServer): void {
         strict: args.strict,
       });
 
-      return text(
+      const summary =
         [
           `PDF written to: ${result.path}`,
           `Source: ${result.origin}`,
           `Size: ${(result.bytes / 1024).toFixed(1)} KB`,
           `Layout: ${result.configUsed.baseFontSize}pt / line-height ${result.configUsed.lineHeight} / ${result.configUsed.locale}`,
           `Sections: ${(result.configUsed.sectionOrder ?? []).join(", ")}`,
-        ].join("\n") + warningBlock(result.warnings)
-      );
+        ].join("\n") + warningBlock(result.warnings);
+
+      if (!args.includePdfData) return text(summary);
+
+      const bytes = await Bun.file(result.path).bytes();
+      return {
+        content: [
+          { type: "text" as const, text: summary },
+          {
+            type: "resource" as const,
+            resource: {
+              uri: `file://${result.path}`,
+              mimeType: "application/pdf",
+              blob: Buffer.from(bytes).toString("base64"),
+            },
+          },
+        ],
+      };
     }
   );
 
@@ -562,10 +699,11 @@ export function registerAll(server: McpServer): void {
               "4. Reorder `skills` keywords so overlap with the posting leads, but do not bury genuine strengths just because this posting emphasises something else.",
               "5. Adapt `basics.summary` into a short line framing me for this role. Framing only, no new facts, and nothing forward-looking about the company — that belongs in a cover email.",
               "6. Aim for one page: trim the least relevant bullets first. Let it run to two only if the posting genuinely has that many distinct important requirement areas.",
-              "7. Call `render_resume_pdf` with the tailored resume" +
+              "7. Call `create_application` with the tailored resume" +
                 (company ? ` and company: ${JSON.stringify(company)}` : "") +
-                ". Pass `config` with a smaller `baseFontSize` (10-11) or a trimmed `sectionOrder` if it needs to fit.",
-              "8. Give me the file path.",
+                ", plus the job description, so I can review and edit it in Flouka Studio. Pass `config` with a smaller `baseFontSize` (10-11) or a trimmed `sectionOrder` if it needs to fit one page.",
+              "8. Call `render_resume_pdf` with the `applicationId` it returned, so the PDF matches what is saved.",
+              "9. Give me the Flouka Studio link and the PDF path.",
               "",
               "Rules that do not bend:",
               "- Never invent or embellish a tool, metric, outcome, date or employer. Tailoring means selecting and reframing what is already there.",

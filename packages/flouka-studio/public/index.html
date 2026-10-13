@@ -1713,7 +1713,7 @@ function createResumeForm(host, onChange) {
   function entryHtml(section, item, index) {
     const id = rfId(item);
     const title = section.itemTitle(item);
-    return `<div class="rf-entry${openEntries.has(id) ? ' open' : ''}" data-entry="${id}" draggable="true">
+    return `<div class="rf-entry${openEntries.has(id) ? ' open' : ''}" data-entry="${id}">
       <div class="rf-entry-head">
         <span class="rf-entry-grip" title="Drag to reorder">⠿</span>
         <span class="rf-entry-label${title ? '' : ' empty'}">${escHtml(title || section.blank)}</span>
@@ -1817,10 +1817,20 @@ function createResumeForm(host, onChange) {
   });
 
   // ── Reordering entries ──
+  // An entry is only draggable while the mouse is down on its header. A permanently draggable
+  // card swallows mousedowns in its inputs, so text in them could not be selected.
+  root.addEventListener('mousedown', (e) => {
+    const head = e.target.closest('.rf-entry-head');
+    if (head && !e.target.closest('.rf-entry-del')) head.parentElement.draggable = true;
+  });
+  root.addEventListener('mouseup', () => {
+    root.querySelectorAll('.rf-entry[draggable="true"]').forEach(el => el.removeAttribute('draggable'));
+  });
   root.addEventListener('dragstart', (e) => {
     const entry = e.target.closest?.('.rf-entry');
-    // Dragging from inside an opened entry is a text selection, not a reorder.
-    if (!entry || e.target.closest('.rf-entry-body')) { e.preventDefault(); return; }
+    if (!entry || !entry.draggable) return;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', '');  // Firefox won't start a drag without data
     entry.classList.add('dragging');
   });
   root.addEventListener('dragover', (e) => {
@@ -1836,6 +1846,7 @@ function createResumeForm(host, onChange) {
     const dragging = root.querySelector('.rf-entry.dragging');
     if (!dragging) return;
     dragging.classList.remove('dragging');
+    dragging.removeAttribute('draggable');
     const order = [...dragging.parentElement.children].map(el => el.dataset.entry);
     rfList(sectionOf(dragging)).sort((a, b) => order.indexOf(rfId(a)) - order.indexOf(rfId(b)));
     render(); notify();
