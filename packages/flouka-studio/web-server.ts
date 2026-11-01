@@ -4,6 +4,7 @@
  */
 
 import "../agent/src/env.js"; // load root .env (ANTHROPIC_API_KEY etc.) before anything reads process.env
+import { resolve, sep } from "node:path";
 import { generateHTML } from "xebec-render";
 import type { GenerateConfig } from "xebec-render";
 import type { ResumeSchema } from "json-resume-types";
@@ -14,6 +15,8 @@ import { tailorResume } from "../agent/src/nodes/tailor-resume.js";
 import { MODEL_KEYS, DEFAULT_MODEL, type ModelKey, createChatModel } from "../agent/src/model.js";
 import { getAll, setValue, isStoreKey } from "./storage.ts";
 
+const PUBLIC_DIR = resolve(import.meta.dir, "public");
+
 const server = Bun.serve({
   // Overridable so a second instance can run against a different FLOUKA_DB_PATH
   // (testing, or a scratch copy of the store) without fighting for the port.
@@ -23,9 +26,20 @@ const server = Bun.serve({
 
     // Serve the main HTML page
     if (url.pathname === "/") {
-      return new Response(await Bun.file("./public/index.html").text(), {
+      return new Response(await Bun.file(resolve(PUBLIC_DIR, "index.html")).text(), {
         headers: { "Content-Type": "text/html" },
       });
+    }
+
+    // Serve the SPA's stylesheets and scripts. no-cache so an edit shows up on
+    // the next reload; the prefix check keeps requests inside public/.
+    if (req.method === "GET" && /^\/(css|js)\//.test(url.pathname)) {
+      const path = resolve(PUBLIC_DIR, `.${url.pathname}`);
+      const file = Bun.file(path);
+      if (path.startsWith(PUBLIC_DIR + sep) && (await file.exists())) {
+        return new Response(file, { headers: { "Cache-Control": "no-cache" } });
+      }
+      return new Response("Not Found", { status: 404 });
     }
 
     // API: Validate JSON Resume

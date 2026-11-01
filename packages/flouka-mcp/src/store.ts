@@ -17,7 +17,7 @@ import type { ResumeSchema } from "json-resume-types";
 import type { GenerateConfig, SectionName } from "xebec-render";
 
 // ---------------------------------------------------------------------------
-// Shapes the SPA persists (see public/index.html — Store / AppsPage.submit)
+// Shapes the SPA persists (see public/js — Store / NewApp)
 // ---------------------------------------------------------------------------
 
 export interface JDAnalysisLike {
@@ -247,7 +247,7 @@ export function writeMaster(resume: ResumeSchema): { backupPath: string | null }
 /**
  * Every section the SPA knows about, in its own default order.
  *
- * Mirrors `ALL_SECTIONS` in public/index.html — which is deliberately a
+ * Mirrors `ALL_SECTIONS` in public/js/constants.js — which is deliberately a
  * different order from xebec-render's `DEFAULT_SECTION_ORDER`. An application
  * config belongs to the web UI, so it follows the web UI's list.
  */
@@ -297,12 +297,12 @@ export function buildAppConfig(overrides: AppConfig | undefined): AppConfig {
   return config;
 }
 
-/** The SPA's id scheme (public/index.html — `uid()`), so ids look native. */
+/** The SPA's id scheme (public/js/utils.js — `uid()`), so ids look native. */
 function uid(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
-/** The SPA's naming scheme (public/index.html — `deriveAppName()`). */
+/** The SPA's naming scheme (public/js/utils.js — `deriveAppName()`). */
 function deriveAppName(resume: ResumeSchema, analysis: JDAnalysisLike | null): string {
   const name = resume.basics?.name || "Resume";
   const role = analysis?.role_title || "";

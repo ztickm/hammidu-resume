@@ -1,0 +1,32 @@
+/* Utility classes, scroll fixes and responsive overrides. Loaded last, because
+   these rules are meant to win over the page styles.
+*/
+
+/* ── UTILITIES ── */
+.hidden { display: none !important; }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.text-muted { color: var(--text-muted); font-size: 0.875em; }
+.spinner { animation: spin 1s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── SCROLL FIX: flex children that need to scroll must have min-height:0 ── */
+.dash-content, .new-content, .settings-content,
+.onb-wrap, .resume-main,
+#app-view-info, .config-sidebar { min-height: 0; }
+
+/* ── RESUME PAGE: Monaco fills remaining height ── */
+#master-editor-container { flex: 1; min-height: 0; }
+
+/* ── APP CONFIGURE: children scroll within ── */
+.config-sidebar { min-height: 0; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .onb-options { grid-template-columns: 1fr; }
+  .apps-grid { grid-template-columns: 1fr; }
+  .info-grid { grid-template-columns: 1fr; }
+  .app-preview-panel { display: none; }
+  .dash-content { padding: 20px; }
+}

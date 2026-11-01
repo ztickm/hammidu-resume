@@ -1,0 +1,14 @@
+/* Master resume page. */
+
+/* Same split as the application detail page: editor on the left, a live
+   PDF preview of the master resume on the right. */
+.resume-main { flex: 1; overflow: hidden; display: flex; min-height: 0; }
+.resume-editor-pane {
+  flex: 1; overflow: hidden; display: flex; flex-direction: column; min-width: 0; min-height: 0;
+}
+.resume-toolbar {
+  background: var(--bg); border-bottom: 1px solid var(--border);
+  padding: 10px 20px; display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+#master-validation { flex: 1; font-size: 0.85em; }
+#master-editor-container { flex: 1; }

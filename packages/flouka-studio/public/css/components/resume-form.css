@@ -1,0 +1,67 @@
+/* Resume form editor. */
+
+/* Styles for createResumeForm(). The component is mounted by onboarding,
+   the master resume page and the application page, so nothing here may
+   depend on which page hosts it — the host only sizes the container. */
+.rf { display: flex; flex-direction: column; gap: 10px; padding: 16px 20px 40px; }
+.rf-section {
+  background: white; border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden; flex-shrink: 0;
+}
+.rf-section-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; cursor: pointer; user-select: none;
+  transition: background 0.12s;
+}
+.rf-section-head:hover { background: var(--bg); }
+.rf-chevron { color: var(--text-muted); font-size: 0.65em; width: 10px; transition: transform 0.15s; }
+.rf-section.open .rf-chevron { transform: rotate(90deg); }
+.rf-section-title { flex: 1; font-weight: 600; font-size: 0.92em; }
+.rf-count {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 999px;
+  padding: 1px 9px; font-size: 0.75em; font-weight: 600; color: var(--text-muted);
+}
+.rf-section-body { display: none; padding: 0 14px 14px; border-top: 1px solid var(--border); }
+.rf-section.open .rf-section-body { display: block; }
+.rf-fields { padding-top: 14px; }
+.rf-fields .form-group { margin-bottom: 12px; }
+.rf-fields .form-textarea { min-height: 0; }
+.rf-hint { font-weight: 400; color: var(--text-muted); }
+
+/* One array item — collapsed to a single summary line until it is opened. */
+.rf-entry { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; margin-top: 10px; }
+.rf-entry.dragging { opacity: 0.4; }
+.rf-entry-head { display: flex; align-items: center; gap: 8px; padding: 9px 10px; cursor: pointer; }
+.rf-entry-grip { color: var(--text-muted); cursor: grab; font-size: 0.95em; }
+.rf-entry-label {
+  flex: 1; min-width: 0; font-size: 0.88em; font-weight: 500;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.rf-entry-label.empty { font-weight: 400; font-style: italic; color: var(--text-muted); }
+.rf-entry-sub { font-size: 0.78em; color: var(--text-muted); white-space: nowrap; }
+.rf-entry-del {
+  background: none; border: none; cursor: pointer; color: var(--text-muted);
+  font-size: 0.9em; padding: 2px 5px; border-radius: 4px;
+}
+.rf-entry-del:hover { color: var(--red); background: var(--red-light); }
+.rf-entry-body {
+  display: none; padding: 0 12px 12px; background: white;
+  border-top: 1px solid var(--border); border-radius: 0 0 7px 7px;
+}
+.rf-entry.open .rf-entry-body { display: block; }
+.rf-empty { font-size: 0.85em; color: var(--text-muted); padding: 14px 0 2px; }
+
+/* Form mode — a tab pane beside the JSON editor, so the form scrolls itself. */
+.rf-toolbar {
+  background: var(--bg); border-bottom: 1px solid var(--border);
+  padding: 8px 20px; display: flex; align-items: center; gap: 8px;
+  font-size: 0.85em; color: var(--text-muted); flex-shrink: 0;
+}
+.rf-toolbar-msg { flex: 1; }
+.view-form { flex: 1; overflow: hidden; display: none; flex-direction: column; }
+.view-form.active { display: flex; }
+.view-form .rf-host { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.view-form .rf { flex: 1; min-height: 0; overflow-y: auto; }
+
+/* Onboarding hosts the form inside the page's own scroll area. */
+.onb-method .rf { padding: 0 0 4px; }

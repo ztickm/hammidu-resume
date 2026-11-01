@@ -11,7 +11,7 @@ bun run web
 
 ## Web application overview
 
-Flouka Studio is a multi-page SPA (hash routing, no framework, vanilla JS + CSS) served from a single file: `public/index.html`. Monaco (the JSON editor) is loaded from jsDelivr, so the page needs a network connection even though your data stays local.
+Flouka Studio is a multi-page SPA (hash routing, no framework, vanilla JS + CSS) served from `public/`: markup in `index.html`, styles in `css/` and scripts in `js/`, with no build step. Monaco (the JSON editor) is loaded from jsDelivr, so the page needs a network connection even though your data stays local.
 
 Data is persisted **server-side in SQLite** (`storage.ts`), not in the browser — clearing browser storage no longer loses your resumes. On first load the client hydrates its cache from `GET /api/store`; writes are debounced (500 ms) and sent to `PUT /api/store/:key` in the background. A one-time `_migrateFromLocalStorage()` copies data from installs that predate this change.
 

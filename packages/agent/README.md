@@ -75,7 +75,7 @@ Pass `model_key` via the LangGraph `configurable` (or `--model` on the CLI) to s
 | `deepseek-flash`    | DeepSeek (V4.1)     | `deepseek-flash`             |
 | `deepseek-v4-pro`   | DeepSeek (V4)       | `deepseek-v4-pro`            |
 
-> The web UI keeps its own copy of this list in `packages/flouka-studio/public/index.html` (`MODEL_OPTIONS`). Update both when adding a model.
+> The web UI keeps its own copy of this list in `packages/flouka-studio/public/js/constants.js` (`MODEL_OPTIONS`). Update both when adding a model.
 
 ### Provider differences
 

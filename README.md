@@ -196,7 +196,9 @@ PDFTS/
 │   │   ├── src/
 │   │   │   └── index.ts           # generatePDF (Puppeteer + pdf-lib)
 │   │   ├── public/
-│   │   │   └── index.html         # the entire SPA (markup, CSS, JS)
+│   │   │   ├── index.html         # SPA markup
+│   │   │   ├── css/               # base, pages, components, utilities
+│   │   │   └── js/                # store, router, components, pages
 │   │   ├── web-server.ts          # Bun.serve + JSON API
 │   │   ├── storage.ts             # SQLite key-value store
 │   │   ├── data/                  # flouka.sqlite (gitignored)

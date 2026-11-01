@@ -1,0 +1,8 @@
+/* Settings page. */
+
+.settings-content {
+  flex: 1; overflow-y: auto; padding: 32px 40px;
+  max-width: 720px; width: 100%; margin: 0 auto;
+}
+.settings-section { margin-bottom: 36px; }
+.settings-section h3 { font-size: 1em; font-weight: 600; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }

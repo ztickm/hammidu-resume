@@ -142,7 +142,7 @@ export function gateValidation(resume: ResumeSchema, strict = false): GateResult
 }
 
 // ---------------------------------------------------------------------------
-// Output naming — matches what the SPA downloads (public/index.html:1236, :2121)
+// Output naming — matches what the SPA downloads (public/js/utils.js — `resumeFileBase()`)
 // ---------------------------------------------------------------------------
 
 function fileBase(resume: ResumeSchema): string {

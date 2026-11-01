@@ -69,8 +69,8 @@ protocol.
 
 - **Model registry has two homes.** `packages/agent/src/model.ts` (`MODEL_KEYS`, `DEFAULT_MODEL`,
   `MAX_OUTPUT_TOKENS`) is the source of truth, but the web UI repeats the list in
-  `MODEL_OPTIONS`/`DEFAULT_SETTINGS.modelKey` near the top of
-  `packages/flouka-studio/public/index.html`. Adding or renaming a model means editing both.
+  `MODEL_OPTIONS`/`DEFAULT_SETTINGS.modelKey` in
+  `packages/flouka-studio/public/js/constants.js`. Adding or renaming a model means editing both.
 - **A validation *warning* makes a resume invalid.** `buildResult()` in
   `packages/validator/src/index.ts` returns `valid: false` when there are any issues, warnings
   included, so a missing phone number blocks `/api/preview` and `/api/generate-pdf`, not just the
@@ -82,9 +82,12 @@ protocol.
 - **The tailoring node selects skills/education by index**, then `mergeResume` filters the master
   arrays. Anything the model invents is dropped; an empty selection falls back to the full master
   list so a bad response can never wipe a section.
-- **The frontend is one 2 100-line file.** `packages/flouka-studio/public/index.html` holds all the
-  CSS, markup and vanilla JS (hash router, `Store`, page objects). No framework, no bundler. **Monaco**
-  is loaded from jsDelivr, so the app needs a network connection even though the data is local.
+- **The frontend has no modules and no build.** `packages/flouka-studio/public/` holds the markup
+  (`index.html`), `css/` and `js/` (hash router, `Store`, page objects). No framework, no bundler.
+  The scripts are classic `<script src>` tags sharing one global scope, because the inline `onclick`
+  handlers depend on it, so the tag order in `index.html` matters: utilities before pages, `main.js`
+  last. CSS order is the cascade, with `utilities.css` last. **Monaco** is loaded from jsDelivr, so
+  the app needs a network connection even though the data is local.
 - **State lives in SQLite, not localStorage in anymore.** `packages/flouka-studio/storage.ts` is a key-value
   table (`flouka_master`, `flouka_settings`, `flouka_apps`) served by `GET /api/store` and
   `PUT /api/store/:key`; the browser keeps a write-through cache with debounced writes. A one-time
@@ -108,7 +111,7 @@ protocol.
   store by workspace name. Adding a new subpath import from that package means adding it there too.
 - **An application's `config` is settings-shaped, not `GenerateConfig`-shaped.** Records in
   `flouka_apps` carry an extra `removedSections` that only the SPA's layout editor reads;
-  `appRenderConfig()` in `public/index.html` strips it before rendering. `createApplication` in
+  `appRenderConfig()` in `public/js/utils.js` strips it before rendering. `createApplication` in
   `packages/flouka-mcp/src/store.ts` inherits from `flouka_settings` and derives `removedSections`
   from a trimmed `sectionOrder`, so a section the model drops stays restorable in the web UI.
 - **`ALL_SECTIONS` in the SPA and `DEFAULT_SECTION_ORDER` in xebec-render are different orders.**

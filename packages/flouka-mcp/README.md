@@ -76,7 +76,7 @@ Add `"env": { "FLOUKA_DB_PATH": "…" }` only if the store isn't at its default 
 
 - **Every master write snapshots first.** The previous `flouka_master` is copied to
   `<store dir>/backups/flouka_master_<timestamp>.json` before `update_master_resume` or
-  `replace_master_resume` writes. This matters because the SPA (`public/index.html`) keeps a
+  `replace_master_resume` writes. This matters because the SPA (`public/js/store.js`) keeps a
   write-through cache: a browser tab left open can overwrite what the MCP just wrote, and will
   show stale data until reloaded. Both tools say so in their result, so the model passes the
   warning along.
