@@ -87,7 +87,7 @@ const ConfigSchema = z
     locale: z
       .enum(["en", "de", "fr", "ar"])
       .optional()
-      .describe(`Language of the section headings. Default: ${DEFAULT_CONFIG.locale}`),
+      .describe(`Language of the section headings, month names and the "present" label. Default: ${DEFAULT_CONFIG.locale}`),
   })
   .describe("Layout overrides, merged over the resume's stored config.");
 

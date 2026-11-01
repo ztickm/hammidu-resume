@@ -2,7 +2,7 @@
  * Configuration for HTML/PDF generation
  */
 
-export type SectionName = 
+export type SectionName =
   | "summary"
   | "education"
   | "work"
@@ -35,61 +35,80 @@ export interface SectionLabels {
 
 export const LABELS: Record<Locale, SectionLabels> = {
   en: {
-    education:    "Education",
-    work:         "Experience",
-    volunteer:    "Volunteer Work",
-    skills:       "Skills",
-    languages:    "Languages",
-    awards:       "Awards & Honors",
+    education: "Education",
+    work: "Experience",
+    volunteer: "Volunteer Work",
+    skills: "Skills",
+    languages: "Languages",
+    awards: "Awards & Honors",
     publications: "Publications",
-    projects:     "Projects",
+    projects: "Projects",
     certificates: "Certificates",
-    interests:    "Interests",
-    references:   "References",
-    present:      "Present",
+    interests: "Interests",
+    references: "References",
+    present: "Present",
   },
   de: {
-    education:    "Ausbildung",
-    work:         "Berufserfahrung",
-    volunteer:    "Ehrenamtliche Tätigkeit",
-    skills:       "Fähigkeiten",
-    languages:    "Sprachen",
-    awards:       "Auszeichnungen",
+    education: "Ausbildung",
+    work: "Berufserfahrung",
+    volunteer: "Ehrenamtliche Tätigkeit",
+    skills: "Fähigkeiten",
+    languages: "Sprachen",
+    awards: "Auszeichnungen",
     publications: "Publikationen",
-    projects:     "Projekte",
+    projects: "Projekte",
     certificates: "Zertifikate",
-    interests:    "Interessen",
-    references:   "Referenzen",
-    present:      "Heute",
+    interests: "Interessen",
+    references: "Referenzen",
+    present: "Heute",
   },
   fr: {
-    education:    "Formation",
-    work:         "Expérience professionnelle",
-    volunteer:    "Bénévolat",
-    skills:       "Compétences",
-    languages:    "Langues",
-    awards:       "Prix & Distinctions",
+    education: "Formation",
+    work: "Expérience professionnelle",
+    volunteer: "Bénévolat",
+    skills: "Compétences",
+    languages: "Langues",
+    awards: "Prix & Distinctions",
     publications: "Publications",
-    projects:     "Projets",
+    projects: "Projets",
     certificates: "Certifications",
-    interests:    "Centres d'intérêt",
-    references:   "Références",
-    present:      "Aujourd'hui",
+    interests: "Centres d'intérêt",
+    references: "Références",
+    present: "Aujourd'hui",
   },
   ar: {
-    education:    "التعليم",
-    work:         "الخبرة المهنية",
-    volunteer:    "العمل التطوعي",
-    skills:       "المهارات",
-    languages:    "اللغات",
-    awards:       "الجوائز والتكريمات",
+    education: "التعليم",
+    work: "الخبرة المهنية",
+    volunteer: "العمل التطوعي",
+    skills: "المهارات",
+    languages: "اللغات",
+    awards: "الجوائز والتكريمات",
     publications: "المنشورات",
-    projects:     "المشاريع",
+    projects: "المشاريع",
     certificates: "الشهادات",
-    interests:    "الاهتمامات",
-    references:   "المراجع",
-    present:      "الآن",
+    interests: "الاهتمامات",
+    references: "المراجع",
+    present: "الآن",
   },
+};
+
+export const MONTHS: Record<Locale, string[]> = {
+  en: [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+  ],
+  de: [
+    "Januar", "Februar", "März", "April", "Mai", "Juni",
+    "Juli", "August", "September", "Oktober", "November", "Dezember",
+  ],
+  fr: [
+    "janvier", "février", "mars", "avril", "mai", "juin",
+    "juillet", "août", "septembre", "octobre", "novembre", "décembre",
+  ],
+  ar: [
+    "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
+    "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر",
+  ],
 };
 
 export interface GenerateConfig {
@@ -125,7 +144,7 @@ export interface GenerateConfig {
   lineHeight?: number;
 
   /**
-   * Output language for section headings
+   * Output language for section headings, month names and the "present" label
    * Default: "en"
    */
   locale?: Locale;

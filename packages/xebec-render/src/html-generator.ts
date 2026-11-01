@@ -4,6 +4,7 @@ import { displayUrl, findProfile, formatDate, formatDateOrPresent, joinArray } f
 import { readFileSync } from "fs";
 import { join } from "path";
 import type { GenerateConfig, SectionName } from "./config";
+import type { ISO8601 } from "json-resume-types";
 import { DEFAULT_CONFIG, LABELS } from "./config";
 import { validateResumeStrict } from "validator";
 
@@ -13,8 +14,14 @@ const templateSource = readFileSync(templatePath, "utf-8");
 const template = Handlebars.compile(templateSource);
 
 // Register Handlebars helpers
-Handlebars.registerHelper("formatDate", formatDate);
-Handlebars.registerHelper("formatDateOrPresent", formatDateOrPresent);
+// The date helpers read the locale off the root context: entries sit inside two
+// nested #each blocks, where "../_config" resolves against the section name.
+Handlebars.registerHelper("formatDate", (date: ISO8601 | undefined, options: Handlebars.HelperOptions) =>
+  formatDate(date, options.data.root._config.locale)
+);
+Handlebars.registerHelper("formatDateOrPresent", (date: ISO8601 | undefined, options: Handlebars.HelperOptions) =>
+  formatDateOrPresent(date, options.data.root._config.locale)
+);
 Handlebars.registerHelper("join", joinArray);
 Handlebars.registerHelper("findProfile", findProfile);
 Handlebars.registerHelper("displayUrl", displayUrl);

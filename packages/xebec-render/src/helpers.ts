@@ -1,4 +1,6 @@
 import type { ISO8601, Profile } from "json-resume-types";
+import type { Locale } from "./config";
+import { LABELS, MONTHS } from "./config";
 
 /**
  * Format an ISO8601 date string to a human-readable format
@@ -7,13 +9,10 @@ import type { ISO8601, Profile } from "json-resume-types";
  *   "2019-01" -> "January 2019"
  *   "2019" -> "2019"
  */
-export function formatDate(dateString: ISO8601 | undefined): string {
+export function formatDate(dateString: ISO8601 | undefined, locale: Locale = "en"): string {
   if (!dateString) return "";
   
-  const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
+  const months = MONTHS[locale] ?? MONTHS.en;
   
   // Handle different ISO8601 formats
   const parts = dateString.split("-");
@@ -41,9 +40,9 @@ export function formatDate(dateString: ISO8601 | undefined): string {
 /**
  * Format a date or show a localised "present" label if undefined/empty
  */
-export function formatDateOrPresent(dateString: ISO8601 | undefined, presentLabel?: string): string {
-  if (!dateString) return presentLabel ?? "Present";
-  return formatDate(dateString);
+export function formatDateOrPresent(dateString: ISO8601 | undefined, locale: Locale = "en"): string {
+  if (!dateString) return (LABELS[locale] ?? LABELS.en).present;
+  return formatDate(dateString, locale);
 }
 
 /**

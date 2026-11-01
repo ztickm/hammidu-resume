@@ -62,7 +62,7 @@ const htmlWithConfig = generateHTML(resume, config);
 - **`pageBreakAfter`**: Array of section names that should have a page break after them
 - **`baseFontSize`**: Base font size in points (default: 12). Smaller values make more compact resumes
 - **`lineHeight`**: Line height multiplier (default: 1.5). Lower values reduce spacing
-- **`locale`**: `"en" | "de" | "fr" | "ar"` (default: `"en"`). Translates section headings and the "Present" label; `"ar"` also switches the document to RTL
+- **`locale`**: `"en" | "de" | "fr" | "ar"` (default: `"en"`). Translates section headings, month names and the "Present" label; `"ar"` also switches the document to RTL
 
 Available sections: `summary`, `education`, `work`, `volunteer`, `skills`, `languages`, `awards`, `publications`, `projects`, `certificates`, `interests`, `references`
 
