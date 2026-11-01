@@ -72,8 +72,8 @@ Pass `model_key` via the LangGraph `configurable` (or `--model` on the CLI) to s
 | `claude-opus-4-5`   | Anthropic (default) | `claude-opus-4-5-20251101`   |
 | `claude-sonnet-4-6` | Anthropic           | `claude-sonnet-4-6-20250620` |
 | `claude-sonnet-4-5` | Anthropic           | `claude-sonnet-4-5-20251001` |
-| `deepseek-chat`     | DeepSeek (V3)       | `deepseek-chat`              |
-| `deepseek-reasoner` | DeepSeek (R1)       | `deepseek-reasoner`          |
+| `deepseek-flash`    | DeepSeek (V4.1)     | `deepseek-flash`             |
+| `deepseek-v4-pro`   | DeepSeek (V4)       | `deepseek-v4-pro`            |
 
 > The web UI keeps its own copy of this list in `packages/flouka-studio/public/index.html` (`MODEL_OPTIONS`). Update both when adding a model.
 
@@ -81,7 +81,7 @@ Pass `model_key` via the LangGraph `configurable` (or `--model` on the CLI) to s
 
 Anthropic models use native tool-call structured output. DeepSeek rejects both `response_format: json_schema` and forced `tool_choice`, so it goes through `jsonMode` (`response_format: json_object`) with the schema injected into the prompt, plus an explicit "use exactly these field names" suffix (`fieldNamesInstruction`).
 
-DeepSeek also bills chain-of-thought against the completion budget, so `deepseek-reasoner` gets 32 768 max output tokens (others get 16 384) and Node B retries once with a "raw JSON only, be terse" instruction when a response fails to parse.
+DeepSeek also bills chain-of-thought against the completion budget and both models think by default, so they get 32 768 max output tokens (Claude models get 16 384) and Node B retries once with a "raw JSON only, be terse" instruction when a response fails to parse.
 
 ## Node B — `prompt_addition`
 

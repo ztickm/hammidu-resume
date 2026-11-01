@@ -19,7 +19,7 @@ import { buildGraph, type ModelKey } from "./src/graph.js";
 
 /**
  * Choose the LLM for this run.
- * Options: "claude-opus-4-5" | "claude-sonnet-4-5" | "deepseek-chat" | "deepseek-reasoner"
+ * Options: "claude-opus-4-5" | "claude-sonnet-4-5" | "deepseek-flash" | "deepseek-v4-pro"
  * DeepSeek requires DEEPSEEK_API_KEY in .env
  */
 const MODEL: ModelKey = "claude-opus-4-5";

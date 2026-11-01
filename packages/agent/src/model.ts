@@ -17,8 +17,8 @@ export const MODEL_KEYS = [
   "claude-sonnet-4-6",
   "claude-opus-4-5",
   "claude-sonnet-4-5",
-  "deepseek-chat",
-  "deepseek-reasoner",
+  "deepseek-flash",
+  "deepseek-v4-pro",
 ] as const;
 
 export type ModelKey = (typeof MODEL_KEYS)[number];
@@ -29,8 +29,8 @@ const MODEL_LABELS: Record<ModelKey, string> = {
   "claude-sonnet-4-6": "Claude Sonnet 4.6 (Anthropic)",
   "claude-opus-4-5": "Claude Opus 4.5 (Anthropic)",
   "claude-sonnet-4-5": "Claude Sonnet 4.5 (Anthropic)",
-  "deepseek-chat": "DeepSeek Chat (DeepSeek-V3)",
-  "deepseek-reasoner": "DeepSeek Reasoner (R1)",
+  "deepseek-flash": "DeepSeek Flash (DeepSeek-V4.1)",
+  "deepseek-v4-pro": "DeepSeek V4 Pro (DeepSeek-V4)",
 };
 
 export function modelLabel(key: ModelKey): string {
@@ -44,19 +44,19 @@ export function modelLabel(key: ModelKey): string {
 /**
  * Max completion tokens per model.
  *
- * DeepSeek bills chain-of-thought against this budget — a reasoner response
+ * DeepSeek bills chain-of-thought against this budget — a thinking response
  * reports `completion_tokens: 190` with `reasoning_tokens: 183`, i.e. the
  * visible answer is what little is left over. Too small a budget therefore
  * truncates the JSON mid-string and surfaces as an OUTPUT_PARSING_FAILURE
- * ("Unterminated string"), so the reasoner gets far more headroom than the
- * tailored JSON itself needs. Both DeepSeek endpoints accept up to 65536.
+ * ("Unterminated string"), so DeepSeek models, which think by default, get far
+ * more headroom than the tailored JSON itself needs. Both accept up to 384K.
  */
 const MAX_OUTPUT_TOKENS: Record<ModelKey, number> = {
   "claude-sonnet-4-6": 16384,
   "claude-opus-4-5": 16384,
   "claude-sonnet-4-5": 16384,
-  "deepseek-chat": 16384,
-  "deepseek-reasoner": 32768,
+  "deepseek-flash": 32768,
+  "deepseek-v4-pro": 32768,
 };
 
 export function maxOutputTokens(key: ModelKey): number {
@@ -67,7 +67,7 @@ export function maxOutputTokens(key: ModelKey): number {
  * Returns the withStructuredOutput options appropriate for the given model.
  * DeepSeek rejects both response_format:json_schema and forced tool_choice,
  * so we use jsonMode which sends response_format:json_object and injects the
- * schema into the prompt — supported by all DeepSeek models including R1.
+ * schema into the prompt — supported by all DeepSeek models.
  */
 export function structuredOutputMethod(key: ModelKey): { method?: "jsonMode" } {
   return key.startsWith("deepseek") ? { method: "jsonMode" } : {};
@@ -132,22 +132,13 @@ export function createChatModel(key: ModelKey, opts: ModelOptions = {}): ChatAnt
         invocationKwargs: { top_p: undefined },
       });
 
-    case "deepseek-chat":
+    case "deepseek-flash":
+    case "deepseek-v4-pro":
       return new ChatOpenAI({
-        model: "deepseek-chat",
-        temperature: 1,
+        model: key,
         maxTokens,
         apiKey: process.env.DEEPSEEK_API_KEY,
-        configuration: { baseURL: "https://api.deepseek.com/v1" },
-        ...(jsonMode ? { modelKwargs: { response_format: { type: "json_object" } } } : {}),
-      }) as unknown as ChatAnthropic;
-
-    case "deepseek-reasoner":
-      return new ChatOpenAI({
-        model: "deepseek-reasoner",
-        maxTokens,
-        apiKey: process.env.DEEPSEEK_API_KEY,
-        configuration: { baseURL: "https://api.deepseek.com/v1" },
+        configuration: { baseURL: "https://api.deepseek.com" },
         ...(jsonMode ? { modelKwargs: { response_format: { type: "json_object" } } } : {}),
       }) as unknown as ChatAnthropic;
   }

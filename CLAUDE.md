@@ -77,7 +77,7 @@ protocol.
   schema errors.
 - **DeepSeek takes a different structured-output path.** Anthropic models use native tool-call
   structured output; DeepSeek goes through `jsonMode` plus a `fieldNamesInstruction` prompt suffix,
-  and `deepseek-reasoner` burns its token budget on chain-of-thought — hence the larger
+  and its models think by default, burning token budget on chain-of-thought — hence the larger
   `MAX_OUTPUT_TOKENS` and the parse-failure retry (`invokeWithRepair`) in `tailor-resume.ts`.
 - **The tailoring node selects skills/education by index**, then `mergeResume` filters the master
   arrays. Anything the model invents is dropped; an empty selection falls back to the full master

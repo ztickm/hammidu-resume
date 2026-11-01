@@ -74,7 +74,7 @@ Takes the HTML from `xebec-render`, prints it to a pixel-perfect PDF, and embeds
 - Persists everything in a local SQLite file; no account or cloud database required
 
 ### `agent` — AI resume tailoring
-A LangGraph pipeline with three nodes: Node A analyses the job description and scores the match; Node B rewrites `basics.label`, `basics.summary`, and `work[].highlights` and selects the JD-relevant subset of `skills` and `education`; Node C renders the result to PDF. Supports Claude (Opus 4.5, Sonnet 4.6, Sonnet 4.5) and DeepSeek (Chat, Reasoner) models. Exposed via `/api/tailor` in the web server and usable standalone via CLI.
+A LangGraph pipeline with three nodes: Node A analyses the job description and scores the match; Node B rewrites `basics.label`, `basics.summary`, and `work[].highlights` and selects the JD-relevant subset of `skills` and `education`; Node C renders the result to PDF. Supports Claude (Opus 4.5, Sonnet 4.6, Sonnet 4.5) and DeepSeek (Flash, V4 Pro) models. Exposed via `/api/tailor` in the web server and usable standalone via CLI.
 
 ### `validator` — catch errors before they reach the PDF
 Validates your JSON Resume against the official schema and runs a second layer of practical checks: is there a name? contact info? are the dates valid ISO8601? This runs automatically before any render, so you get a clear error message instead of a broken PDF.
@@ -261,7 +261,7 @@ PDFTS/
 
 ### ✅ v2 — AI tailoring + Flouka Studio multi-page app (released, `main`)
 - [x] LangGraph agent: Node A analyses JD + scores match, Node B tailors `basics.label`, `basics.summary`, `work[].highlights`, and selects relevant `skills` / `education`
-- [x] Multi-model support: Claude Opus 4.5 / Sonnet 4.6 / Sonnet 4.5 + DeepSeek Chat & Reasoner
+- [x] Multi-model support: Claude Opus 4.5 / Sonnet 4.6 / Sonnet 4.5 + DeepSeek Flash & V4 Pro
 - [x] Per-call `promptAddition` to inject custom tailoring instructions
 - [x] Chat sidebar: refine a tailored resume conversationally (tool-calling on Claude, JSON mode on DeepSeek)
 - [x] Flouka Studio rewritten as a multi-page SPA (hash routing, no framework)
